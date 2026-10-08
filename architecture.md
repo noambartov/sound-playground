@@ -20,7 +20,7 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
   - Presentation / Play Mode toggling (`isPresentationMode`).
   - Global tooltips state management (`toggleTooltips()`).
 - **`audioEngine.js`**: Centralized Web Audio engine wrapper. Standardizes `AudioContext` management, master input/output node routing, global volume control, and dynamic hardware sample rate detection.
-- **`PatchManager.js`**: Handles JSON serialization and deserialization of synthesizer patches (saving canvas layouts, module parameters, active settings, and cable wire connections).
+- **`PatchManager.js`**: Handles JSON serialization and deserialization of synthesizer patches (saving canvas layouts, module parameters, active settings, and cable wire connections). **Note:** this file is currently *not* loaded by `index.html`; the live save/load logic is `exportPatch()` / `loadPatchData()` inside `app.js`.
 - **`help.js`**: Manual & Preset Booklet Controller (`HelpController`). Manages modal visibility, Escape key and backdrop click listeners, full bilingual language toggling (HE/EN) with RTL/LTR layout handling, dynamic multi-tab navigation (Quick Start, Module Guide, Signal Flow, Presets, Shortcuts), live search filtering (`.searchable-item`), and loading curated preset Eurorack patches (`EURORACK_PRESETS`) directly into the canvas via `window.synthApp.loadPatchData()`. Fully self-initializing (`window.helpController`) on `DOMContentLoaded` or immediate ready state.
 
 ### Audio Processing & Generation Modules
@@ -128,3 +128,43 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
     }
   ]
 }
+```
+
+### Module Type IDs
+The `type` field (in patches, presets, and sidebar `data-type` buttons) must use one of the IDs that `app.js` (`addModule`) recognizes. The canonical ID comes first; aliases are also accepted:
+
+| Module | Canonical `type` | Accepted aliases |
+|---|---|---|
+| Oscillator | `oscillator` | |
+| Granular Cloud | `granular` | |
+| Mic / Audio In | `audio_in` | `mic`, `audio_input` |
+| Keyboard | `keyboard` | `keys` |
+| Sequencer | `sequencer` | |
+| Webcam Controller | `webcam` | `webcam_controller`, `webcam-controller`, `camera` |
+| Filter | `filter` | |
+| VCA | `vca` | |
+| Mixer | `mixer` | |
+| Reverb | `reverb` | |
+| Envelope (ADSR) | `envelope` | `adsr` |
+| LFO | `lfo` | |
+| Output | `output` | |
+| Oscilloscope | `oscilloscope` | `scope` |
+| Recorder | `recorder` | |
+
+Any other value (e.g. `audioinput`) fails to create the module. Presets live in `helpData.js` (`window.presetData`).
+
+---
+
+## 8. Repository, Deployment & Working Rules
+
+- **Source of truth:** GitHub repository `noambartov/sound-playground`, branch `main`. Older local copies (e.g. the iCloud folder `sound playground v_4`) are not updated automatically.
+- **Live site:** GitHub Pages, deployed from `main` / root. URL: https://noambartov.github.io/sound-playground/. Every push to `main` redeploys automatically.
+- **No build step:** plain static files; `index.html` is the entry point.
+- **Repo housekeeping files:** `README.md` (short description), `.gitignore` (ignores macOS `.DS_Store`), `CLAUDE.md` (working rules for Claude sessions).
+- **Documentation rule:** every change to a file or to a foundational setting must be reflected in this `architecture.md` in the same commit, so that this document always holds everything needed to rebuild the site from scratch.
+
+---
+
+## 9. Changelog
+
+- **2026-10-08** - Imported v_4 into GitHub. Fixed the Audio Input demo and External Processing presets in `helpData.js` (module type `audioinput` changed to the canonical `audio_in`). Added `README.md`, `.gitignore`, `CLAUDE.md`. Enabled GitHub Pages. Documented module type IDs and the `PatchManager.js` load status.

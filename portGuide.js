@@ -111,7 +111,7 @@
     'envelope:in:gate': 'Keyboard / Seq GATE',
     'envelope:out:env': 'VCA CV / Filter CUT',
     'lfo:in:rate': 'LFO / Webcam',
-    'lfo:out:default': 'Filter CUT / VCA CV',
+    'lfo:out:default': 'any slider / CV in',
     'output:in:in': 'last module',
     'output:out:out': 'Recorder / Scope',
     'oscilloscope:in:audio': 'any OUT',

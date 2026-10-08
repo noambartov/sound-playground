@@ -1134,14 +1134,54 @@ if (!window.SoundSandboxApp) {
       let startPanX = 0, startPanY = 0;
       let startWorldX = 0, startWorldY = 0;
 
+      // iPad: two fingers on the empty workspace pinch-zoom and move the app view.
+      // The Apple Pencil (pointerType 'pen') never pinches, it keeps selecting.
+      const touchPoints = new Map();
+      let pinch = null;
+
+      const getPinchInfo = () => {
+        const [a, b] = Array.from(touchPoints.values());
+        const cRect = this.canvasContainer.getBoundingClientRect();
+        return {
+          dist: Math.max(Math.hypot(b.x - a.x, b.y - a.y), 1),
+          midX: (a.x + b.x) / 2 - cRect.left,
+          midY: (a.y + b.y) / 2 - cRect.top
+        };
+      };
+
+      // Safari's own page zoom gesture is blocked everywhere.
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
+        document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+      });
+      document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) e.preventDefault();
+      }, { passive: false });
+
       this.canvasContainer.addEventListener('pointerdown', (e) => {
         this.ensureAudioContextRunning();
-
-        if (this.isPresentationMode) return;
 
         if (e.target.closest('.module-card') || e.target.closest('.sidebar') || e.target.closest('.toolbar') || e.target.closest('.port')) {
           return;
         }
+
+        if (e.pointerType === 'touch') {
+          touchPoints.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (touchPoints.size >= 2) {
+            e.preventDefault();
+            // A second finger turns the gesture into a pinch: drop the selection box the first finger started.
+            if (isSelecting) {
+              isSelecting = false;
+              this.selectionBox.style.display = 'none';
+            }
+            if (touchPoints.size === 2) {
+              const info = getPinchInfo();
+              pinch = { ...info, scale: this.scale, panX: this.panX, panY: this.panY };
+            }
+            return;
+          }
+        }
+
+        if (this.isPresentationMode) return;
 
         const cRect = this.canvasContainer.getBoundingClientRect();
         const clickX = e.clientX - cRect.left;
@@ -1192,6 +1232,20 @@ if (!window.SoundSandboxApp) {
       });
 
       window.addEventListener('pointermove', (e) => {
+        if (touchPoints.has(e.pointerId)) {
+          touchPoints.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (pinch && touchPoints.size === 2) {
+            const info = getPinchInfo();
+            const newScale = Math.min(Math.max(pinch.scale * info.dist / pinch.dist, 0.4), 2.2);
+            // Keep the workspace point that was under the fingers under the fingers.
+            this.panX = info.midX - (pinch.midX - pinch.panX) * newScale / pinch.scale;
+            this.panY = info.midY - (pinch.midY - pinch.panY) * newScale / pinch.scale;
+            this.scale = newScale;
+            this.applyViewportTransform();
+            return;
+          }
+        }
+
         if (isPanning) {
           const dx = e.clientX - startMouseX;
           const dy = e.clientY - startMouseY;
@@ -1241,6 +1295,10 @@ if (!window.SoundSandboxApp) {
       });
 
       const stopPanOrSelect = (e) => {
+        if (e && touchPoints.has(e.pointerId)) {
+          touchPoints.delete(e.pointerId);
+          if (touchPoints.size < 2) pinch = null;
+        }
         if (isPanning) {
           isPanning = false;
           this.canvasContainer.style.cursor = (e && (e.metaKey || e.ctrlKey || this.isSpacePressed)) ? 'grab' : '';

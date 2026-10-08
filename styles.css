@@ -49,7 +49,35 @@ body.dark-theme {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iPad / touch: the browser itself must never zoom or scroll the page.
+   Pinch on the workspace zooms the app instead (app.js bindCanvasInteractions). */
+html, body {
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* Areas that scroll by themselves keep finger scrolling (no pinch zoom). */
+.sidebar,
+.help-tabs-bar,
+.help-tabs,
+.help-content-area,
+#help-modal #help-tab-content {
+  touch-action: pan-x pan-y;
+}
+
+/* Text fields still allow typing and selecting text. */
+input[type="text"],
+input[type="search"],
+input[type="number"],
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body {
@@ -251,6 +279,7 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
+  touch-action: none;
   background-color: var(--bg-color);
   background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1.5px);
   background-size: 20px 20px;

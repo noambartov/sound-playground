@@ -73,6 +73,52 @@
     'recorder:out:out': { name: 'THRU', signal: 'Audio', text: 'Passes the sound on unchanged.', to: 'Output IN', match: ['output:in:in'] }
   };
 
+  // Short always-visible labels shown under every jack while Tooltips is ON (works on touch screens too)
+  const CHIPS = {
+    'oscillator:in:pitch': 'Keyboard / Seq',
+    'oscillator:in:fm': 'LFO / Osc',
+    'oscillator:out:default': 'Filter / VCA / Output',
+    'granular:in:in_l': 'Osc / Mic',
+    'granular:in:in_r': 'Osc / Mic',
+    'granular:in:cv1': 'LFO / Env',
+    'granular:in:cv2': 'LFO / Env',
+    'granular:out:out_l': 'Filter / Reverb / Output',
+    'granular:out:out_r': 'Reverb / Output',
+    'audio_in:out:audio': 'Filter / Granular / Output',
+    'keyboard:out:freq': 'Osc PITCH',
+    'keyboard:out:gate': 'Env GATE / VCA CV',
+    'keyboard:out:bend': 'Osc FM',
+    'sequencer:out:pitch': 'Osc PITCH',
+    'sequencer:out:gate': 'Env GATE / VCA CV',
+    'webcam:out:out_x': 'Osc FM / Filter',
+    'webcam:out:out_y': 'Osc FM / Filter',
+    'webcam:out:out_motion': 'VCA CV / Granular',
+    'webcam:out:out_gate': 'Env GATE',
+    'filter:in:audio': 'Osc / Granular / Mic',
+    'filter:in:cutoff': 'Env / LFO',
+    'filter:out:default': 'VCA / Reverb / Output',
+    'vca:in:audio': 'Osc / Filter',
+    'vca:in:cv': 'Env / LFO / Gate',
+    'vca:out:audio': 'Reverb / Output',
+    'mixer:in:ch_in': 'any audio',
+    'mixer:out:ch_out': 'this channel only',
+    'mixer:out:out_l': 'Output / Reverb',
+    'mixer:out:out_r': 'Output / Reverb R',
+    'reverb:in:in_l': 'VCA / Filter / Mixer',
+    'reverb:in:in_r': 'Mixer R / Granular R',
+    'reverb:out:out_l': 'Output / Recorder',
+    'reverb:out:out_r': 'Output',
+    'envelope:in:gate': 'Keyboard / Seq GATE',
+    'envelope:out:env': 'VCA CV / Filter CUT',
+    'lfo:in:rate': 'LFO / Webcam',
+    'lfo:out:default': 'Filter CUT / VCA CV',
+    'output:in:in': 'last module',
+    'output:out:out': 'Recorder / Scope',
+    'oscilloscope:in:audio': 'any OUT',
+    'recorder:in:in': 'VCA / Reverb / Mixer',
+    'recorder:out:out': 'Output'
+  };
+
   const TYPE_ALIASES = { scope: 'oscilloscope', keys: 'keyboard', adsr: 'envelope', mic: 'audio_in', audio_input: 'audio_in', webcam_controller: 'webcam', 'webcam-controller': 'webcam', camera: 'webcam' };
 
   function moduleTypeOf(port) {
@@ -204,12 +250,123 @@
 
   // Capture phase: the app stops propagation on port presses
   document.addEventListener('pointerdown', (e) => {
-    if (!e.target.closest || !e.target.closest('.port')) return;
+    const port = e.target.closest ? e.target.closest('.port') : null;
+    if (!port) return;
     hideHint();
+    // On touch screens there is no hover: show the full card while the finger is on the jack
+    if (e.pointerType !== 'mouse' && !document.body.classList.contains('tooltips-disabled')) showHint(port);
     setTimeout(applyHighlights, 0);
   }, true);
-  window.addEventListener('pointerup', () => setTimeout(clearHighlights, 0), true);
-  window.addEventListener('pointercancel', () => setTimeout(clearHighlights, 0), true);
+  const endPress = () => setTimeout(() => { clearHighlights(); hideHint(); }, 0);
+  window.addEventListener('pointerup', endPress, true);
+  window.addEventListener('pointercancel', endPress, true);
 
-  window.portGuide = { GUIDE, portKey, guideFor };
+  // ---------- Always-visible jack labels ----------
+  // Drawn in one fixed layer above the canvas (cards clip their contents), placed under each jack
+  // every frame. Where two labels would collide, both fall back to the short form (IN / OUT + signal).
+  let chipLayer = null;
+  const chipByPort = new Map();
+  let lastChipSig = '';
+
+  function chipFor(port) {
+    let chip = chipByPort.get(port);
+    if (chip) return chip;
+    const key = portKey(port);
+    const g = GUIDE[key];
+    const short = CHIPS[key];
+    if (!g && !short) return null;
+    const isOut = key.includes(':out:');
+    chip = document.createElement('div');
+    chip.className = `port-chip ${isOut ? 'port-chip-out' : 'port-chip-in'}`;
+    chip.innerHTML = `<b>${isOut ? 'OUT' : 'IN'}${g ? `<span class="port-chip-sig"> · ${escapeHtml(g.signal)}</span>` : ''}</b>` +
+      (short ? `<span class="port-chip-where">${isOut ? 'to ' : 'from '}${escapeHtml(short)}</span>` : '');
+    chipLayer.appendChild(chip);
+    chipByPort.set(port, chip);
+    return chip;
+  }
+
+  function chipsVisible() {
+    const b = document.body.classList;
+    const modal = document.getElementById('help-modal');
+    const modalOpen = modal && modal.style.display && modal.style.display !== 'none';
+    return !b.contains('tooltips-disabled') && !b.contains('presentation-mode') && !modalOpen;
+  }
+
+  function layoutChips() {
+    requestAnimationFrame(layoutChips);
+    if (!chipLayer) return;
+    if (!chipsVisible()) { chipLayer.style.display = 'none'; lastChipSig = ''; return; }
+    chipLayer.style.display = '';
+
+    const ports = Array.from(document.querySelectorAll('.module-card .port'));
+    // Skip the frame when no jack moved since last time (keeps idle frames cheap, e.g. on iPad)
+    let sig = ports.length + '|' + document.body.className;
+    for (const p of ports) {
+      const r = p.getBoundingClientRect();
+      sig += `${Math.round(r.left)},${Math.round(r.top)};`;
+    }
+    if (sig === lastChipSig) return;
+    lastChipSig = sig;
+    const alive = new Set(ports);
+    chipByPort.forEach((chip, port) => {
+      if (!alive.has(port) || !port.isConnected) { chip.remove(); chipByPort.delete(port); }
+    });
+
+    const placed = [];
+    const jackRects = [];
+    ports.forEach(port => {
+      const chip = chipFor(port);
+      const r = port.getBoundingClientRect();
+      if (r.width > 0) jackRects.push(r);
+      if (!chip) return;
+      if (r.width === 0) { chip.style.display = 'none'; return; }
+      chip.style.display = '';
+      chip.classList.remove('compact', 'tiny');
+      placed.push({ chip, port: r, cx: r.left + r.width / 2, top: r.bottom + 3, level: 0 });
+    });
+
+    // Three sizes: full (IN · CV + where), compact (IN · CV), tiny (IN). A label shrinks while it
+    // overlaps another label or covers another jack.
+    const LEVELS = ['', 'compact', 'tiny'];
+    const box = p => {
+      const w = p.chip.offsetWidth, h = p.chip.offsetHeight;
+      return { l: p.cx - w / 2, r: p.cx + w / 2, t: p.top, b: p.top + h };
+    };
+    const hit = (a, b, pad) => a.l < b.r + pad && a.r + pad > b.l && a.t < b.b + pad && a.b + pad > b.t;
+    for (let round = 0; round < 2; round++) {
+      const boxes = placed.map(box);
+      const grow = new Set();
+      placed.forEach((p, i) => {
+        if (p.level >= 2) return;
+        for (let j = 0; j < placed.length; j++) {
+          if (j !== i && hit(boxes[i], boxes[j], 2)) { grow.add(i); break; }
+        }
+        if (!grow.has(i) && jackRects.some(jr => jr !== p.port &&
+            hit(boxes[i], { l: jr.left, r: jr.right, t: jr.top, b: jr.bottom }, 1))) grow.add(i);
+      });
+      if (!grow.size) break;
+      grow.forEach(i => {
+        const p = placed[i];
+        if (LEVELS[p.level]) p.chip.classList.remove(LEVELS[p.level]);
+        p.level++;
+        p.chip.classList.add(LEVELS[p.level]);
+      });
+    }
+    placed.forEach(p => {
+      p.chip.style.left = `${Math.round(p.cx - p.chip.offsetWidth / 2)}px`;
+      p.chip.style.top = `${Math.round(p.top)}px`;
+    });
+  }
+
+  function startChips() {
+    chipLayer = document.createElement('div');
+    chipLayer.id = 'port-chip-layer';
+    document.body.appendChild(chipLayer);
+    requestAnimationFrame(layoutChips);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startChips);
+  else startChips();
+
+  window.portGuide = { GUIDE, CHIPS, portKey, guideFor };
 })();

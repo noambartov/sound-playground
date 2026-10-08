@@ -562,22 +562,32 @@ if (!window.SoundSandboxApp) {
     }
 
     updatePortConnectedClasses() {
-      document.querySelectorAll('.port').forEach(p => p.classList.remove('connected'));
+      document.querySelectorAll('.port').forEach(p => {
+        p.classList.remove('connected');
+        p.style.removeProperty('--cable-color');
+      });
 
+      // כל שקע מחובר נצבע בצבע הכבל שלו, כדי לראות לאן כל כבל מחובר גם כשהכבלים מאחורי המודולים
       this.connections.forEach(conn => {
         const fromCard = document.getElementById(`module_card_${conn.fromNode}`);
         const toCard = document.getElementById(`module_card_${conn.toNode}`);
+        const fromPort = fromCard ? this.getPortElement(fromCard, true, conn.fromPortInfo) : null;
+        const toPort = toCard ? this.getPortElement(toCard, false, conn.toPortInfo) : null;
+        const color = this.getConnectionColor(conn, fromPort);
 
-        if (fromCard) {
-          const fromPort = this.getPortElement(fromCard, true, conn.fromPortInfo);
-          if (fromPort) fromPort.classList.add('connected');
-        }
-
-        if (toCard) {
-          const toPort = this.getPortElement(toCard, false, conn.toPortInfo);
-          if (toPort) toPort.classList.add('connected');
-        }
+        [fromPort, toPort].forEach(port => {
+          if (!port) return;
+          port.classList.add('connected');
+          port.style.setProperty('--cable-color', color);
+        });
       });
+    }
+
+    getConnectionColor(conn, fromPortEl) {
+      const portType = (fromPortEl && fromPortEl.getAttribute('data-port-type')) || conn.fromPortInfo?.type || 'audio';
+      const portKey = info => info?.channel || info?.id || info?.name || info?.type || 'p';
+      const connId = `${conn.fromNode}_${portKey(conn.fromPortInfo)}_${conn.toNode}_${portKey(conn.toPortInfo)}`;
+      return this.getCableColor(portType, connId);
     }
 
     getHash(str) {
@@ -642,13 +652,25 @@ if (!window.SoundSandboxApp) {
           const portId = port.getAttribute('data-port-id');
           const portType = port.getAttribute('data-port-type');
 
-          // בדיקה אם יש כבר כבל מחובר בדיוק לשקע הזה (לפי האלמנט עצמו, לא לפי סוג השקע)
-          const existingConnIndex = this.connections.findIndex(c => {
-            if (isOut) {
-              return c.fromNode === id && this.getPortElement(card, true, c.fromPortInfo) === port;
+          // בדיקה אם יש כבר כבל מחובר בדיוק לשקע הזה (לפי האלמנט עצמו, לא לפי סוג השקע).
+          // יציאה יכולה להזין כמה כבלים: גרירה מיציאה תמיד מוציאה כבל חדש, ורק Shift+גרירה שולפת את הכבל האחרון שחובר אליה.
+          // כניסה מקבלת כבל אחד: גרירה ממנה שולפת את הכבל שמחובר אליה.
+          let existingConnIndex = -1;
+          if (isOut) {
+            if (e.shiftKey) {
+              for (let i = this.connections.length - 1; i >= 0; i--) {
+                const c = this.connections[i];
+                if (c.fromNode === id && this.getPortElement(card, true, c.fromPortInfo) === port) {
+                  existingConnIndex = i;
+                  break;
+                }
+              }
             }
-            return c.toNode === id && this.getPortElement(card, false, c.toPortInfo) === port;
-          });
+          } else {
+            existingConnIndex = this.connections.findIndex(c =>
+              c.toNode === id && this.getPortElement(card, false, c.toPortInfo) === port
+            );
+          }
 
           const cRect = this.canvasContainer.getBoundingClientRect();
 
@@ -739,8 +761,18 @@ if (!window.SoundSandboxApp) {
                   }
                 };
 
-                this.connections.push(connection);
-                this.connectAudio(connection);
+                const fromCardEl = document.getElementById(`module_card_${fromId}`);
+                const toCardEl = document.getElementById(`module_card_${toId}`);
+                const isSameCable = c =>
+                  c.fromNode === fromId && c.toNode === toId &&
+                  this.getPortElement(fromCardEl, true, c.fromPortInfo) === fromPortEl &&
+                  this.getPortElement(toCardEl, false, c.toPortInfo) === toPortEl;
+
+                // אותו כבל בדיוק כבר קיים: לא מוסיפים כפילות
+                if (!this.connections.some(isSameCable)) {
+                  this.connections.push(connection);
+                  this.connectAudio(connection);
+                }
               }
             }
 
@@ -1056,9 +1088,7 @@ if (!window.SoundSandboxApp) {
           if (fromPortEl && toPortEl) {
             const p1 = this.getPortCenter(fromPortEl);
             const p2 = this.getPortCenter(toPortEl);
-            const portType = fromPortEl.getAttribute('data-port-type') || conn.fromPortInfo?.type || 'audio';
-            const connId = `${conn.fromNode}_${conn.fromPortInfo?.id || 'p'}_${conn.toNode}_${conn.toPortInfo?.id || 'p'}`;
-            const color = this.getCableColor(portType, connId);
+            const color = this.getConnectionColor(conn, fromPortEl);
 
             const isSelected = conn === this.selectedConnection;
             const points = this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);

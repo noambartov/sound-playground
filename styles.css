@@ -408,6 +408,14 @@ body.cables-behind #connections-canvas {
   background: #94a3b8;
 }
 
+/* Connected ports take the color of their cable (set as --cable-color by app.js) */
+.port.connected,
+.dark-theme .port.connected {
+  background: var(--cable-color, #10b981);
+  border-color: var(--cable-color, #10b981) !important;
+  box-shadow: 0 0 0 2px var(--panel-bg), 0 0 0 4px var(--cable-color, #10b981);
+}
+
 /* ==========================================================================
    6. SPECIFIC MODULES
    ========================================================================== */

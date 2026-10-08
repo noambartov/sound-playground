@@ -1,726 +1,542 @@
-// helpData.js - מודולים מרווחים + הנחיות חיווט מפורטות לכל פורט
+// helpData.js - the manual's content (window.helpData) and the ready-made patches (window.presetData).
+// helpData has one object per language (en, he) with the same shape; help.js builds the six tabs from it.
+// Jack explanations are not written here: help.js reads them from portGuide.js (the same source as the
+// jack hints on the cards). Only their Hebrew translations live here, in he.ports.
 window.helpData = {
-  he: {
-    title: "Sound Playground - ספר ההפעלה והמדריך המלא",
-    searchPlaceholder: "חפש מודול, כבל, כניסה או פריסט...",
-    tabs: {
-      basics: "1. תפעול הממשק",
-      eurorack: "2. יסודות הסינתזה",
-      modules: "3. ספר 15 המודולים",
-      patches: "4. פריסטים ותקלות"
-    },
-    sections: {
-      basics: `
-        <div class="help-section">
-          <h3>1. מדריך תפעול הממשק</h3>
-          
-          <div class="help-card">
-            <h4>תנועה במרחב (Navigation)</h4>
-            <ul class="help-list">
-              <li><strong>הזזת המשטח (Pan):</strong> לחצו ממושך על <kbd>Space</kbd> או <kbd>Ctrl/Cmd</kbd> וגררו את העכבר.</li>
-              <li><strong>זום (Zoom):</strong> סובבו את גלגלת העכבר או השתמשו בכפתורי <kbd>+</kbd> ו-<kbd>-</kbd> בסרגל העליון.</li>
-              <li><strong>איפוס תצוגה:</strong> לחיצה על כפתור ה-<strong>100%</strong> מחזירה למרכז.</li>
-            </ul>
-          </div>
-
-          <div class="help-card">
-            <h4>ניהול מודולים</h4>
-            <ul class="help-list">
-              <li><strong>הוספת מודול:</strong> לחצו על המודול בסרגל הצדי ליצירתו במרכז המסך.</li>
-              <li><strong>הזזה:</strong> גררו את כותרת המודול לכל מקום בקנבס.</li>
-              <li><strong>מחיקה:</strong> לחצו על כפתור <kbd>X</kbd> בכותרת או על מקש <kbd>Delete</kbd>.</li>
-            </ul>
-          </div>
-
-          <div class="help-card">
-            <h4>מנגנון הכבלים</h4>
-            <ul class="help-list">
-              <li><strong>יצירת חיבור:</strong> גררו כבל מפורט יציאה <span class="tag tag-out">OUT</span> לפורט כניסה <span class="tag tag-in">IN</span>.</li>
-              <li><strong>צבעי האותות:</strong>
-                <span class="tag tag-audio">Audio</span> | 
-                <span class="tag tag-gate">Gate</span> | 
-                <span class="tag tag-cv">CV</span>
-              </li>
-              <li><strong>ניתוק כבל:</strong> לחיצה בודדת על הכבל המתוח תנתק אותו.</li>
-            </ul>
-          </div>
-        </div>
-      `,
-      eurorack: `
-        <div class="help-section">
-          <h3>2. יסודות הסינתזה המודולרית (Eurorack 101)</h3>
-          
-          <div class="help-card">
-            <h4>מהי סינתזה מודולרית?</h4>
-            <p>בסינתסייזר רגיל המנגנון מחווט מראש. בסינתזה מודולרית אתם אלו שקובעים את מסלול האות מאפס באמצעות חיבור כבלים בין מודולים עצמאיים.</p>
-          </div>
-
-          <div class="help-card">
-            <h4>שלושת סוגי האותות במערכת</h4>
-            <ul class="help-list">
-              <li><span class="tag tag-audio">Audio Signal</span> <strong>אות שמע:</strong> תדרים נשמעים הזורמים ממחוללי צליל דרך אפקטים ליציאה.</li>
-              <li><span class="tag tag-gate">Gate / Trigger</span> <strong>אות תזמון:</strong> פולסים של הפעלה/כיבוי שמפעילים מעטפות וסיקוונסרים.</li>
-              <li><span class="tag tag-cv">Control Voltage (CV)</span> <strong>מתח שליטה:</strong> אותות המשתנים בזמן אמת לאפנון פרמטרים.</li>
-            </ul>
-          </div>
-        </div>
-      `,
-      modules: `
-        <div class="help-section">
-          <h3>3. ספר 15 המודולים המלא והנחיות חיווט</h3>
-          <div class="modules-grid">
-            
-            <div class="module-card">
-              <div class="mod-header"><span>1. Oscillator (VCO)</span> <span class="mod-badge">Sound Source</span></div>
-              <p>מחולל תדרים בסיסי המפיק גלי קול (Sine, Square, Sawtooth, Triangle).</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: מאיפה? מ-Pitch OUT של מקלדת או סיקוונסר.</li>
-                    <li><span class="tag tag-cv">FM IN</span>: מאיפה? מיציאת LFO או VCO אחר לאפנון תדר.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-Audio IN של פילטר, VCA, אפקט, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-oscillator">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>2. Granular Cloud</span> <span class="mod-badge">Sound Source / FX</span></div>
-              <p>מנוע גראנולרי המפרק דגימת קול לפרגמנטים זעירים ליצירת ענני סאונד.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: מאיפה? מ-Audio Input, VCO, או Mixer.</li>
-                    <li><span class="tag tag-cv">Density CV</span>: מאיפה? מ-CV OUT של LFO או Webcam.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-Filter, Reverb, VCA, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-granular">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>3. Audio Input</span> <span class="mod-badge">External Input</span></div>
-              <p>מדגום שמע חיצוני מהמיקרופון או כרטיס הקול בזמן אמת.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> מיקרופון מחשב / כרטיס קול</div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-Filter, Granular Cloud, Reverb, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-audioinput">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>4. Filter (VCF)</span> <span class="mod-badge">Processor</span></div>
-              <p>מסנן תדרים (Lowpass / Highpass / Bandpass) לעיצוב גוון הסאונד.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: מאיפה? מ-VCO, Granular, Audio Input, או Mixer.</li>
-                    <li><span class="tag tag-cv">Cutoff CV</span>: מאיפה? מ-Envelope CV, LFO, או Webcam CV.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-VCA, Reverb, Oscilloscope, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-filter">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>5. VCA (Amplifier)</span> <span class="mod-badge">Processor</span></div>
-              <p>מגבר מבוקר מתח הקובע את עוצמת השמע לפי אות CV שנכנס אליו.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: מאיפה? מ-VCO, Filter, או FX.</li>
-                    <li><span class="tag tag-cv">CV Control</span>: מאיפה? מ-Envelope CV OUT, LFO, או Webcam.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-Reverb, Mixer, Recorder, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-vca">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>6. Reverb</span> <span class="mod-badge">Effect</span></div>
-              <p>אפקט מהדהד המדמה חלל אקוסטי, אולם או מערה.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: מאיפה? מ-VCA, Filter, Mixer, או VCO.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: לאן? ל-Output, Recorder, או Oscilloscope.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-reverb">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>7. Envelope Generator</span> <span class="mod-badge">Modulator</span></div>
-              <p>מחולל מעטפת 4 שלבים (Attack, Decay, Sustain, Release).</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-gate">Gate IN</span>: מאיפה? מ-Gate OUT של מקלדת או סיקוונסר.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: לאן? ל-CV Control ב-VCA או Cutoff CV בפילטר.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-envelope">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>8. LFO</span> <span class="mod-badge">Modulator</span></div>
-              <p>מתנד תדר נמוך היוצר תנודות מחזוריות לאפקטי Tremolo ו-Vibrato.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Rate CV</span>: מאיפה? מ-Webcam CV או LFO אחר.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: לאן? ל-Cutoff CV, Pitch CV, או VCA CV.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-lfo">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>9. Webcam Controller</span> <span class="mod-badge">Modulator</span></div>
-              <p>מתרגם תנועה אל מול המצלמה למתח שליטה (CV) אינטראקטיבי.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> וידאו מצלמה</div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: לאן? ל-Pitch CV ב-VCO, Cutoff CV בפילטר, או VCA.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-webcam">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>10. Keyboard</span> <span class="mod-badge">Controller</span></div>
-              <p>מקלדת נגינה וירטואלית להפקת תווים ואותות שליטה.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> מקלדת/עכבר</div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: לאן? ל-Pitch CV ב-VCO.</li>
-                    <li><span class="tag tag-gate">Gate OUT</span>: לאן? ל-Gate IN ב-Envelope (מעטפת).</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-keyboard">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>11. Sequencer</span> <span class="mod-badge">Controller</span></div>
-              <p>מחולל תבניות מקצב ותווים מחזוריים אוטומטי.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-gate">Clock IN</span>: מאיפה? מ-Gate OUT של סיקוונסר/קבועה.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: לאן? ל-Pitch CV ב-VCO.</li>
-                    <li><span class="tag tag-gate">Gate OUT</span>: לאן? ל-Gate IN במעטפת.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-sequencer">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>12. Mixer</span> <span class="mod-badge">Utility</span></div>
-              <p>ממזג מספר ערוצי שמע או CV לערוץ יציאה יחיד.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">IN 1 - 4</span>: מאיפה? מיציאות VCOs, אפקטים, או דגימות.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Master OUT</span>: לאן? ל-Filter, VCA, Reverb, או Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-mixer">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>13. Oscilloscope</span> <span class="mod-badge">Utility</span></div>
-              <p>מסך ניטור ויזואלי המציג את צורת הגל בזמן אמת.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Signal IN</span>: מאיפה? מכל יציאת Audio או CV.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> 
-                  <ul>
-                    <li>אין יציאה. כדי גם לשמוע את הצליל, חברו את אותו מקור גם ל-Output (מיציאה אחת אפשר למשוך כמה כבלים).</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-oscilloscope">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>14. Recorder</span> <span class="mod-badge">Utility</span></div>
-              <p>מקליט את יציאת הסאונד הראשית ומאפשר הורדת קובץ אודיו.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: מאיפה? מ-VCA, Reverb, Mixer, או Output.</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> הורדת קובץ WAV מוקלט</div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-recorder">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>15. Output Module</span> <span class="mod-badge">Master Output</span></div>
-              <p>רכיב היציאה הסופי המקשר בין הסינתסייזר לרמקולים של המחשב.</p>
-              <div class="io-grid">
-                <div><strong>כניסות (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Master Audio IN</span>: מאיפה? מהיציאה האחרונה בשרשרת (VCA, FX, Mixer).</li>
-                  </ul>
-                </div>
-                <div><strong>יציאות (OUT):</strong> לרמקולים/אוזניות של המחשב</div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-output">▶ הרץ פאץ' הדגמה</button>
-            </div>
-
-          </div>
-        </div>
-      `,
-      patches: `
-        <div class="help-section">
-          <h3>4. פריסטים ראשיים ופתרון תקלות</h3>
-          
-          <div class="help-card">
-            <h4>4 פריסטים מובנים מלאים</h4>
-            <div class="preset-grid">
-              <button class="tool-btn preset-btn" data-preset="classic-mono">1. Classic Monophonic Synth</button>
-              <button class="tool-btn preset-btn" data-preset="ambient-drone">2. Generative Ambient Drone</button>
-              <button class="tool-btn preset-btn" data-preset="seq-groove">3. Dynamic Sequencer Groove</button>
-              <button class="tool-btn preset-btn" data-preset="ext-processing">4. External Processing</button>
-            </div>
-          </div>
-
-          <div class="help-card">
-            <h4>מדריך פתרון תקלות מהיר</h4>
-            <ul class="help-list">
-              <li><strong>לא שומעים צליל במקלדת?</strong>
-                <ul>
-                  <li>בפאץ' שכולל מקלדת, הצליל מופק <strong>רק בעת לחיצה על המקשים במקלדת</strong>.</li>
-                  <li>ודאו שמודול ה-<strong>Output</strong> מחובר ושסליידר הווליום הוגבר.</li>
-                </ul>
-              </li>
-              <li><strong>מנוע השמע קפא (AudioContext Suspended):</strong> לחצו לחיצה בודדת בתוך משטח העבודה לשחרור חסימת הדפדפן.</li>
-            </ul>
-          </div>
-        </div>
-      `
-    }
-  },
   en: {
-    title: "Sound Playground - Complete Manual & Guide",
-    searchPlaceholder: "Search module, cable, input or preset...",
+    title: "Sound Playground Manual",
+    searchPlaceholder: "Search modules, jacks, recipes...",
     tabs: {
-      basics: "1. Interface Operations",
-      eurorack: "2. Modular 101",
-      modules: "3. 15 Modules Ref",
-      patches: "4. Presets & Debug"
+      start: "Start here",
+      modules: "Modules",
+      recipes: "Recipes",
+      basics: "Signals",
+      trouble: "Troubleshooting",
+      shortcuts: "Shortcuts"
+    },
+    ui: {
+      inputs: "Inputs",
+      outputs: "Outputs",
+      controls: "Controls",
+      tips: "Tips",
+      none: "None",
+      from: "Connect from",
+      to: "Connect to",
+      tryIt: "Load the demo patch",
+      loadRecipe: "Load this patch",
+      youLearn: "What you learn",
+      howToPlay: "How to play it",
+      noResults: "Nothing found. Try another word.",
+      newModule: "This module is new. Its manual page is coming soon; the jack list below is already up to date.",
+      groups: { sources: "Sound sources", controllers: "Controllers", processors: "Processors and effects", modulation: "Modulation", output: "Output and monitoring", other: "New modules" }
     },
     sections: {
+      start: `
+        <div class="help-card">
+          <h4>Your first sound in three steps</h4>
+          <ol class="help-list">
+            <li>In the <strong>Modules</strong> menu on the left, add an <strong>Oscillator</strong> and an <strong>Output</strong>.</li>
+            <li>Drag a cable from the Oscillator's <strong>OUT</strong> jack to the Output's <strong>IN</strong> jack.</li>
+            <li>Raise <strong>Master Volume</strong> on the Output. You hear a steady tone; move the Frequency slider to change it.</li>
+          </ol>
+        </div>
+        <div class="help-card">
+          <h4>Reading the jacks</h4>
+          <ul class="help-list">
+            <li>Every jack has a small tag under it. <span class="chip-demo chip-in">IN</span> (white) is an input, <span class="chip-demo chip-out">OUT</span> (blue) is an output. The tag also says the kind of signal and where it usually connects.</li>
+            <li>For the full explanation, rest the mouse on a jack, or on iPad press and hold it.</li>
+            <li>While you drag a cable, the best destinations pulse, other possible ones get a ring, and the rest fade.</li>
+            <li>The <strong>Tooltips</strong> button in the top bar hides and shows the tags and explanations.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>Cables</h4>
+          <ul class="help-list">
+            <li>Cables always go from an <strong>OUT</strong> to an <strong>IN</strong>. One output can feed several cables.</li>
+            <li>To unplug, drag the cable out of its input and let go on empty space. Or click a cable once to select it and again (or press Delete) to remove it.</li>
+            <li>A cable from an <strong>LFO OUT</strong> (or a <strong>Ribbon</strong> output) can also be dropped on any slider of another module; the slider then moves by itself.</li>
+            <li><strong>Cables: Front / Back</strong> in the top bar puts the cables over or under the modules.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>Presets start silent</h4>
+          <p>Every patch you load (from <strong>Recipes</strong> or with <strong>Load</strong>) opens with the Output volume at 0, so nothing jumps at you. Raise <strong>Master Volume</strong> on the Output module to hear it.</p>
+        </div>
+      `,
       basics: `
-        <div class="help-section">
-          <h3>1. Interface Operations Guide</h3>
-          
-          <div class="help-card">
-            <h4>Navigation & Viewport</h4>
-            <ul class="help-list">
-              <li><strong>Pan Canvas:</strong> Hold <kbd>Space</kbd> or <kbd>Ctrl/Cmd</kbd> and drag with the mouse.</li>
-              <li><strong>Zoom:</strong> Scroll the mouse wheel or use <kbd>+</kbd> / <kbd>-</kbd> on top toolbar.</li>
-              <li><strong>Reset View:</strong> Click the <strong>100%</strong> button to re-center viewport.</li>
-            </ul>
-          </div>
-
-          <div class="help-card">
-            <h4>Module Management</h4>
-            <ul class="help-list">
-              <li><strong>Add Module:</strong> Click any module in side panel to spawn it in the center.</li>
-              <li><strong>Move:</strong> Drag module header to reposition it anywhere on canvas.</li>
-              <li><strong>Delete:</strong> Click <kbd>X</kbd> on header or press <kbd>Delete</kbd> key.</li>
-            </ul>
-          </div>
-
-          <div class="help-card">
-            <h4>Patch Cables</h4>
-            <ul class="help-list">
-              <li><strong>Create Connection:</strong> Drag a cable from an output port <span class="tag tag-out">OUT</span> to an input port <span class="tag tag-in">IN</span>.</li>
-              <li><strong>Signal Types:</strong>
-                <span class="tag tag-audio">Audio</span> | 
-                <span class="tag tag-gate">Gate</span> | 
-                <span class="tag tag-cv">CV</span>
-              </li>
-              <li><strong>Disconnect:</strong> Click once on any patch cable to remove it.</li>
-            </ul>
-          </div>
+        <div class="help-card">
+          <h4>What is a modular synthesizer?</h4>
+          <p>A normal synthesizer is wired inside. Here you do the wiring: each module does one job, and cables decide where the sound and the control signals go.</p>
+        </div>
+        <div class="help-card">
+          <h4>The three kinds of signal</h4>
+          <ul class="help-list">
+            <li><span class="tag tag-audio">Audio</span> The sound itself, fast vibrations you can hear. Oscillator, Granular and Mic make it; Filter, VCA and Reverb change it; Output plays it.</li>
+            <li><span class="tag tag-cv">CV</span> Control voltage: a slow signal that moves a setting, like pitch, volume or brightness. LFO, Envelope, Keyboard FREQ and Webcam make it.</li>
+            <li><span class="tag tag-gate">Gate</span> On or off: "a note is playing now". Keyboard and Sequencer make it; it starts an Envelope or opens a VCA.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>The classic chain</h4>
+          <ol class="help-list">
+            <li><strong>Notes:</strong> Keyboard FREQ (or Sequencer PITCH CV) to Oscillator PITCH. Keyboard GATE to Envelope GATE IN.</li>
+            <li><strong>Sound:</strong> Oscillator OUT to Filter IN, Filter OUT to VCA IN, VCA OUT to Output IN.</li>
+            <li><strong>Shape:</strong> Envelope ENV OUT to VCA CV, so each note fades in and out. Add a second cable from ENV OUT to Filter CUT MOD to make each note brighter at its start.</li>
+          </ol>
+          <p>The <strong>Classic Mono Synth</strong> recipe is exactly this patch.</p>
+        </div>
+        <div class="help-card">
+          <h4>Seeing the signal</h4>
+          <p>Plug any OUT into an <strong>Oscilloscope</strong> to see it. The oscilloscope has no output, so to hear the same signal too, run a second cable from that OUT to the Output.</p>
         </div>
       `,
-      eurorack: `
-        <div class="help-section">
-          <h3>2. Modular Synthesis Fundamentals (Eurorack 101)</h3>
-          
-          <div class="help-card">
-            <h4>What is Modular Synthesis?</h4>
-            <p>In a standard synthesizer, signal routing is fixed. In modular synthesis, you define the entire audio and control path from scratch by patching cables between independent modules.</p>
-          </div>
-
-          <div class="help-card">
-            <h4>Three Signal Types</h4>
-            <ul class="help-list">
-              <li><span class="tag tag-audio">Audio Signal</span> <strong>Audio Signal:</strong> Audible sound frequencies flowing from sources through filters/effects to output.</li>
-              <li><span class="tag tag-gate">Gate / Trigger</span> <strong>Timing Signal:</strong> On/Off pulses triggering envelopes and sequencers.</li>
-              <li><span class="tag tag-cv">Control Voltage (CV)</span> <strong>Control Voltage:</strong> Real-time modulating voltage altering parameters dynamically.</li>
-            </ul>
-          </div>
+      trouble: `
+        <div class="help-card">
+          <h4>I hear nothing</h4>
+          <ul class="help-list">
+            <li>Raise <strong>Master Volume</strong> on the Output. Every loaded patch starts at 0.</li>
+            <li>Check that a cable reaches the Output's <strong>IN</strong>.</li>
+            <li>If the patch has a VCA, it stays silent until something opens it: press a key on the Keyboard, or press Play on the Sequencer.</li>
+            <li>Click once anywhere on the page: browsers keep sound off until you touch the page.</li>
+            <li>Mic patches need <strong>Enable Mic</strong>; Webcam patches need <strong>Start Camera</strong>, and the browser must be allowed to use them.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>The Keyboard does not play</h4>
+          <ul class="help-list">
+            <li>Keyboard FREQ goes to Oscillator <strong>PITCH</strong>, and Keyboard GATE goes to an Envelope or straight to a VCA CV.</li>
+            <li>Computer keys work only when no text box is selected. Keys held with Cmd or Ctrl are ignored on purpose (Cmd+Z is undo).</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>It sounds distorted or too loud</h4>
+          <ul class="help-list">
+            <li>Lower Master Volume, or the level of the module before it.</li>
+            <li>An LFO is strong: into a Filter use a small Depth, or lower the filter's Mod Depth.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>I made a mess</h4>
+          <p>Undo with the arrow buttons at the start of the top bar, or Cmd+Z. <strong>Clear</strong> empties the whole workspace (it can be undone too).</p>
         </div>
       `,
-      modules: `
-        <div class="help-section">
-          <h3>3. Complete 15 Modules Reference & Patching Guide</h3>
-          <div class="modules-grid">
-            
-            <div class="module-card">
-              <div class="mod-header"><span>1. Oscillator (VCO)</span> <span class="mod-badge">Sound Source</span></div>
-              <p>Primary tone generator producing raw sound waves (Sine, Square, Sawtooth, Triangle).</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: From Pitch OUT of Keyboard or Sequencer.</li>
-                    <li><span class="tag tag-cv">FM IN</span>: From LFO or another VCO for frequency modulation.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To Audio IN of Filter, VCA, FX, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-oscillator">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>2. Granular Cloud</span> <span class="mod-badge">Sound Source / FX</span></div>
-              <p>Granular synthesizer slicing audio samples into tiny grains to construct ethereal sound clouds.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: From Audio Input, VCO, or Mixer.</li>
-                    <li><span class="tag tag-cv">Density CV</span>: From CV OUT of LFO or Webcam.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To Filter, Reverb, VCA, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-granular">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>3. Audio Input</span> <span class="mod-badge">External Input</span></div>
-              <p>Captures real-time external audio from system microphone or sound interface.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> Computer Mic / Sound Card</div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To Filter, Granular Cloud, Reverb, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-audioinput">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>4. Filter (VCF)</span> <span class="mod-badge">Processor</span></div>
-              <p>Frequency filter (Lowpass / Highpass / Bandpass) for shaping tonal character.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: From VCO, Granular, Audio Input, or Mixer.</li>
-                    <li><span class="tag tag-cv">Cutoff CV</span>: From Envelope CV, LFO, or Webcam CV.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To VCA, Reverb, Oscilloscope, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-filter">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>5. VCA (Amplifier)</span> <span class="mod-badge">Processor</span></div>
-              <p>Voltage Controlled Amplifier adjusting audio volume based on incoming CV modulation.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: From VCO, Filter, or FX.</li>
-                    <li><span class="tag tag-cv">CV Control</span>: From Envelope CV OUT, LFO, or Webcam.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To Reverb, Mixer, Recorder, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-vca">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>6. Reverb</span> <span class="mod-badge">Effect</span></div>
-              <p>Spatial reverberation effect simulating acoustic rooms, halls, and ambient spaces.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: From VCA, Filter, Mixer, or VCO.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio OUT</span>: To Output, Recorder, or Oscilloscope.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-reverb">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>7. Envelope Generator</span> <span class="mod-badge">Modulator</span></div>
-              <p>4-stage contour generator (Attack, Decay, Sustain, Release) triggered by Gate signals.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-gate">Gate IN</span>: From Gate OUT of Keyboard or Sequencer.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: To CV Control on VCA or Cutoff CV on Filter.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-envelope">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>8. LFO</span> <span class="mod-badge">Modulator</span></div>
-              <p>Low Frequency Oscillator generating cyclic oscillations for Tremolo and Vibrato effects.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Rate CV</span>: From Webcam CV or another LFO.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: To Cutoff CV, Pitch CV, or VCA CV.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-lfo">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>9. Webcam Controller</span> <span class="mod-badge">Modulator</span></div>
-              <p>Converts optical motion in front of your camera into interactive Control Voltage (CV).</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> Camera Video Feed</div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">CV OUT</span>: To Pitch CV on VCO, Cutoff CV on Filter, or VCA.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-webcam">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>10. Keyboard</span> <span class="mod-badge">Controller</span></div>
-              <p>Virtual musical performance keyboard outputting pitch notes and gate triggers.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> Computer Keyboard / Mouse</div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: To Pitch CV on VCO.</li>
-                    <li><span class="tag tag-gate">Gate OUT</span>: To Gate IN on Envelope.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-keyboard">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>11. Sequencer</span> <span class="mod-badge">Controller</span></div>
-              <p>Automated step sequencer for melody patterns and rhythmic trigger sequences.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-gate">Clock IN</span>: From Gate OUT of another sequencer or clock source.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-cv">Pitch CV</span>: To Pitch CV on VCO.</li>
-                    <li><span class="tag tag-gate">Gate OUT</span>: To Gate IN on Envelope.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-sequencer">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>12. Mixer</span> <span class="mod-badge">Utility</span></div>
-              <p>Combines up to 4 audio or CV signals into a single summed master output.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">IN 1 - 4</span>: From VCO outputs, effects, or sample generators.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Master OUT</span>: To Filter, VCA, Reverb, or Output.</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-mixer">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>13. Oscilloscope</span> <span class="mod-badge">Utility</span></div>
-              <p>Real-time visual waveform monitor displaying audio and modulation signals.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Signal IN</span>: From any Audio or CV output node.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> 
-                  <ul>
-                    <li>None. To also hear the sound, patch the same source into the Output too (one output can feed several cables).</li>
-                  </ul>
-                </div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-oscilloscope">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>14. Recorder</span> <span class="mod-badge">Utility</span></div>
-              <p>Captures master output audio and allows downloading lossless WAV files.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Audio IN</span>: From VCA, Reverb, Mixer, or Output.</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> WAV audio file download</div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-recorder">▶ Run Demo Patch</button>
-            </div>
-
-            <div class="module-card">
-              <div class="mod-header"><span>15. Output Module</span> <span class="mod-badge">Master Output</span></div>
-              <p>Final master destination node routing synthesized audio directly to system speakers.</p>
-              <div class="io-grid">
-                <div><strong>Inputs (IN):</strong> 
-                  <ul>
-                    <li><span class="tag tag-audio">Master Audio IN</span>: From final stage in signal chain (VCA, FX, Mixer).</li>
-                  </ul>
-                </div>
-                <div><strong>Outputs (OUT):</strong> System Speakers / Headphones</div>
-              </div>
-              <button class="tool-btn preset-btn" data-preset="demo-output">▶ Run Demo Patch</button>
-            </div>
-
-          </div>
+      shortcuts: `
+        <div class="help-card">
+          <h4>Workspace</h4>
+          <ul class="help-list">
+            <li><kbd>Space</kbd> + drag, or <kbd>Cmd</kbd>/<kbd>Ctrl</kbd> + drag: move around the workspace.</li>
+            <li>Mouse wheel or the <kbd>+</kbd> / <kbd>-</kbd> buttons: zoom. <strong>100%</strong> resets the view.</li>
+            <li>iPad: pinch with two fingers on empty space to zoom and move.</li>
+            <li><kbd>Delete</kbd>: remove the selected module or cable. <kbd>Esc</kbd>: deselect.</li>
+            <li><kbd>Cmd</kbd>+<kbd>Z</kbd> undo, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo (<kbd>Ctrl</kbd> on Windows).</li>
+            <li><kbd>Shift</kbd> + drag from an output: move the last cable plugged into it.</li>
+          </ul>
         </div>
-      `,
-      patches: `
-        <div class="help-section">
-          <h3>4. Main Presets & Troubleshooting Guide</h3>
-          
-          <div class="help-card">
-            <h4>4 Built-in Full Presets</h4>
-            <div class="preset-grid">
-              <button class="tool-btn preset-btn" data-preset="classic-mono">1. Classic Monophonic Synth</button>
-              <button class="tool-btn preset-btn" data-preset="ambient-drone">2. Generative Ambient Drone</button>
-              <button class="tool-btn preset-btn" data-preset="seq-groove">3. Dynamic Sequencer Groove</button>
-              <button class="tool-btn preset-btn" data-preset="ext-processing">4. External Processing</button>
-            </div>
-          </div>
-
-          <div class="help-card">
-            <h4>Quick Troubleshooting Guide</h4>
-            <ul class="help-list">
-              <li><strong>No sound when pressing keyboard keys?</strong>
-                <ul>
-                  <li>In patches containing a keyboard, audio is generated <strong>only while pressing keys on the keyboard</strong>.</li>
-                  <li>Verify that the <strong>Output</strong> module is connected and its volume slider is turned up.</li>
-                </ul>
-              </li>
-              <li><strong>Audio engine frozen (AudioContext Suspended):</strong> Click once inside the canvas area to unlock browser audio.</li>
-            </ul>
-          </div>
+        <div class="help-card">
+          <h4>Playing the Keyboard module</h4>
+          <ul class="help-list">
+            <li>Bottom two rows of letters (<kbd>Z</kbd> to <kbd>M</kbd>): lower octave.</li>
+            <li>Top two rows (<kbd>Q</kbd> to <kbd>I</kbd>): upper octave.</li>
+            <li>The <strong>-</strong> / <strong>+</strong> buttons on the module move the octave.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>Top bar</h4>
+          <ul class="help-list">
+            <li><strong>Move</strong>: drag to move the top bar. Drag the <strong>Modules</strong> title to move the side menu. Double-click either to put it back.</li>
+            <li><strong>Theme</strong> light or dark. <strong>Play Mode</strong> hides cables and locks the layout for performing.</li>
+            <li><strong>Save</strong> / <strong>Load</strong> a patch file (on iPad, Save opens the share sheet: choose Save to Files).</li>
+          </ul>
         </div>
       `
+    },
+    modules: [
+      { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
+        summary: "Makes a steady tone. The starting point of most sounds.",
+        controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure).", "Frequency: the pitch, 20 to 4000 Hz. Greyed out while a cable is in PITCH.", "Pulse Width: only for Square; changes the tone from hollow to thin."],
+        tips: ["Plug Keyboard FREQ into PITCH to play notes in tune.", "A slow LFO into FM IN gives vibrato."] },
+      { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
+        summary: "Records the sound coming in (or a loaded file) and replays it as a cloud of tiny overlapping grains.",
+        controls: ["Source: Live Input (records IN L / IN R) or Audio File (Load File).", "Position: where in the recording grains are taken from.", "Size: grain length. Density: grains per second.", "Pitch: grain speed (2 = one octave up). Spray: randomness. Reverse: chance a grain plays backwards.", "CV 1 / CV 2 Target: which setting each CV input moves."],
+        tips: ["Without anything plugged into IN (in Live mode) it is silent.", "Long grains with high density give smooth pads; short sparse grains give crackle."] },
+      { type: "audio_in", group: "sources", name: "Mic / Audio In", preset: "demo-audioinput",
+        summary: "Brings in live sound from your microphone or sound card.",
+        controls: ["Enable Mic: asks the browser for the microphone.", "Input Level: how loud it comes in.", "Auto-Level & Anti-Clip: keeps the level steady and safe."],
+        tips: ["Use headphones, otherwise the speakers feed back into the mic."] },
+      { type: "keyboard", group: "controllers", name: "Keyboard", preset: "demo-keyboard",
+        summary: "Play notes with the mouse, the computer keyboard or a MIDI keyboard.",
+        controls: ["MIDI In: pick a connected MIDI keyboard.", "- / +: move the octave.", "PITCH bend strip on the left: bends the pitch (BEND output)."],
+        tips: ["FREQ to Oscillator PITCH, GATE to Envelope GATE IN: a playable synth."] },
+      { type: "sequencer", group: "controllers", name: "Sequencer", preset: "demo-sequencer",
+        summary: "Plays a repeating row of notes by itself.",
+        controls: ["Play / Stop.", "Direction: forward, backward, back-and-forth, random.", "Tempo: speed in BPM. Octave: how wide the step sliders reach.", "+ Step / - Step: more or fewer steps.", "Each step: ON / OFF and a pitch slider."],
+        tips: ["PITCH CV to Oscillator PITCH, GATE to an Envelope or a VCA CV."] },
+      { type: "webcam", group: "controllers", name: "Webcam Controller", preset: "demo-webcam",
+        summary: "Turns movement in front of your camera into control signals.",
+        controls: ["Start Camera.", "Sens (Thresh): how much movement counts.", "Smoothing: calmer or faster response.", "CV Depth (Hz): how strong the X / Y outputs are."],
+        tips: ["X CV into an Oscillator FM IN: move your hand left and right to change the pitch."] },
+      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "",
+        summary: "A rainbow strip you play by sliding a mouse, a finger or the iPad pencil along it.",
+        controls: ["Left to right sets the pitch. The Note readout shows the note you are on.", "Base Note: the note at the left end. Range: how many octaves the strip covers.", "Glide: how smoothly the pitch slides between positions.", "Snap: On jumps to whole notes, Off slides freely.", "Hold: On keeps the gate open after you lift your finger.", "Y / Press Range: how strong the Y and PRESS outputs are (x1 for a VCA, around x1000 for a Filter CUT MOD)."],
+        tips: ["PITCH to Oscillator PITCH and GATE to Envelope GATE IN: a playable synth you slide on.", "Y and PRESS cables can be dropped on any slider, like the LFO: touch higher or press harder to move it."] },
+      { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
+        summary: "Removes part of the sound: darker, brighter or thinner.",
+        controls: ["Type: Lowpass (keeps the lows), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
+        tips: ["Envelope into CUT MOD makes every note start bright and close darker."] },
+      { type: "vca", group: "processors", name: "VCA (Amplifier)", preset: "demo-vca",
+        summary: "A volume control that other modules can move.",
+        controls: ["Initial Gain: the volume when nothing is in CV. Keep it at 0 so notes stop between key presses."],
+        tips: ["Envelope ENV OUT into CV shapes each note.", "A Keyboard or Sequencer GATE straight into CV gives simple on / off notes."] },
+      { type: "mixer", group: "processors", name: "Mixer", preset: "demo-mixer",
+        summary: "Combines several sounds into one, each with its own level and left-right position.",
+        controls: ["Per channel: VOL and PAN.", "MASTER VOL: the total level.", "+ Add Channel: another input."],
+        tips: ["DIR OUT sends one channel alone somewhere else, for example into a Reverb."] },
+      { type: "reverb", group: "processors", name: "Reverb", preset: "demo-reverb",
+        summary: "Puts the sound in a room, from a small space to a huge hall.",
+        controls: ["Radius: room size. Decay: how long the tail lasts.", "Damping: darker or brighter tail. Warp: a little movement in the tail.", "Mix: how much reverb against the dry sound."],
+        tips: ["Short notes with a long Decay sound much bigger than a steady tone."] },
+      { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
+        summary: "Draws the shape of a note over time each time a gate arrives.",
+        controls: ["Attack: fade-in time.", "Decay: time to fall to the Sustain level.", "Sustain: level held while the key is down.", "Release: fade-out after the key is let go."],
+        tips: ["One ENV OUT can feed both the VCA CV and the Filter CUT MOD."] },
+      { type: "lfo", group: "modulation", name: "LFO", preset: "demo-lfo",
+        summary: "A slow wave that moves other settings up and down by itself.",
+        controls: ["Waveform: Sine, Triangle, Square, Sawtooth. The preview shows the shape and a dot riding it.", "Rate: speed, 0.1 to 20 Hz.", "Depth: how strong.", "Reset Phase: restarts the wave."],
+        tips: ["Drop the OUT cable on any slider of another module to move that slider.", "Into a Filter CUT MOD, use a small Depth."] },
+      { type: "output", group: "output", name: "Output", preset: "demo-output",
+        summary: "Sends the sound to your speakers or headphones.",
+        controls: ["Master Volume: starts at 0 when a patch loads."],
+        tips: ["THRU OUT passes a copy on to a Recorder or Oscilloscope."] },
+      { type: "oscilloscope", group: "output", name: "Oscilloscope", preset: "demo-oscilloscope",
+        summary: "Draws any signal so you can see it.",
+        controls: [],
+        tips: ["It has no output. To also hear the signal, run a second cable from the same OUT to the Output."] },
+      { type: "recorder", group: "output", name: "Recorder", preset: "demo-recorder",
+        summary: "Records what comes in and saves it as a WAV file.",
+        controls: ["Record / Stop & Export. The level is normalized so recordings come out at an even loudness."],
+        tips: ["On iPad, the share sheet opens: choose Save to Files."] }
+    ],
+    recipes: [
+      { preset: "classic-mono", title: "Classic Mono Synth",
+        learn: "The basic synth: notes, a filter and a volume shape.",
+        steps: ["Raise Master Volume.", "Play the Keyboard (letters Z to M, or click the keys).", "Change Attack and Release on the Envelope, then Cutoff on the Filter."] },
+      { preset: "seq-groove", title: "Sequencer Groove",
+        learn: "A pattern that plays itself, with the Envelope opening the filter on every step.",
+        steps: ["Raise Master Volume (the Sequencer is already running).", "Move the step sliders to change the melody, switch steps ON / OFF.", "Raise Mod Depth or Resonance on the Filter for a sharper sound."] },
+      { preset: "ambient-drone", title: "Ambient Drone",
+        learn: "Granular texture, a slow filter sweep from an LFO and a big reverb.",
+        steps: ["Raise Master Volume.", "Change Pitch and Spray on the Granular Cloud.", "Slow the LFO Rate down even more."] },
+      { preset: "ext-processing", title: "Process Your Voice",
+        learn: "Live sound from your mic through a filter and a reverb.",
+        steps: ["Press Enable Mic and allow the browser.", "Use headphones, then raise Master Volume.", "Sweep the Filter Cutoff while you talk or play."] },
+      { preset: "demo-reverb", title: "Plucks in a Hall",
+        learn: "Short notes from a Sequencer and Envelope, sent into a long reverb.",
+        steps: ["Raise Master Volume.", "Change Decay and Mix on the Reverb."] },
+      { preset: "demo-envelope", title: "Shaping a Note",
+        learn: "What Attack, Decay, Sustain and Release do; the oscilloscope draws the shape.",
+        steps: ["Raise Master Volume and hold a key.", "Watch the oscilloscope while you move the four sliders."] },
+      { preset: "demo-lfo", title: "Filter Wobble",
+        learn: "An LFO moving a filter by itself.",
+        steps: ["Raise Master Volume.", "Change the LFO Rate and Waveform."] },
+      { preset: "demo-mixer", title: "Two Oscillators, One Mixer",
+        learn: "Combining sounds and placing them left and right.",
+        steps: ["Raise Master Volume.", "Move VOL and PAN on each channel."] }
+    ]
+  }
+,
+  he: {
+    title: "המדריך של Sound Playground",
+    searchPlaceholder: "חיפוש מודול, שקע או מתכון...",
+    tabs: {
+      start: "מתחילים כאן",
+      modules: "המודולים",
+      recipes: "מתכונים",
+      basics: "סוגי אותות",
+      trouble: "פתרון תקלות",
+      shortcuts: "קיצורים"
+    },
+    ui: {
+      inputs: "כניסות",
+      outputs: "יציאות",
+      controls: "כפתורים וסליידרים",
+      tips: "טיפים",
+      none: "אין",
+      from: "מחברים מ",
+      to: "מחברים אל",
+      tryIt: "טען את פאץ' ההדגמה",
+      loadRecipe: "טען את הפאץ'",
+      youLearn: "מה לומדים",
+      howToPlay: "איך מנגנים",
+      noResults: "לא נמצא כלום. נסה מילה אחרת.",
+      newModule: "זה מודול חדש. העמוד שלו בספר יגיע בקרוב; רשימת השקעים למטה כבר מעודכנת.",
+      groups: { sources: "מקורות צליל", controllers: "בקרים", processors: "מעבדים ואפקטים", modulation: "אפנון", output: "יציאה וניטור", other: "מודולים חדשים" }
+    },
+    sections: {
+      start: `
+        <div class="help-card">
+          <h4>הצליל הראשון בשלושה צעדים</h4>
+          <ol class="help-list">
+            <li>בתפריט <strong>Modules</strong> משמאל, הוסיפו <strong>Oscillator</strong> ו-<strong>Output</strong>.</li>
+            <li>גררו כבל מהשקע <strong>OUT</strong> של האוסילטור לשקע <strong>IN</strong> של ה-Output.</li>
+            <li>הרימו את <strong>Master Volume</strong> ב-Output. תשמעו צליל קבוע; הזיזו את סליידר ה-Frequency כדי לשנות אותו.</li>
+          </ol>
+        </div>
+        <div class="help-card">
+          <h4>איך קוראים את השקעים</h4>
+          <ul class="help-list">
+            <li>מתחת לכל שקע יש תווית קטנה. <span class="chip-demo chip-in">IN</span> (לבנה) היא כניסה, <span class="chip-demo chip-out">OUT</span> (כחולה) היא יציאה. כתוב בה גם סוג האות ולאן מחברים בדרך כלל.</li>
+            <li>להסבר המלא: עוברים עם העכבר על השקע, או באייפד לוחצים עליו ומחזיקים.</li>
+            <li>בזמן גרירת כבל, היעדים הכי מתאימים מהבהבים, יעדים אפשריים מקבלים טבעת, וכל השאר מתעמעמים.</li>
+            <li>כפתור <strong>Tooltips</strong> בסרגל העליון מסתיר ומחזיר את התוויות וההסברים.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>כבלים</h4>
+          <ul class="help-list">
+            <li>כבל תמיד יוצא מ-<strong>OUT</strong> ונכנס ל-<strong>IN</strong>. מיציאה אחת אפשר למשוך כמה כבלים.</li>
+            <li>כדי לנתק, גוררים את הכבל החוצה מהכניסה ועוזבים במקום ריק. או לוחצים על כבל פעם אחת כדי לסמן אותו, ושוב (או Delete) כדי למחוק.</li>
+            <li>כבל מ-<strong>LFO OUT</strong> (או מיציאה של ה-<strong>Ribbon</strong>) אפשר להפיל גם על כל סליידר של מודול אחר, והסליידר יזוז לבד.</li>
+            <li>הכפתור <strong>Cables: Front / Back</strong> בסרגל העליון שם את הכבלים מעל או מתחת למודולים.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>פריסטים נפתחים בשקט</h4>
+          <p>כל פאץ' שנטען (מ<strong>מתכונים</strong> או עם <strong>Load</strong>) נפתח כשהווליום של ה-Output על 0, כדי ששום דבר לא יתנפל עליכם. מרימים את <strong>Master Volume</strong> במודול ה-Output כדי לשמוע.</p>
+        </div>
+      `,
+      basics: `
+        <div class="help-card">
+          <h4>מה זה סינתסייזר מודולרי?</h4>
+          <p>בסינתסייזר רגיל החיווט מוכן מראש. כאן אתם מחווטים: כל מודול עושה דבר אחד, והכבלים קובעים לאן הולכים הצליל ואותות השליטה.</p>
+        </div>
+        <div class="help-card">
+          <h4>שלושה סוגי אותות</h4>
+          <ul class="help-list">
+            <li><span class="tag tag-audio">Audio</span> הצליל עצמו, רעידות מהירות שאפשר לשמוע. Oscillator, Granular ו-Mic מייצרים אותו; Filter, VCA ו-Reverb משנים אותו; Output משמיע אותו.</li>
+            <li><span class="tag tag-cv">CV</span> מתח שליטה: אות איטי שמזיז הגדרה, כמו גובה צליל, עוצמה או בהירות. LFO, Envelope, FREQ של המקלדת ו-Webcam מייצרים אותו.</li>
+            <li><span class="tag tag-gate">Gate</span> דולק או כבוי: "עכשיו מנגן תו". המקלדת והסיקוונסר מייצרים אותו; הוא מפעיל Envelope או פותח VCA.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>השרשרת הקלאסית</h4>
+          <ol class="help-list">
+            <li><strong>תווים:</strong> FREQ של המקלדת (או PITCH CV של הסיקוונסר) אל PITCH של האוסילטור. GATE של המקלדת אל GATE IN של ה-Envelope.</li>
+            <li><strong>צליל:</strong> OUT של האוסילטור אל IN של הפילטר, OUT של הפילטר אל IN של ה-VCA, OUT של ה-VCA אל IN של ה-Output.</li>
+            <li><strong>צורה:</strong> ENV OUT אל CV של ה-VCA, כך שכל תו נכנס ויוצא בהדרגה. כבל נוסף מ-ENV OUT אל CUT MOD של הפילטר יעשה כל תו בהיר יותר בתחילתו.</li>
+          </ol>
+          <p>המתכון <strong>Classic Mono Synth</strong> הוא בדיוק הפאץ' הזה.</p>
+        </div>
+        <div class="help-card">
+          <h4>לראות את האות</h4>
+          <p>חברו כל OUT ל-<strong>Oscilloscope</strong> כדי לראות אותו. לאוסצילוסקופ אין יציאה, אז כדי גם לשמוע את אותו אות, משכו כבל שני מאותו OUT אל ה-Output.</p>
+        </div>
+      `,
+      trouble: `
+        <div class="help-card">
+          <h4>לא שומעים כלום</h4>
+          <ul class="help-list">
+            <li>הרימו את <strong>Master Volume</strong> ב-Output. כל פאץ' נטען על 0.</li>
+            <li>בדקו שיש כבל שמגיע ל-<strong>IN</strong> של ה-Output.</li>
+            <li>אם יש בפאץ' VCA, הוא שקט עד שמשהו פותח אותו: לחצו על קליד במקלדת, או Play בסיקוונסר.</li>
+            <li>לחצו פעם אחת בכל מקום בדף: הדפדפן משאיר את הצליל כבוי עד שנוגעים בדף.</li>
+            <li>פאצ'ים עם מיקרופון צריכים <strong>Enable Mic</strong>; פאצ'ים עם מצלמה צריכים <strong>Start Camera</strong>, והדפדפן צריך לקבל אישור.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>המקלדת לא מנגנת</h4>
+          <ul class="help-list">
+            <li>FREQ של המקלדת הולך ל-<strong>PITCH</strong> של האוסילטור, ו-GATE הולך ל-Envelope או ישר ל-CV של VCA.</li>
+            <li>מקשי המחשב עובדים רק כשלא מסומנת תיבת טקסט. מקשים עם Cmd או Ctrl לא מנגנים בכוונה (Cmd+Z זה ביטול).</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>הצליל מעוות או חזק מדי</h4>
+          <ul class="help-list">
+            <li>הנמיכו את Master Volume, או את העוצמה של המודול שלפניו.</li>
+            <li>LFO הוא חזק: לפילטר השתמשו ב-Depth קטן, או הנמיכו את Mod Depth של הפילטר.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>עשיתי בלגן</h4>
+          <p>ביטול עם כפתורי החצים בתחילת הסרגל העליון, או Cmd+Z. <strong>Clear</strong> מנקה את כל משטח העבודה (גם את זה אפשר לבטל).</p>
+        </div>
+      `,
+      shortcuts: `
+        <div class="help-card">
+          <h4>משטח העבודה</h4>
+          <ul class="help-list">
+            <li><kbd>Space</kbd> + גרירה, או <kbd>Cmd</kbd>/<kbd>Ctrl</kbd> + גרירה: תזוזה במשטח.</li>
+            <li>גלגלת העכבר או הכפתורים <kbd>+</kbd> / <kbd>-</kbd>: זום. <strong>100%</strong> מאפס את התצוגה.</li>
+            <li>אייפד: צביטה בשתי אצבעות על מקום ריק לזום ולתזוזה.</li>
+            <li><kbd>Delete</kbd>: מחיקת המודול או הכבל המסומן. <kbd>Esc</kbd>: ביטול סימון.</li>
+            <li><kbd>Cmd</kbd>+<kbd>Z</kbd> ביטול, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> חזרה (<kbd>Ctrl</kbd> בווינדוס).</li>
+            <li><kbd>Shift</kbd> + גרירה מיציאה: הזזת הכבל האחרון שחובר אליה.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>נגינה במקלדת</h4>
+          <ul class="help-list">
+            <li>שתי שורות האותיות התחתונות (<kbd>Z</kbd> עד <kbd>M</kbd>): האוקטבה הנמוכה.</li>
+            <li>שתי השורות העליונות (<kbd>Q</kbd> עד <kbd>I</kbd>): האוקטבה הגבוהה.</li>
+            <li>הכפתורים <strong>-</strong> / <strong>+</strong> במודול מזיזים אוקטבה.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>הסרגל העליון</h4>
+          <ul class="help-list">
+            <li><strong>Move</strong>: גוררים כדי להזיז את הסרגל. גוררים את הכותרת <strong>Modules</strong> כדי להזיז את התפריט הצדדי. לחיצה כפולה מחזירה למקום.</li>
+            <li><strong>Theme</strong> בהיר או כהה. <strong>Play Mode</strong> מסתיר את הכבלים ונועל את המודולים להופעה.</li>
+            <li><strong>Save</strong> / <strong>Load</strong> שמירה וטעינה של קובץ פאץ' (באייפד, Save פותח את חלון השיתוף: בוחרים Save to Files).</li>
+          </ul>
+        </div>
+      `
+    },
+    modules: [
+      { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
+        summary: "מייצר צליל קבוע. נקודת ההתחלה של רוב הצלילים.",
+        controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אפור כשיש כבל ב-PITCH.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק."],
+        tips: ["FREQ של המקלדת אל PITCH: מנגנים תווים מכוונים.", "LFO איטי אל FM IN נותן ויברטו."] },
+      { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
+        summary: "מקליט את הצליל שנכנס (או קובץ שנטען) ומשמיע אותו כענן של גרגרים קטנטנים.",
+        controls: ["Source: Live Input (מקליט מ-IN L / IN R) או Audio File (Load File).", "Position: מאיפה בהקלטה לוקחים גרגרים.", "Size: אורך גרגר. Density: גרגרים בשנייה.", "Pitch: מהירות הגרגר (2 = אוקטבה למעלה). Spray: אקראיות. Reverse: הסיכוי שגרגר יתנגן הפוך.", "CV 1 / CV 2 Target: איזו הגדרה כל כניסת CV מזיזה."],
+        tips: ["במצב Live, בלי שום דבר ב-IN הוא שקט.", "גרגרים ארוכים וצפופים נותנים פד רך; קצרים ודלילים נותנים פצפוץ."] },
+      { type: "audio_in", group: "sources", name: "Mic / Audio In", preset: "demo-audioinput",
+        summary: "מכניס צליל חי מהמיקרופון או מכרטיס הקול.",
+        controls: ["Enable Mic: מבקש מהדפדפן גישה למיקרופון.", "Input Level: עוצמת הכניסה.", "Auto-Level & Anti-Clip: שומר על עוצמה יציבה ובטוחה."],
+        tips: ["השתמשו באוזניות, אחרת הרמקולים חוזרים למיקרופון ומצפצפים."] },
+      { type: "keyboard", group: "controllers", name: "Keyboard", preset: "demo-keyboard",
+        summary: "מנגנים תווים בעכבר, במקלדת המחשב או במקלדת MIDI.",
+        controls: ["MIDI In: בחירת מקלדת MIDI מחוברת.", "- / +: הזזת אוקטבה.", "פס PITCH משמאל: מכופף את הצליל (יציאת BEND)."],
+        tips: ["FREQ אל PITCH של האוסילטור, GATE אל GATE IN של ה-Envelope: סינתסייזר שאפשר לנגן."] },
+      { type: "sequencer", group: "controllers", name: "Sequencer", preset: "demo-sequencer",
+        summary: "מנגן לבד שורה של תווים שחוזרת על עצמה.",
+        controls: ["Play / Stop.", "כיוון: קדימה, אחורה, הלוך-חזור, אקראי.", "Tempo: מהירות ב-BPM. Octave: כמה רחוק מגיעים סליידרי הצעדים.", "+ Step / - Step: יותר או פחות צעדים.", "לכל צעד: ON / OFF וסליידר גובה."],
+        tips: ["PITCH CV אל PITCH של האוסילטור, GATE אל Envelope או אל CV של VCA."] },
+      { type: "webcam", group: "controllers", name: "Webcam Controller", preset: "demo-webcam",
+        summary: "הופך תנועה מול המצלמה לאותות שליטה.",
+        controls: ["Start Camera.", "Sens (Thresh): כמה תנועה נחשבת.", "Smoothing: תגובה רגועה או מהירה.", "CV Depth (Hz): כמה חזקות יציאות X / Y."],
+        tips: ["X CV אל FM IN של האוסילטור: מזיזים יד ימינה ושמאלה ומשנים את הגובה."] },
+      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "",
+        summary: "רצועה בצבעי קשת שמנגנים עליה בהחלקה של עכבר, אצבע או העיפרון של האייפד.",
+        controls: ["משמאל לימין קובע את גובה הצליל. התצוגה Note מראה על איזה תו אתם.", "Base Note: התו בקצה השמאלי. Range: כמה אוקטבות הרצועה מכסה.", "Glide: כמה חלק הגובה מחליק בין מקומות.", "Snap: במצב On קופץ לתווים שלמים, במצב Off מחליק חופשי.", "Hold: במצב On ה-Gate נשאר פתוח גם אחרי שמרימים את האצבע.", "Y / Press Range: כמה חזקות היציאות Y ו-PRESS (x1 ל-VCA, בערך x1000 ל-CUT MOD של פילטר)."],
+        tips: ["PITCH אל PITCH של האוסילטור ו-GATE אל GATE IN של ה-Envelope: סינתסייזר שמנגנים עליו בהחלקה.", "את הכבלים מ-Y ומ-PRESS אפשר להפיל על כל סליידר, כמו ה-LFO: נגיעה גבוהה יותר או לחיצה חזקה יותר מזיזה אותו."] },
+      { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
+        summary: "מוריד חלק מהצליל: כהה יותר, בהיר יותר או דק יותר.",
+        controls: ["Type: Lowpass (משאיר נמוכים), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
+        tips: ["Envelope אל CUT MOD: כל תו מתחיל בהיר ונסגר כהה יותר."] },
+      { type: "vca", group: "processors", name: "VCA (Amplifier)", preset: "demo-vca",
+        summary: "בקרת עוצמה שמודולים אחרים יכולים להזיז.",
+        controls: ["Initial Gain: העוצמה כשאין כלום ב-CV. השאירו על 0 כדי שהתווים ייעצרו בין לחיצות."],
+        tips: ["ENV OUT של ה-Envelope אל CV מעצב כל תו.", "GATE של המקלדת או הסיקוונסר ישר אל CV נותן תווים פשוטים של דלוק/כבוי."] },
+      { type: "mixer", group: "processors", name: "Mixer", preset: "demo-mixer",
+        summary: "מחבר כמה צלילים לאחד, לכל אחד עוצמה ומיקום ימין-שמאל משלו.",
+        controls: ["לכל ערוץ: VOL ו-PAN.", "MASTER VOL: העוצמה הכוללת.", "+ Add Channel: עוד כניסה."],
+        tips: ["DIR OUT שולח ערוץ אחד לבד למקום אחר, למשל ל-Reverb."] },
+      { type: "reverb", group: "processors", name: "Reverb", preset: "demo-reverb",
+        summary: "שם את הצליל בתוך חדר, מחלל קטן ועד אולם ענק.",
+        controls: ["Radius: גודל החדר. Decay: כמה זמן הזנב נמשך.", "Damping: זנב כהה או בהיר. Warp: קצת תנועה בזנב.", "Mix: כמה ריוורב לעומת הצליל היבש."],
+        tips: ["תווים קצרים עם Decay ארוך נשמעים הרבה יותר גדולים מצליל קבוע."] },
+      { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
+        summary: "משרטט את הצורה של תו לאורך זמן בכל פעם שמגיע Gate.",
+        controls: ["Attack: זמן הכניסה.", "Decay: הזמן לרדת לרמת ה-Sustain.", "Sustain: הרמה שנשארת כל עוד הקליד לחוץ.", "Release: הדעיכה אחרי שעוזבים את הקליד."],
+        tips: ["ENV OUT אחד יכול להזין גם את CV של ה-VCA וגם את CUT MOD של הפילטר."] },
+      { type: "lfo", group: "modulation", name: "LFO", preset: "demo-lfo",
+        summary: "גל איטי שמזיז לבד הגדרות אחרות למעלה ולמטה.",
+        controls: ["Waveform: Sine, Triangle, Square, Sawtooth. התצוגה מראה את הצורה ונקודה שרוכבת עליה.", "Rate: מהירות, 0.1 עד 20 הרץ.", "Depth: עוצמה.", "Reset Phase: מתחיל את הגל מחדש."],
+        tips: ["הפילו את הכבל מ-OUT על כל סליידר של מודול אחר כדי שהסליידר יזוז.", "ל-CUT MOD של פילטר השתמשו ב-Depth קטן."] },
+      { type: "output", group: "output", name: "Output", preset: "demo-output",
+        summary: "שולח את הצליל לרמקולים או לאוזניות.",
+        controls: ["Master Volume: מתחיל על 0 כשפאץ' נטען."],
+        tips: ["THRU OUT מעביר עותק הלאה ל-Recorder או לאוסצילוסקופ."] },
+      { type: "oscilloscope", group: "output", name: "Oscilloscope", preset: "demo-oscilloscope",
+        summary: "משרטט כל אות כדי שאפשר יהיה לראות אותו.",
+        controls: [],
+        tips: ["אין לו יציאה. כדי גם לשמוע את האות, משכו כבל שני מאותו OUT אל ה-Output."] },
+      { type: "recorder", group: "output", name: "Recorder", preset: "demo-recorder",
+        summary: "מקליט את מה שנכנס ושומר כקובץ WAV.",
+        controls: ["Record / Stop & Export. העוצמה מנורמלת כך שההקלטות יוצאות בעוצמה אחידה."],
+        tips: ["באייפד נפתח חלון השיתוף: בוחרים Save to Files."] }
+    ],
+    recipes: [
+      { preset: "classic-mono", title: "Classic Mono Synth",
+        learn: "הסינתסייזר הבסיסי: תווים, פילטר וצורת עוצמה.",
+        steps: ["הרימו את Master Volume.", "נגנו במקלדת (האותיות Z עד M, או לחיצה על הקלידים).", "שנו Attack ו-Release ב-Envelope, ואז Cutoff בפילטר."] },
+      { preset: "seq-groove", title: "Sequencer Groove",
+        learn: "תבנית שמנגנת לבד, וה-Envelope פותח את הפילטר בכל צעד.",
+        steps: ["הרימו את Master Volume (הסיקוונסר כבר מנגן).", "הזיזו את סליידרי הצעדים כדי לשנות את המנגינה, הדליקו וכבו צעדים.", "הגבירו Mod Depth או Resonance בפילטר לצליל חד יותר."] },
+      { preset: "ambient-drone", title: "Ambient Drone",
+        learn: "טקסטורה גרנולרית, פילטר שזז לאט בעזרת LFO, וריוורב גדול.",
+        steps: ["הרימו את Master Volume.", "שנו Pitch ו-Spray ב-Granular Cloud.", "האטו עוד יותר את ה-Rate של ה-LFO."] },
+      { preset: "ext-processing", title: "Process Your Voice",
+        learn: "צליל חי מהמיקרופון דרך פילטר וריוורב.",
+        steps: ["לחצו Enable Mic ואשרו בדפדפן.", "שימו אוזניות, ואז הרימו את Master Volume.", "הזיזו את ה-Cutoff של הפילטר בזמן שאתם מדברים או מנגנים."] },
+      { preset: "demo-reverb", title: "Plucks in a Hall",
+        learn: "תווים קצרים מסיקוונסר ו-Envelope, שנשלחים לריוורב ארוך.",
+        steps: ["הרימו את Master Volume.", "שנו Decay ו-Mix בריוורב."] },
+      { preset: "demo-envelope", title: "Shaping a Note",
+        learn: "מה עושים Attack, Decay, Sustain ו-Release; האוסצילוסקופ משרטט את הצורה.",
+        steps: ["הרימו את Master Volume והחזיקו קליד.", "הסתכלו על האוסצילוסקופ בזמן שאתם מזיזים את ארבעת הסליידרים."] },
+      { preset: "demo-lfo", title: "Filter Wobble",
+        learn: "LFO שמזיז פילטר לבד.",
+        steps: ["הרימו את Master Volume.", "שנו את ה-Rate וה-Waveform של ה-LFO."] },
+      { preset: "demo-mixer", title: "Two Oscillators, One Mixer",
+        learn: "חיבור צלילים ומיקום שלהם ימינה ושמאלה.",
+        steps: ["הרימו את Master Volume.", "הזיזו VOL ו-PAN בכל ערוץ."] }
+    ],
+    // Hebrew text for each jack (keys match portGuide.js GUIDE); missing keys fall back to English
+    ports: {
+      "oscillator:in:pitch": { text: "מנגן תווים. כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר" },
+      "oscillator:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, X / Y של המצלמה, BEND של המקלדת, OUT של אוסילטור אחר" },
+      "oscillator:out:default": { text: "הצליל הגולמי של האוסילטור.", where: "IN של Filter, VCA, Mixer, Reverb, Output, Oscilloscope" },
+      "granular:in:in_l": { text: "צליל שנחתך לגרגרים (צד שמאל).", where: "OUT של Mic, Oscillator, Mixer" },
+      "granular:in:in_r": { text: "צליל שנחתך לגרגרים (צד ימין).", where: "OUT של Mic, Oscillator, Mixer" },
+      "granular:in:cv1": { text: "מזיז את ההגדרה שנבחרה בתפריט CV 1 (ברירת מחדל: Position).", where: "LFO, X / Y / MOTION של המצלמה, Envelope" },
+      "granular:in:cv2": { text: "מזיז את ההגדרה שנבחרה בתפריט CV 2 (ברירת מחדל: Pitch).", where: "LFO, X / Y / MOTION של המצלמה, Envelope" },
+      "granular:out:out_l": { text: "ענן הגרגרים, צד שמאל.", where: "Filter, Reverb, VCA, Output" },
+      "granular:out:out_r": { text: "ענן הגרגרים, צד ימין.", where: "Reverb IN R, Mixer, Output" },
+      "audio_in:out:audio": { text: "צליל חי מהמיקרופון או מכרטיס הקול.", where: "Filter, Granular, Reverb, VCA, Output" },
+      "keyboard:out:freq": { text: "גובה הקליד שמנגנים.", where: "PITCH של האוסילטור" },
+      "keyboard:out:gate": { text: "דולק כל עוד קליד לחוץ, כבוי כשעוזבים.", where: "GATE IN של Envelope, או CV של VCA" },
+      "keyboard:out:bend": { text: "פס כיפוף הצליל.", where: "FM IN של האוסילטור, CUT MOD של הפילטר" },
+      "sequencer:out:pitch": { text: "התו של הצעד הנוכחי.", where: "PITCH של האוסילטור" },
+      "sequencer:out:gate": { text: "פולס קצר בכל צעד פעיל.", where: "GATE IN של Envelope, או CV של VCA" },
+      "webcam:out:out_x": { text: "איפה התנועה, משמאל לימין.", where: "CUT MOD של פילטר, FM IN של אוסילטור, CV 1 של Granular" },
+      "webcam:out:out_y": { text: "איפה התנועה, מלמטה למעלה.", where: "CUT MOD של פילטר, FM IN של אוסילטור, CV 2 של Granular" },
+      "webcam:out:out_motion": { text: "כמה תנועה יש.", where: "CV של VCA, CV 1 של Granular, CUT MOD של פילטר" },
+      "webcam:out:out_gate": { text: "נדלק כשהתנועה עוברת את הסף.", where: "GATE IN של Envelope" },
+      "filter:in:audio": { text: "הצליל שמסננים.", where: "OUT של Oscillator, Granular, Mic, Mixer" },
+      "filter:in:cutoff": { text: "מזיז את נקודת החיתוך: צליל בהיר או כהה יותר.", where: "ENV OUT, LFO OUT, X / Y של המצלמה" },
+      "filter:out:default": { text: "הצליל אחרי הסינון.", where: "VCA, Reverb, Output, Oscilloscope" },
+      "vca:in:audio": { text: "הצליל שה-VCA שולט בעוצמה שלו.", where: "OUT של Oscillator, Filter, Granular" },
+      "vca:in:cv": { text: "פותח את העוצמה. מ-Envelope כל תו נכנס ויוצא בהדרגה; מ-LFO מקבלים טרמולו.", where: "ENV OUT, LFO OUT, GATE של המקלדת או הסיקוונסר" },
+      "vca:out:audio": { text: "הצליל אחרי בקרת העוצמה.", where: "Reverb, Mixer, Output, Recorder" },
+      "mixer:in:ch_in": { text: "ערוץ אחד במיקסר, עם עוצמה ו-PAN משלו.", where: "כל יציאת Audio" },
+      "mixer:out:ch_out": { text: "הערוץ הזה לבד, אחרי כפתור העוצמה שלו.", where: "Reverb, Filter, Oscilloscope" },
+      "mixer:out:out_l": { text: "כל הערוצים יחד, צד שמאל.", where: "Output, Reverb IN L, Recorder" },
+      "mixer:out:out_r": { text: "כל הערוצים יחד, צד ימין.", where: "Reverb IN R, Output" },
+      "reverb:in:in_l": { text: "צליל שנשלח לחדר (שמאל).", where: "OUT של VCA, Filter, Mixer, Oscillator" },
+      "reverb:in:in_r": { text: "צליל שנשלח לחדר (ימין).", where: "OUT R של Mixer, Granular" },
+      "reverb:out:out_l": { text: "הצליל עם הריוורב, צד שמאל.", where: "Output, Recorder, Oscilloscope" },
+      "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output, Mixer" },
+      "envelope:in:gate": { text: "מתחיל את המעטפת כשתו מתחיל ומשחרר אותה כשהתו נגמר.", where: "GATE של המקלדת, הסיקוונסר או המצלמה" },
+      "envelope:out:env": { text: "הצורה של Attack / Decay / Sustain / Release.", where: "CV של VCA (עוצמת התו), CUT MOD של פילטר (בהירות התו)" },
+      "lfo:in:rate": { text: "מאיץ ומאט את ה-LFO.", where: "LFO אחר, X / Y של המצלמה, ENV OUT" },
+      "lfo:out:default": { text: "גל איטי שחוזר על עצמו. אפשר להפיל אותו גם על כל סליידר.", where: "CUT MOD של פילטר (וואו), CV של VCA (טרמולו), FM IN של אוסילטור (ויברטו)" },
+      "output:in:in": { text: "הולך לרמקולים. מרימים את Master Volume כדי לשמוע.", where: "המודול האחרון בשרשרת: VCA, Reverb, Filter, Mixer" },
+      "output:out:out": { text: "עותק של מה שמגיע ל-Output, לפני ה-Master Volume.", where: "Recorder, Oscilloscope" },
+      "oscilloscope:in:audio": { text: "משרטט את האות. אין לו יציאה: כדי גם לשמוע, חברו את אותו מקור גם ל-Output.", where: "כל OUT" },
+      "ribbon:out:pitch": { text: "התו שמתחת לאצבע או לעיפרון; הקצה השמאלי הוא Base Note.", where: "PITCH של אוסילטור, או כל סליידר" },
+      "ribbon:out:gate": { text: "דלוק כל עוד נוגעים ברצועה (נשאר דלוק עם Hold).", where: "GATE IN של Envelope, או CV של VCA" },
+      "ribbon:out:y": { text: "כמה גבוה נוגעים בתוך הרצועה, 0 בתחתית, כפול Y / Press Range. אפשר להפיל את הכבל גם על כל סליידר.", where: "CV של VCA, CUT MOD של פילטר, או כל סליידר" },
+      "ribbon:out:press": { text: "לחץ העיפרון (עכבר ואצבע נותנים לחץ מלא), כפול Y / Press Range. אפשר להפיל את הכבל גם על כל סליידר.", where: "CV של VCA, CUT MOD של פילטר, או כל סליידר" },
+      "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
+      "recorder:out:out": { text: "מעביר את הצליל הלאה בלי שינוי.", where: "Output" }
     }
   }
+
 };
 
-// מיקומיי מודולים מרווחים ביותר למניעת חפיפה + רווח מכל הצדדים
+// Ready-made patches, loaded from the Recipes and Modules tabs of the manual
 window.presetData = {
   // Every preset loads with the Output volume at 0 (app.js). Scopes show what each patch does.
   "demo-oscillator": {

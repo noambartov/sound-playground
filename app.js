@@ -16,6 +16,9 @@ if (!window.SoundSandboxApp) {
 
       this.selectedNodeIds = new Set();
       this.activeCable = null; 
+      this.selectedConnection = null;
+      this.cableHitPaths = [];
+      this.cablesBehind = false;
 
       this.initResizeObserver();
       this.initAudioContext();
@@ -23,6 +26,7 @@ if (!window.SoundSandboxApp) {
       this.initCanvas();
       this.bindEvents();
       this.bindCanvasInteractions();
+      this.initDraggablePanels();
     }
 
     initResizeObserver() {
@@ -91,6 +95,7 @@ if (!window.SoundSandboxApp) {
       this.themeToggleBtn = document.getElementById('theme-toggle-btn');
       this.presentationBtn = document.getElementById('presentation-mode-btn');
       this.tooltipsBtn = document.getElementById('toggle_tooltips_btn');
+      this.cableLayerBtn = document.getElementById('cable-layer-btn');
 
       this.canvasContainer = document.getElementById('canvas-container');
       this.viewport = document.getElementById('workspace-viewport');
@@ -298,6 +303,7 @@ if (!window.SoundSandboxApp) {
       if (this.themeToggleBtn) this.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
       if (this.presentationBtn) this.presentationBtn.addEventListener('click', () => this.togglePresentationMode());
       if (this.tooltipsBtn) this.tooltipsBtn.addEventListener('click', () => this.toggleTooltips());
+      if (this.cableLayerBtn) this.cableLayerBtn.addEventListener('click', () => this.toggleCableLayer());
       if (this.saveBtn) this.saveBtn.addEventListener('click', () => this.exportPatch());
 
       if (this.loadBtn && this.importFileInput) {
@@ -331,7 +337,10 @@ if (!window.SoundSandboxApp) {
         }
 
         if ((e.key === 'Delete' || e.key === 'Backspace') && !isInputFocused) {
-          if (this.selectedNodeIds.size > 0) {
+          if (this.selectedConnection) {
+            e.preventDefault();
+            this.deleteConnection(this.selectedConnection);
+          } else if (this.selectedNodeIds.size > 0) {
             e.preventDefault();
             Array.from(this.selectedNodeIds).forEach(id => this.deleteNode(id));
           }
@@ -341,6 +350,8 @@ if (!window.SoundSandboxApp) {
           if (this.activeCable) {
             this.activeCable = null;
             this.drawConnections();
+          } else if (this.selectedConnection) {
+            this.selectConnection(null);
           } else if (this.selectedNodeIds.size > 0) {
             this.selectedNodeIds.clear();
             this.updateSelectionUI();
@@ -364,6 +375,7 @@ if (!window.SoundSandboxApp) {
       this.modules = {};
       this.connections = [];
       this.selectedNodeIds.clear();
+      this.selectedConnection = null;
       this.updatePortConnectedClasses();
       this.drawConnections();
     }
@@ -530,20 +542,23 @@ if (!window.SoundSandboxApp) {
 
     getPortElement(cardEl, isOutput, info = {}) {
       if (!cardEl) return null;
-      const portSelectors = isOutput ? '.port-out, .output-port' : '.port-in, .input-port';
-      const targetVal = info.id || info.name || info.type;
+      // חיפוש רק בין שקעי הכיוון הנכון (יציאות או כניסות), כדי שכניסה ויציאה מאותו סוג לא יתבלבלו
+      const ports = Array.from(cardEl.querySelectorAll(isOutput ? '.port-out, .output-port' : '.port-in, .input-port'));
 
       if (info.channel) {
-        const chMatch = cardEl.querySelector(`[data-channel="${info.channel}"]`);
+        const chMatch = ports.find(p => p.getAttribute('data-channel') === String(info.channel));
         if (chMatch) return chMatch;
       }
 
+      const targetVal = info.id || info.name || info.type;
       if (targetVal) {
-        const match = cardEl.querySelector(`[data-port-id="${targetVal}"], [data-port-name="${targetVal}"], [data-port-type="${targetVal}"]`);
+        const match = ports.find(p => p.getAttribute('data-port-id') === targetVal)
+          || ports.find(p => p.getAttribute('data-port-name') === targetVal)
+          || ports.find(p => p.getAttribute('data-port-type') === targetVal);
         if (match) return match;
       }
 
-      return cardEl.querySelector(portSelectors) || cardEl.querySelector('.port');
+      return ports[0] || cardEl.querySelector('.port');
     }
 
     updatePortConnectedClasses() {
@@ -626,25 +641,13 @@ if (!window.SoundSandboxApp) {
           const isOut = port.classList.contains('port-out') || port.classList.contains('output-port');
           const portId = port.getAttribute('data-port-id');
           const portType = port.getAttribute('data-port-type');
-          const portName = port.getAttribute('data-port-name');
-          const portChannel = port.getAttribute('data-channel');
 
-          // בדיקה אם יש כבר כבל מחובר לפורט זה לשליפה וניתוק בגרירה
+          // בדיקה אם יש כבר כבל מחובר בדיוק לשקע הזה (לפי האלמנט עצמו, לא לפי סוג השקע)
           const existingConnIndex = this.connections.findIndex(c => {
             if (isOut) {
-              return c.fromNode === id && (
-                (portId && c.fromPortInfo?.id === portId) ||
-                (portType && c.fromPortInfo?.type === portType) ||
-                (portName && c.fromPortInfo?.name === portName)
-              );
-            } else {
-              return c.toNode === id && (
-                (portChannel && c.toPortInfo?.channel === portChannel) ||
-                (portId && c.toPortInfo?.id === portId) ||
-                (portType && c.toPortInfo?.type === portType) ||
-                (portName && c.toPortInfo?.name === portName)
-              );
+              return c.fromNode === id && this.getPortElement(card, true, c.fromPortInfo) === port;
             }
+            return c.toNode === id && this.getPortElement(card, false, c.toPortInfo) === port;
           });
 
           const cRect = this.canvasContainer.getBoundingClientRect();
@@ -846,6 +849,22 @@ if (!window.SoundSandboxApp) {
           return;
         }
 
+        // לחיצה על כבל: לחיצה ראשונה מסמנת אותו, לחיצה שנייה על כבל מסומן מוחקת אותו.
+        // עובד רק על משטח העבודה הריק, כך שלחיצה בתוך מודול (סליידר, כפתור) לעולם לא נוגעת בכבל.
+        if (e.button === 0) {
+          const hitConn = this.findCableAt(clickX, clickY);
+          if (hitConn) {
+            e.preventDefault();
+            if (hitConn === this.selectedConnection) {
+              this.deleteConnection(hitConn);
+            } else {
+              this.selectConnection(hitConn);
+            }
+            return;
+          }
+        }
+        if (this.selectedConnection) this.selectConnection(null);
+
         if (!e.shiftKey) {
           this.selectedNodeIds.clear();
           this.updateSelectionUI();
@@ -1019,6 +1038,11 @@ if (!window.SoundSandboxApp) {
       const dpr = window.devicePixelRatio || 1;
       this.ctx.clearRect(0, 0, this.canvas.width / dpr, this.canvas.height / dpr);
 
+      this.cableHitPaths = [];
+      if (this.selectedConnection && !this.connections.includes(this.selectedConnection)) {
+        this.selectedConnection = null;
+      }
+
       if (this.isPresentationMode) return;
 
       this.connections.forEach(conn => {
@@ -1036,7 +1060,9 @@ if (!window.SoundSandboxApp) {
             const connId = `${conn.fromNode}_${conn.fromPortInfo?.id || 'p'}_${conn.toNode}_${conn.toPortInfo?.id || 'p'}`;
             const color = this.getCableColor(portType, connId);
 
-            this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color);
+            const isSelected = conn === this.selectedConnection;
+            const points = this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);
+            this.cableHitPaths.push({ conn, points });
           }
         }
       });
@@ -1053,26 +1079,164 @@ if (!window.SoundSandboxApp) {
       }
     }
 
-    drawBezierCable(x1, y1, x2, y2, color) {
-      this.ctx.beginPath();
-      this.ctx.moveTo(x1, y1);
-
+    getBezierControlPoints(x1, y1, x2, y2) {
       // חישוב שקיעת עקומת Bezier (Sag Offset) לפי מרחק הפורטים
       const dx = (x2 - x1) * 0.25;
       const dist = Math.hypot(x2 - x1, y2 - y1);
       const sag = Math.min(Math.max(dist * 0.35, 30), 220);
+      return { cp1x: x1 + dx, cp1y: y1 + sag, cp2x: x2 - dx, cp2y: y2 + sag };
+    }
 
-      const cp1x = x1 + dx;
-      const cp1y = y1 + sag;
-      const cp2x = x2 - dx;
-      const cp2y = y2 + sag;
+    drawBezierCable(x1, y1, x2, y2, color, isSelected = false) {
+      const { cp1x, cp1y, cp2x, cp2y } = this.getBezierControlPoints(x1, y1, x2, y2);
 
-      this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
-      this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = 3.5;
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
+
+      const trace = () => {
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
+      };
+
+      if (isSelected) {
+        // הילה רחבה סביב כבל מסומן
+        trace();
+        this.ctx.strokeStyle = this.theme === 'dark' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(15, 23, 42, 0.25)';
+        this.ctx.lineWidth = 12;
+        this.ctx.stroke();
+      }
+
+      trace();
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = isSelected ? 6 : 3.5;
       this.ctx.stroke();
+
+      return { x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2 };
+    }
+
+    findCableAt(x, y, tolerance = 8) {
+      const samples = 40;
+      let best = null;
+      let bestDist = tolerance;
+
+      // מעבר מהסוף להתחלה כדי שהכבל שצויר אחרון (העליון) ייבחר קודם
+      for (let i = this.cableHitPaths.length - 1; i >= 0; i--) {
+        const { conn, points: b } = this.cableHitPaths[i];
+        let prevX = b.x1, prevY = b.y1;
+        for (let s = 1; s <= samples; s++) {
+          const t = s / samples, u = 1 - t;
+          const px = u * u * u * b.x1 + 3 * u * u * t * b.cp1x + 3 * u * t * t * b.cp2x + t * t * t * b.x2;
+          const py = u * u * u * b.y1 + 3 * u * u * t * b.cp1y + 3 * u * t * t * b.cp2y + t * t * t * b.y2;
+          const d = this.distanceToSegment(x, y, prevX, prevY, px, py);
+          if (d < bestDist) {
+            bestDist = d;
+            best = conn;
+          }
+          prevX = px;
+          prevY = py;
+        }
+      }
+      return best;
+    }
+
+    distanceToSegment(x, y, ax, ay, bx, by) {
+      const dx = bx - ax, dy = by - ay;
+      const lenSq = dx * dx + dy * dy;
+      let t = lenSq ? ((x - ax) * dx + (y - ay) * dy) / lenSq : 0;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(x - (ax + t * dx), y - (ay + t * dy));
+    }
+
+    selectConnection(conn) {
+      this.selectedConnection = conn;
+      this.drawConnections();
+    }
+
+    deleteConnection(conn) {
+      const index = this.connections.indexOf(conn);
+      if (index !== -1) {
+        this.connections.splice(index, 1);
+        this.disconnectAudio(conn);
+      }
+      if (this.selectedConnection === conn) this.selectedConnection = null;
+      this.updatePortConnectedClasses();
+      this.drawConnections();
+    }
+
+    toggleCableLayer() {
+      this.cablesBehind = !this.cablesBehind;
+      document.body.classList.toggle('cables-behind', this.cablesBehind);
+      if (this.cableLayerBtn) {
+        this.cableLayerBtn.textContent = `Cables: ${this.cablesBehind ? 'Back' : 'Front'}`;
+        this.cableLayerBtn.classList.toggle('active', this.cablesBehind);
+      }
+      try { localStorage.setItem('sp_cables_behind', this.cablesBehind ? '1' : '0'); } catch (e) {}
+    }
+
+    initDraggablePanels() {
+      try {
+        if (localStorage.getItem('sp_cables_behind') === '1') this.toggleCableLayer();
+      } catch (e) {}
+
+      const panels = [
+        { el: document.querySelector('.sidebar'), handle: document.querySelector('.sidebar h3'), key: 'sp_panel_sidebar' },
+        { el: document.querySelector('.toolbar'), handle: document.querySelector('.toolbar .panel-drag-handle'), key: 'sp_panel_toolbar' }
+      ];
+
+      panels.forEach(({ el, handle, key }) => {
+        if (!el || !handle) return;
+        handle.classList.add('panel-drag-handle');
+        handle.title = 'Drag to move. Double-click to reset position.';
+
+        const placeAt = (left, top) => {
+          const maxLeft = Math.max(0, window.innerWidth - el.offsetWidth);
+          const maxTop = Math.max(0, window.innerHeight - 40);
+          left = Math.min(Math.max(0, left), maxLeft);
+          top = Math.min(Math.max(0, top), maxTop);
+          el.style.left = `${left}px`;
+          el.style.top = `${top}px`;
+          el.style.right = 'auto';
+        };
+
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || 'null');
+          if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') placeAt(saved.left, saved.top);
+        } catch (e) {}
+
+        handle.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = el.getBoundingClientRect();
+          const offsetX = e.clientX - rect.left;
+          const offsetY = e.clientY - rect.top;
+          el.classList.add('panel-dragging');
+
+          const onMove = (moveEvent) => {
+            placeAt(moveEvent.clientX - offsetX, moveEvent.clientY - offsetY);
+          };
+          const onUp = () => {
+            el.classList.remove('panel-dragging');
+            try {
+              localStorage.setItem(key, JSON.stringify({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
+            } catch (err) {}
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            window.removeEventListener('pointercancel', onUp);
+          };
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', onUp);
+          window.addEventListener('pointercancel', onUp);
+        });
+
+        handle.addEventListener('dblclick', () => {
+          el.style.left = '';
+          el.style.top = '';
+          el.style.right = '';
+          try { localStorage.removeItem(key); } catch (e) {}
+        });
+      });
     }
 
     deleteNode(id) {

@@ -27,6 +27,7 @@ if (!window.SoundSandboxApp) {
       this.bindEvents();
       this.bindCanvasInteractions();
       this.initDraggablePanels();
+      this.initHistory();
     }
 
     initResizeObserver() {
@@ -367,6 +368,174 @@ if (!window.SoundSandboxApp) {
       });
     }
 
+    // --- Undo / Redo history ---
+    // Each history entry is a snapshot of the patch (modules with position + state, and cables).
+    // A snapshot is taken shortly after every user action; identical snapshots are skipped.
+    initHistory() {
+      this.undoStack = [];
+      this.redoStack = [];
+      this.historyLimit = 100;
+      this.isRestoringHistory = false;
+      this.isPointerDown = false;
+      this.historyTimer = null;
+      this.historyCurrent = this.takeSnapshot();
+
+      this.undoBtn = document.getElementById('undo-btn');
+      this.redoBtn = document.getElementById('redo-btn');
+      if (this.undoBtn) this.undoBtn.addEventListener('click', () => this.undo());
+      if (this.redoBtn) this.redoBtn.addEventListener('click', () => this.redo());
+
+      window.addEventListener('pointerdown', () => { this.isPointerDown = true; }, true);
+      const onPointerRelease = () => { this.isPointerDown = false; this.scheduleHistoryCapture(); };
+      window.addEventListener('pointerup', onPointerRelease, true);
+      window.addEventListener('pointercancel', onPointerRelease, true);
+      document.addEventListener('change', () => this.scheduleHistoryCapture(), true);
+      window.addEventListener('keyup', () => this.scheduleHistoryCapture());
+
+      window.addEventListener('keydown', (e) => {
+        if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+        const el = document.activeElement;
+        const isTextField = el && (el.tagName === 'TEXTAREA' || el.isContentEditable ||
+          (el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'file', 'color'].includes(el.type)));
+        if (isTextField) return;
+        const key = e.key.toLowerCase();
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          this.undo();
+        } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+          e.preventDefault();
+          this.redo();
+        }
+      });
+
+      this.updateHistoryButtons();
+    }
+
+    takeSnapshot() {
+      const modules = Object.values(this.modules).map(m => {
+        let state = {};
+        try { state = typeof m.instance.getState === 'function' ? m.instance.getState() : {}; } catch (e) {}
+        return {
+          id: m.id,
+          type: m.type,
+          x: parseFloat(m.card.style.left || 0),
+          y: parseFloat(m.card.style.top || 0),
+          state
+        };
+      }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+      const connections = this.connections.map(c => ({
+        fromNode: c.fromNode, fromPortInfo: c.fromPortInfo, toNode: c.toNode, toPortInfo: c.toPortInfo
+      }));
+      return JSON.stringify({ modules, connections });
+    }
+
+    connectionKey(c) {
+      const portKey = info => (info ? (info.channel ?? info.id ?? info.name ?? info.type ?? '') : '');
+      return `${c.fromNode}|${portKey(c.fromPortInfo)}|${c.toNode}|${portKey(c.toPortInfo)}`;
+    }
+
+    scheduleHistoryCapture() {
+      if (this.isRestoringHistory) return;
+      clearTimeout(this.historyTimer);
+      this.historyTimer = setTimeout(() => this.captureHistory(), 250);
+    }
+
+    captureHistory() {
+      if (this.isRestoringHistory) return;
+      // Do not record half-finished actions (a module or cable still being dragged)
+      if (this.isPointerDown || this.activeCable) {
+        this.scheduleHistoryCapture();
+        return;
+      }
+      const snap = this.takeSnapshot();
+      if (snap === this.historyCurrent) return;
+      this.undoStack.push(this.historyCurrent);
+      if (this.undoStack.length > this.historyLimit) this.undoStack.shift();
+      this.historyCurrent = snap;
+      this.redoStack = [];
+      this.updateHistoryButtons();
+    }
+
+    undo() {
+      clearTimeout(this.historyTimer);
+      this.captureHistory();
+      if (this.undoStack.length === 0) return;
+      this.redoStack.push(this.historyCurrent);
+      this.restoreSnapshot(this.undoStack.pop());
+    }
+
+    redo() {
+      clearTimeout(this.historyTimer);
+      this.captureHistory();
+      if (this.redoStack.length === 0) return;
+      this.undoStack.push(this.historyCurrent);
+      this.restoreSnapshot(this.redoStack.pop());
+    }
+
+    // Brings the workspace to a snapshot by changing only what differs,
+    // so untouched modules keep running without a click or restart.
+    restoreSnapshot(snapStr) {
+      const snap = JSON.parse(snapStr);
+      this.isRestoringHistory = true;
+      this.activeCable = null;
+      this.selectedConnection = null;
+      try {
+        const wanted = {};
+        snap.modules.forEach(m => { wanted[m.id] = m; });
+
+        Object.keys(this.modules).forEach(id => {
+          if (!wanted[id] || wanted[id].type !== this.modules[id].type) this.deleteNode(id);
+        });
+
+        snap.modules.forEach(m => {
+          let entry = this.modules[m.id];
+          if (entry) {
+            entry.card.style.left = `${m.x}px`;
+            entry.card.style.top = `${m.y}px`;
+            const getState = () => { try { return JSON.stringify(entry.instance.getState()); } catch (e) { return ''; } };
+            if (typeof entry.instance.getState === 'function' && getState() !== JSON.stringify(m.state)) {
+              try { entry.instance.setState(m.state); } catch (e) {}
+              // setState could not reach the old state (e.g. a removed mixer channel): rebuild the module
+              if (getState() !== JSON.stringify(m.state)) {
+                this.deleteNode(m.id);
+                entry = null;
+              }
+            }
+          }
+          if (!entry) this.createModule(m.type, m.id, m.x, m.y, m.state);
+        });
+
+        const wantedKeys = new Set(snap.connections.map(c => this.connectionKey(c)));
+        this.connections.slice().forEach(c => {
+          if (!wantedKeys.has(this.connectionKey(c))) this.deleteConnection(c);
+        });
+        const existing = {};
+        this.connections.forEach(c => { existing[this.connectionKey(c)] = c; });
+        this.connections = snap.connections.map(c => {
+          const found = existing[this.connectionKey(c)];
+          if (found) return found;
+          if (!this.modules[c.fromNode] || !this.modules[c.toNode]) return null;
+          this.connectAudio(c);
+          return c;
+        }).filter(Boolean);
+
+        this.selectedNodeIds.clear();
+        this.updateSelectionUI();
+        this.updatePortConnectedClasses();
+        this.drawConnections();
+        requestAnimationFrame(() => this.drawConnections());
+      } finally {
+        this.isRestoringHistory = false;
+      }
+      this.historyCurrent = this.takeSnapshot();
+      this.updateHistoryButtons();
+    }
+
+    updateHistoryButtons() {
+      if (this.undoBtn) this.undoBtn.disabled = this.undoStack.length === 0;
+      if (this.redoBtn) this.redoBtn.disabled = this.redoStack.length === 0;
+    }
+
     clearWorkspace() {
       this.connections.forEach(conn => this.disconnectAudio(conn));
       Object.keys(this.modules).forEach(id => this.deleteNode(id));
@@ -481,6 +650,7 @@ if (!window.SoundSandboxApp) {
           this.updatePortConnectedClasses();
           this.resizeCanvas();
           this.render();
+          this.scheduleHistoryCapture();
           this.showNotification('הפאץ\' נטען בהצלחה! הווליום הראשי אופס ל-0. יש להרים את ה-Master Volume במודול ה-Output כדי לשמוע צליל.');
         });
       });
@@ -1192,6 +1362,7 @@ if (!window.SoundSandboxApp) {
       if (this.selectedConnection === conn) this.selectedConnection = null;
       this.updatePortConnectedClasses();
       this.drawConnections();
+      this.scheduleHistoryCapture();
     }
 
     toggleCableLayer() {
@@ -1294,6 +1465,7 @@ if (!window.SoundSandboxApp) {
       }
       this.updatePortConnectedClasses();
       this.drawConnections();
+      this.scheduleHistoryCapture();
     }
   }
 

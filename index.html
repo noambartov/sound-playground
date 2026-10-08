@@ -11,7 +11,7 @@
   <meta http-equiv="Expires" content="0">
 
   <title>Sound Playground - Modular Synthesizer</title>
-  <link rel="stylesheet" href="styles.css?v=2.2">
+  <link rel="stylesheet" href="styles.css?v=2.3">
 </head>
 <body class="light-theme">
 
@@ -58,6 +58,8 @@
   <!-- Floating Toolbar -->
   <header class="toolbar" role="toolbar" aria-label="Main Controls">
     <span class="panel-drag-handle" aria-label="Move Toolbar">Move</span>
+    <button id="undo-btn" class="tool-btn" title="Undo (Cmd+Z)" aria-label="Undo" disabled>&#8630;</button>
+    <button id="redo-btn" class="tool-btn" title="Redo (Cmd+Shift+Z)" aria-label="Redo" disabled>&#8631;</button>
     <button id="help-btn" class="tool-btn" title="Help & Presets Guide" aria-label="Help and Presets Guide">?</button>
     <button id="theme-toggle-btn" class="tool-btn" title="Toggle Theme (Light/Dark)" aria-label="Toggle Theme">Theme</button>
     <button id="presentation-mode-btn" class="tool-btn" title="Toggle Play / Edit Mode" aria-label="Toggle Play Mode">Play Mode</button>
@@ -140,7 +142,7 @@
   <script src="WebcamModule.js"></script>
 
   <!-- Main Application -->
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 
 </body>
 </html>

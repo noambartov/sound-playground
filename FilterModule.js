@@ -13,7 +13,8 @@ class FilterModule {
         this.currentFreq = this.sliderToFreq(defaultSliderVal);
 
         this.filterNode.frequency.setValueAtTime(this.currentFreq, this.ctx.currentTime);
-        this.filterNode.Q.setValueAtTime(1.0, this.ctx.currentTime);
+        this.resonance = 1.0; // intended Q; Q.value lags behind while the audio engine ramps
+        this.filterNode.Q.setValueAtTime(this.resonance, this.ctx.currentTime);
 
         // Expanded modulation depth control (default 2400 Hz range)
         this.modDepth = 2400;
@@ -30,7 +31,7 @@ class FilterModule {
         return {
             type: this.filterNode ? this.filterNode.type : 'lowpass',
             frequency: this.currentFreq,
-            resonance: this.filterNode ? this.filterNode.Q.value : 1.0,
+            resonance: this.resonance,
             modDepth: this.modDepth
         };
     }
@@ -108,6 +109,7 @@ class FilterModule {
 
     setResonance(val) {
         const qVal = Math.min(12.0, Math.max(0.1, parseFloat(val)));
+        this.resonance = qVal;
         const now = this.ctx ? this.ctx.currentTime : 0;
         if (this.ctx) {
             this.filterNode.Q.cancelScheduledValues(now);

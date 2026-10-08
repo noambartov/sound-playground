@@ -6,6 +6,7 @@ class VcaModule {
 
     // יצירת רכיב ה-Gain של Web Audio API
     this.gainNode = this.audioCtx.createGain();
+    this.gainValue = 0.0; // intended gain; gain.value lags behind while the audio engine ramps
     this.gainNode.gain.setValueAtTime(0.0, this.audioCtx.currentTime); // ברירת מחדל: שקט (נפתח רק כשמגיעה מעטפת/CV)
 
     this.audioInput = this.gainNode;
@@ -13,7 +14,7 @@ class VcaModule {
   }
 
   getState() {
-    return { gain: this.gainNode.gain.value };
+    return { gain: this.gainValue };
   }
 
   setState(state) {
@@ -33,6 +34,7 @@ class VcaModule {
 
   setGain(val) {
     const gainVal = Math.max(0, Math.min(1, parseFloat(val)));
+    this.gainValue = gainVal;
     const now = this.audioCtx.currentTime;
     this.gainNode.gain.cancelScheduledValues(now);
     this.gainNode.gain.setTargetAtTime(gainVal, now, 0.003);

@@ -190,6 +190,18 @@ body {
   border-color: var(--btn-hover-border);
 }
 
+.tool-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+#undo-btn, #redo-btn {
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 9px;
+}
+
 .danger-btn {
   background: var(--btn-bg);
   color: var(--danger-color);

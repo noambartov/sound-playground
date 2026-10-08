@@ -339,6 +339,7 @@ class KeyboardModule {
   handleKeyDown(e) {
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
     if (e.repeat) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return; // shortcuts such as Cmd+Z do not play notes
 
     const char = e.key.toLowerCase();
     if (this.keyMap.hasOwnProperty(char)) {

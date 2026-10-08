@@ -1,6 +1,6 @@
 <!-- index.html -->
 <!DOCTYPE html>
-<html lang="he" dir="ltr">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -11,7 +11,7 @@
   <meta http-equiv="Expires" content="0">
 
   <title>Sound Playground - Modular Synthesizer</title>
-  <link rel="stylesheet" href="styles.css?v=2.3">
+  <link rel="stylesheet" href="styles.css?v=2.4">
 </head>
 <body class="light-theme">
 
@@ -101,13 +101,13 @@
           <h2 id="help-modal-title">Sound Playground</h2>
         </div>
         <div class="help-header-actions" style="display: flex; gap: 10px; align-items: center;">
-          <button id="help-lang-toggle" class="tool-btn action-btn">English 🌐</button>
+          <button id="help-lang-toggle" class="tool-btn action-btn">Hebrew</button>
           <button id="close-help-btn" class="help-close-btn close-btn" aria-label="Close Modal">&times;</button>
         </div>
       </div>
 
       <div class="modal-search-bar" style="padding: 10px 0;">
-        <input type="text" id="help-search-input" placeholder="חפש במדריך..." aria-label="Search manual and presets" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc;" />
+        <input type="text" id="help-search-input" placeholder="Search the manual..." aria-label="Search manual and presets" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc;" />
       </div>
 
       <!-- Navigation Tabs (Populated dynamically by help.js) -->
@@ -123,8 +123,8 @@
   <script src="audioEngine.js"></script>
 
   <!-- Modules Scripts -->
-  <script src="helpData.js?v=1"></script>
-  <script src="help.js?v=2"></script>
+  <script src="helpData.js?v=2"></script>
+  <script src="help.js?v=3"></script>
   <script src="OscilloscopeModule.js"></script>
   <script src="KeyboardModule.js"></script>
   <script src="OscillatorModule.js"></script>
@@ -142,7 +142,7 @@
   <script src="WebcamModule.js"></script>
 
   <!-- Main Application -->
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 
 </body>
 </html>

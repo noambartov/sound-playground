@@ -193,7 +193,7 @@ class WebcamModule {
       }
     } catch (err) {
       console.error('[WebcamModule] Access error:', err);
-      alert('לא ניתן להתחבר למצלמה. אנא ודא שניתנו הרשאות מתאימות בדפדפן.');
+      alert('Could not access the camera. Please allow camera access in your browser.');
     }
   }
 

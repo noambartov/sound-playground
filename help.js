@@ -1,6 +1,6 @@
 // help.js - עיצוב מבודד לחלוטין (#help-modal), Auto-Fit מדויק, השתקת התראות תחתונות
 (function () {
-  let currentLang = 'he';
+  let currentLang = 'en';
   let activeTab = 'basics';
 
   function injectModalStyles() {
@@ -162,58 +162,8 @@
         box-sizing: border-box;
         margin-top: 6px;
       }
-
-      /* באנר התרעה עליון באנגלית בלבד */
-      #help-toast-banner {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #0f172a;
-        color: #ffffff;
-        padding: 12px 24px;
-        border-radius: 30px;
-        font-size: 0.9em;
-        font-weight: 600;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        z-index: 1000000;
-        display: none;
-        align-items: center;
-        gap: 10px;
-        border: 1px solid #3b82f6;
-        direction: ltr;
-      }
     `;
     document.head.appendChild(style);
-  }
-
-  function showEnglishToast(msg) {
-    let toast = document.getElementById('help-toast-banner');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'help-toast-banner';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.style.display = 'flex';
-
-    setTimeout(() => {
-      toast.style.display = 'none';
-    }, 4000);
-  }
-
-  // הסרת כל התראה תחתית המופקת מהאפליקציה
-  function suppressBottomToasts() {
-    const selectors = ['.toast', '.notification', '.toast-notification', '[class*="toast"]', '#toast', '.alert-box'];
-    selectors.forEach(sel => {
-      document.querySelectorAll(sel).forEach(el => {
-        if (el.id !== 'help-toast-banner') {
-          el.style.display = 'none';
-          el.style.visibility = 'hidden';
-          el.remove();
-        }
-      });
-    });
   }
 
   // חישוב Auto-Fit מדויק המתחשב ברוחב סרגל הצד (Sidebar)
@@ -348,18 +298,7 @@
         const preset = window.presetData ? window.presetData[key] : null;
 
         if (preset && window.synthApp) {
-          // השתקה מתמשכת של התראות המערכת הראשית למניעת קפיצת הודעה בעברית
-          const origAppToast = window.synthApp.showToast;
-          const origAppNotification = window.synthApp.showNotification;
-          const origWinToast = window.showToast;
-          const origWinNotification = window.showNotification;
-
-          const dummyFn = () => {};
-          window.synthApp.showToast = dummyFn;
-          window.synthApp.showNotification = dummyFn;
-          window.showToast = dummyFn;
-          window.showNotification = dummyFn;
-
+          // The app itself shows the "patch loaded, raise the volume" notice
           if (typeof window.synthApp.loadPatchData === 'function') {
             window.synthApp.loadPatchData(preset);
           }
@@ -368,21 +307,9 @@
             window.synthApp.audioCtx.resume();
           }
 
-          const toastCleaner = setInterval(suppressBottomToasts, 50);
-
-          setTimeout(() => {
-            clearInterval(toastCleaner);
-            suppressBottomToasts();
-            if (origAppToast) window.synthApp.showToast = origAppToast;
-            if (origAppNotification) window.synthApp.showNotification = origAppNotification;
-            if (origWinToast) window.showToast = origWinToast;
-            if (origWinNotification) window.showNotification = origWinNotification;
-          }, 1500);
-
           setTimeout(() => {
             autoFitPatch(preset);
             closeModal();
-            showEnglishToast('Patch loaded successfully! Make sure to turn up Master Volume in Output module.');
           }, 60);
         }
       };
@@ -438,7 +365,7 @@
     if (langBtn) {
       langBtn.onclick = () => {
         currentLang = currentLang === 'he' ? 'en' : 'he';
-        langBtn.textContent = currentLang === 'he' ? 'English' : 'עברית';
+        langBtn.textContent = currentLang === 'he' ? 'English' : 'Hebrew';
         renderHelpUI();
       };
     }

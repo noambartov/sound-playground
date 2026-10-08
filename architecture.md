@@ -28,7 +28,7 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
   - Global tooltips state management (`toggleTooltips()`).
 - **`audioEngine.js`**: Centralized Web Audio engine wrapper. Standardizes `AudioContext` management, master input/output node routing, global volume control, and dynamic hardware sample rate detection.
 - **`PatchManager.js`**: Handles JSON serialization and deserialization of synthesizer patches (saving canvas layouts, module parameters, active settings, and cable wire connections). **Note:** this file is currently *not* loaded by `index.html`; the live save/load logic is `exportPatch()` / `loadPatchData()` inside `app.js`.
-- **`help.js`**: Manual & Preset Booklet Controller (`HelpController`). Manages modal visibility, Escape key and backdrop click listeners, full bilingual language toggling (HE/EN) with RTL/LTR layout handling, dynamic multi-tab navigation (Quick Start, Module Guide, Signal Flow, Presets, Shortcuts), live search filtering (`.searchable-item`), and loading curated preset Eurorack patches (`EURORACK_PRESETS`) directly into the canvas via `window.synthApp.loadPatchData()`. Fully self-initializing (`window.helpController`) on `DOMContentLoaded` or immediate ready state.
+- **`help.js`**: Manual & Preset Booklet Controller. Manages modal visibility, Escape key and backdrop click listeners, bilingual language toggling with RTL/LTR layout handling (English is the default, `currentLang = 'en'`; the toggle button reads "Hebrew" / "English"), tab navigation built from the 4 tabs in `helpData.js` (Interface Operations, Modular 101, 15 Modules Ref, Presets & Debug), live search across sections, and loading presets from `window.presetData` into the canvas via `window.synthApp.loadPatchData()`, then auto-fitting the view and closing the modal. It does not show its own notices; the "patch loaded" notice comes from `app.js`.
 
 ### Audio Processing & Generation Modules
 - **`OscillatorModule.js` (VCO)**: Primary sound source (`OscillatorNode`). Features waveform selection (sawtooth, square, triangle, sine), pitch tuning, fine tune, octave controls, pulse width modulation, and `FM` modulation input port.
@@ -71,6 +71,14 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
 ### 4. Accessibility & Focus Indicators
 - Clear keyboard focus indicators (`*:focus-visible`) styled with `outline: 2px solid var(--primary-color)`.
 - Customized scrollbars (`::-webkit-scrollbar`) styled to blend seamlessly with active themes.
+
+### 5. Language Rule
+- The whole site UI is English only: toolbar, sidebar, modules, notifications, `alert`/`confirm` dialogs, and `<html lang="en">`.
+- Hebrew exists only inside the Help manual (`helpData.js` `he`), as an optional second language the user switches to with the Hebrew button. Code comments may stay in Hebrew.
+
+### 6. Notifications
+- `app.js` `showNotification(message)` is the single notice mechanism: a `div#synth-toast-notification.app-toast` (styled in `styles.css`) at the bottom center, theme-aware panel colors with a primary-color left border, plain text, no icon, fades in via the `.visible` class and hides after 6 s.
+- After any patch load (preset or file), `loadPatchData` sets every Output module to volume 0 (slider and `%` readout) and shows: "Patch loaded. Volume starts at 0: raise Master Volume on the Output module to hear it."
 
 ---
 
@@ -183,3 +191,4 @@ Any other value (e.g. `audioinput`) fails to create the module. Presets live in 
 - **2026-10-08** - Added the publish rule (section 8 and `CLAUDE.md`): every finished change goes live on `main` immediately.
 - **2026-10-08** - Connected ports are painted in their cable's color (`--cable-color`). Outputs can feed several cables (drag from an output always adds a cable, `Shift`+drag moves the last one); duplicate cables are ignored. Cable shades now differ per port pair. Bumped `styles.css?v=2.2`, `app.js?v=4`.
 - **2026-10-08** - Undo / Redo: snapshot history in `app.js` (100 steps), `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z` shortcuts, two arrow buttons at the start of the Toolbar. Output, VCA and Filter `getState()` now return their stored intended values instead of the lagging `AudioParam.value`. Keyboard module ignores keys pressed with `Cmd`/`Ctrl`/`Alt`. Bumped `styles.css?v=2.3`, `app.js?v=5`.
+- **2026-10-08** - English-only site: translated every Hebrew notice and dialog in `app.js`, `WebcamModule.js`, `PatchManager.js`, `index.html` to English; Help opens in English with Hebrew as an optional toggle (section 3.5). Replaced the help.js toast-suppression hack and its separate banner with one clean `.app-toast` notification from `app.js` (section 3.6); the Output volume readout now also shows 0% after a load. Fixed the Oscilloscope demo preset (the oscillator now feeds both the scope and the Output; the scope has no output jack) and its manual text in both languages. Bumped `styles.css?v=2.4`, `helpData.js?v=2`, `help.js?v=3`, `app.js?v=6`.

@@ -169,7 +169,7 @@ class LfoModule {
         </div>
 
         <button id="lfo_sync_${this.id}" class="add-module-btn" style="text-align: center; font-size: 11px; padding: 6px; cursor: pointer;">
-          🔄 Reset Phase (Sync)
+          Reset Phase (Sync)
         </button>
 
         <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #3f3f46;">

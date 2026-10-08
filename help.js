@@ -166,79 +166,6 @@
     document.head.appendChild(style);
   }
 
-  // חישוב Auto-Fit מדויק המתחשב ברוחב סרגל הצד (Sidebar)
-  function autoFitPatch(preset) {
-    if (!preset || !preset.modules || preset.modules.length === 0) return;
-
-    let minX = Infinity, minY = Infinity;
-    let maxX = -Infinity, maxY = -Infinity;
-
-    const DEFAULT_W = 320;
-    const DEFAULT_H = 300;
-
-    preset.modules.forEach(m => {
-      let w = DEFAULT_W;
-      let h = DEFAULT_H;
-
-      if (m.type === 'keyboard' || m.type === 'sequencer') w = 560;
-      if (m.type === 'output') w = 420;
-
-      if (m.x < minX) minX = m.x;
-      if (m.y < minY) minY = m.y;
-      if (m.x + w > maxX) maxX = m.x + w;
-      if (m.y + h > maxY) maxY = m.y + h;
-    });
-
-    const margin = 80;
-    minX -= margin;
-    minY -= margin;
-    maxX += margin;
-    maxY += margin;
-
-    const boundsW = maxX - minX;
-    const boundsH = maxY - minY;
-
-    // זיהוי רוחב סרגל הצד השמאלי למניעת זליגה מאחוריו
-    const sidebar = document.querySelector('.sidebar') || document.querySelector('#sidebar') || document.querySelector('.modules-sidebar') || document.querySelector('.sidebar-panel');
-    const sidebarWidth = sidebar ? sidebar.offsetWidth : 260;
-
-    const viewW = window.innerWidth || 1200;
-    const viewH = window.innerHeight || 800;
-
-    const availableW = Math.max(300, viewW - sidebarWidth);
-    const availableH = Math.max(300, viewH - 60);
-
-    let fitZoom = Math.min(availableW / boundsW, availableH / boundsH);
-    fitZoom = Math.min(1.0, Math.max(0.25, fitZoom));
-
-    const centerX = minX + (boundsW / 2);
-    const centerY = minY + (boundsH / 2);
-
-    const targetCanvasX = sidebarWidth + (availableW / 2);
-    const targetCanvasY = 60 + (availableH / 2);
-
-    if (window.synthApp) {
-      if (typeof window.synthApp.setZoom === 'function') {
-        window.synthApp.setZoom(fitZoom);
-      } else if (window.synthApp.zoom !== undefined) {
-        window.synthApp.zoom = fitZoom;
-      }
-
-      if (typeof window.synthApp.centerAt === 'function') {
-        window.synthApp.centerAt(centerX, centerY);
-      } else if (typeof window.synthApp.setPan === 'function') {
-        const panX = targetCanvasX - (centerX * fitZoom);
-        const panY = targetCanvasY - (centerY * fitZoom);
-        window.synthApp.setPan(panX, panY);
-      } else if (window.synthApp.pan !== undefined) {
-        window.synthApp.pan = {
-          x: targetCanvasX - (centerX * fitZoom),
-          y: targetCanvasY - (centerY * fitZoom)
-        };
-      }
-    }
-  }
-
   function openModal() {
     const modal = document.getElementById('help-modal');
     if (modal) {
@@ -307,10 +234,7 @@
             window.synthApp.audioCtx.resume();
           }
 
-          setTimeout(() => {
-            autoFitPatch(preset);
-            closeModal();
-          }, 60);
+          closeModal();
         }
       };
     });

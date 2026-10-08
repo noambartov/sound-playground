@@ -926,3 +926,50 @@ body.cable-dragging .port.port-suggested {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.35); }
 }
+
+/* Always-visible jack labels (portGuide.js): a small tag under every jack saying IN or OUT,
+   the signal kind, and where it usually connects. Drawn in #port-chip-layer above the canvas
+   (below the Sidebar/Toolbar). Hidden when Tooltips is OFF, in Play Mode and while Help is open. */
+#port-chip-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 90;
+  overflow: hidden;
+}
+.port-chip {
+  position: fixed;
+  max-width: 92px;
+  padding: 2px 5px 3px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+  direction: ltr;
+}
+.port-chip b {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.port-chip-where { display: block; }
+.port-chip.compact .port-chip-where,
+.port-chip.tiny .port-chip-where,
+.port-chip.tiny .port-chip-sig { display: none; }
+.port-chip.tiny { padding: 1px 4px; }
+.port-chip-in {
+  background: var(--panel-bg);
+  color: var(--text-color);
+  border: 1px solid var(--muted-text);
+}
+.port-chip-out {
+  background: var(--primary-color);
+  color: #ffffff;
+  border: 1px solid var(--primary-color);
+}
+.dark-theme .port-chip-out { color: #0f172a; }

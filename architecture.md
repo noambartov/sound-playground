@@ -167,6 +167,7 @@ Any other value (e.g. `audioinput`) fails to create the module. Presets live in 
 - **Live site:** GitHub Pages, deployed from `main` / root. URL: https://noambartov.github.io/sound-playground/. Every push to `main` redeploys automatically.
 - **No build step:** plain static files; `index.html` is the entry point.
 - **Repo housekeeping files:** `README.md` (short description), `.gitignore` (ignores macOS `.DS_Store`), `CLAUDE.md` (working rules for Claude sessions).
+- **Publish rule:** every finished change is merged into `main` right away, without waiting for the owner to ask, because the live site is the owner's only way to see changes. Test in a headless browser first. After merging, wait until the `pages build and deployment` GitHub Actions run whose `head_sha` matches the merge commit reports `completed` / `success` (e.g. `https://api.github.com/repos/noambartov/sound-playground/actions/runs?per_page=1`), and only then tell the owner the site is ready (usually 1-2 minutes). After a deploy, a hard refresh (Cmd+Shift+R) may be needed; the `?v=` numbers on `styles.css` / `app.js` in `index.html` must be bumped on every change to those files so browsers fetch the new version.
 - **Documentation rule:** every change to a file or to a foundational setting must be reflected in this `architecture.md` in the same commit, so that this document always holds everything needed to rebuild the site from scratch.
 
 ---
@@ -175,3 +176,4 @@ Any other value (e.g. `audioinput`) fails to create the module. Presets live in 
 
 - **2026-10-08** - Imported v_4 into GitHub. Fixed the Audio Input demo and External Processing presets in `helpData.js` (module type `audioinput` changed to the canonical `audio_in`). Added `README.md`, `.gitignore`, `CLAUDE.md`. Enabled GitHub Pages. Documented module type IDs and the `PatchManager.js` load status.
 - **2026-10-08** - Cables and menus: fixed pressing a free port pulling out a cable from another port of the same type (exact element match; `getPortElement` now searches only the correct direction, which also fixes the VCA output cable being drawn from its input). Added click-to-select / click-again-or-Delete to remove a cable, the `Cables: Front/Back` toolbar button, and draggable Sidebar/Toolbar with remembered positions. Bumped `styles.css?v=2.1`, `app.js?v=3`.
+- **2026-10-08** - Added the publish rule (section 8 and `CLAUDE.md`): every finished change goes live on `main` immediately.

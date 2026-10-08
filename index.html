@@ -1,0 +1,144 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- מניעת אגירת קבצים במטמון (Cache Control) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <title>Sound Playground - Modular Synthesizer</title>
+  <link rel="stylesheet" href="styles.css?v=2.0">
+</head>
+<body class="light-theme">
+
+  <!-- Floating Sidebar Menu -->
+  <aside class="sidebar" role="navigation" aria-label="Module Library">
+    <h3>Modules</h3>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Sound Sources</span>
+      <button class="add-module-btn" data-type="oscillator" aria-label="Add Oscillator Module">Oscillator</button>
+      <button class="add-module-btn" data-type="granular" aria-label="Add Granular Cloud Module">Granular Cloud</button>
+      <button class="add-module-btn" data-type="audio_in" aria-label="Add Audio Input Module">Mic / Audio In</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Controllers & Sequencing</span>
+      <button class="add-module-btn" data-type="keyboard" aria-label="Add Keyboard Module">Keyboard</button>
+      <button class="add-module-btn" data-type="sequencer" aria-label="Add Sequencer Module">Sequencer</button>
+      <button class="add-module-btn" data-type="webcam" aria-label="Add Webcam Controller Module">Webcam Controller</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Processors & Effects</span>
+      <button class="add-module-btn" data-type="filter" aria-label="Add Filter Module">Filter</button>
+      <button class="add-module-btn" data-type="vca" aria-label="Add VCA Module">+ VCA</button>
+      <button class="add-module-btn" data-type="mixer" aria-label="Add Mixer Module">Mixer</button>
+      <button class="add-module-btn" data-type="reverb" aria-label="Add Reverb Module">Reverb</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Modulation</span>
+      <button class="add-module-btn" data-type="envelope" aria-label="Add ADSR Envelope Module">Envelope (ADSR)</button>
+      <button class="add-module-btn" data-type="lfo" aria-label="Add LFO Module">LFO</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Output & Monitoring</span>
+      <button class="add-module-btn" data-type="output" aria-label="Add Master Output Module">Output</button>
+      <button class="add-module-btn" data-type="oscilloscope" aria-label="Add Oscilloscope Module">+ Oscilloscope</button>
+      <button class="add-module-btn" data-type="recorder" aria-label="Add Audio Recorder Module">Recorder</button>
+    </div>
+  </aside>
+
+  <!-- Floating Toolbar -->
+  <header class="toolbar" role="toolbar" aria-label="Main Controls">
+    <button id="help-btn" class="tool-btn" title="Help & Presets Guide" aria-label="Help and Presets Guide">?</button>
+    <button id="theme-toggle-btn" class="tool-btn" title="Toggle Theme (Light/Dark)" aria-label="Toggle Theme">Theme</button>
+    <button id="presentation-mode-btn" class="tool-btn" title="Toggle Play / Edit Mode" aria-label="Toggle Play Mode">Play Mode</button>
+    
+    <div class="zoom-controls" role="group" aria-label="Zoom Controls">
+      <button id="zoom-out-btn" class="tool-btn" title="Zoom Out" aria-label="Zoom Out">-</button>
+      <span id="zoom-level" aria-live="polite">100%</span>
+      <button id="zoom-in-btn" class="tool-btn" title="Zoom In" aria-label="Zoom In">+</button>
+      <button id="zoom-reset-btn" class="tool-btn" title="Reset Zoom" aria-label="Reset Zoom">100%</button>
+    </div>
+
+    <button id="save-patch-btn" class="tool-btn" title="Export Patch to JSON" aria-label="Save Patch">Save</button>
+    <button id="load-patch-btn" class="tool-btn" title="Import Patch from JSON" aria-label="Load Patch">Load</button>
+    <input type="file" id="import-patch-input" accept=".json" style="display: none;" aria-hidden="true">
+    
+    <button id="clear-workspace-btn" class="tool-btn danger-btn" title="Clear Workspace" aria-label="Clear Workspace">Clear</button>
+    <button id="toggle_tooltips_btn" class="tool-btn" aria-label="Toggle Tooltips">
+      Tooltips: ON
+    </button>
+  </header>
+
+  <!-- Canvas Container Workspace -->
+  <main id="canvas-container" role="main" tabIndex="0">
+    <canvas id="connections-canvas"></canvas>
+    
+    <div id="workspace-viewport">
+      <div id="selection-box"></div>
+      <div id="modules-layer"></div>
+    </div>
+  </main>
+
+  <!-- Dynamic Bilingual Help Modal / Manual & Presets -->
+  <div id="help-modal" class="help-modal-overlay modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="help-modal-container modal-content">
+      
+      <div class="help-header modal-header">
+        <div class="help-title-area">
+          <h2 id="help-modal-title">Sound Playground</h2>
+        </div>
+        <div class="help-header-actions" style="display: flex; gap: 10px; align-items: center;">
+          <button id="help-lang-toggle" class="tool-btn action-btn">English 🌐</button>
+          <button id="close-help-btn" class="help-close-btn close-btn" aria-label="Close Modal">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-search-bar" style="padding: 10px 0;">
+        <input type="text" id="help-search-input" placeholder="חפש במדריך..." aria-label="Search manual and presets" style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc;" />
+      </div>
+
+      <!-- Navigation Tabs (Populated dynamically by help.js) -->
+      <nav id="help-nav-tabs" class="help-tabs help-tabs-bar" role="tablist"></nav>
+
+      <!-- Tab Content Area (Populated dynamically by help.js) -->
+      <div id="help-tab-content" class="help-content-area modal-body"></div>
+
+    </div>
+  </div>
+
+  <!-- Engine -->
+  <script src="audioEngine.js"></script>
+
+  <!-- Modules Scripts -->
+  <script src="helpData.js?v=1"></script>
+  <script src="help.js?v=2"></script>
+  <script src="OscilloscopeModule.js"></script>
+  <script src="KeyboardModule.js"></script>
+  <script src="OscillatorModule.js"></script>
+  <script src="FilterModule.js"></script>
+  <script src="LfoModule.js"></script>
+  <script src="MixerModule.js"></script>
+  <script src="VcaModule.js"></script>
+  <script src="ReverbModule.js"></script>
+  <script src="SequencerModule.js"></script>
+  <script src="RecorderModule.js"></script>
+  <script src="OutputModule.js"></script>
+  <script src="GranularModule.js"></script>
+  <script src="EnvelopeModule.js"></script>
+  <script src="AudioInputModule.js"></script>
+  <script src="WebcamModule.js"></script>
+
+  <!-- Main Application -->
+  <script src="app.js?v=2"></script>
+
+</body>
+</html>

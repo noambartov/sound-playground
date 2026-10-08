@@ -29,7 +29,8 @@ class KnobModulation {
     return !!(conn && conn.toPortInfo && conn.toPortInfo.knob);
   }
 
-  // Only the LFO can modulate sliders (it exposes getKnobModValue)
+  // Only modules that expose getKnobModValue (the LFO, the Ribbon) can modulate sliders.
+  // getKnobModValue(fromPortInfo) gets the cable's source jack, so a module with several outputs can answer per jack.
   static canModulateFrom(app, moduleId) {
     const mod = app.getModule(moduleId);
     return !!(mod && typeof mod.getKnobModValue === 'function');
@@ -105,7 +106,7 @@ class KnobModulation {
       const el = this.sliderFor(link.conn);
       if (!el) return;
       const src = this.app.getModule(link.conn.fromNode);
-      const v = src && typeof src.getKnobModValue === 'function' ? src.getKnobModValue() : 0;
+      const v = src && typeof src.getKnobModValue === 'function' ? src.getKnobModValue(link.conn.fromPortInfo) : 0;
       const entry = offsets.get(el) || { sum: 0, depth: 0, color: null };
       entry.sum += v;
       entry.depth += src && typeof src.getKnobModDepth === 'function' ? src.getKnobModDepth() : 0;

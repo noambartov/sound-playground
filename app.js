@@ -194,7 +194,11 @@ if (!window.SoundSandboxApp) {
       const WebcamClass = window.WebcamModule || (typeof WebcamModule !== 'undefined' ? WebcamModule : null);
 
       try {
-        if (type === 'oscillator' && typeof OscillatorModule !== 'undefined') {
+        // Modules built on the shared template (ModuleBase.js) register themselves
+        const TemplateClass = window.ModuleBase ? window.ModuleBase.get(type) : null;
+        if (TemplateClass) {
+          instance = new TemplateClass(id, this.audioCtx);
+        } else if (type === 'oscillator' && typeof OscillatorModule !== 'undefined') {
           instance = new OscillatorModule(id, this.audioCtx);
         } else if (type === 'granular' && typeof GranularModule !== 'undefined') {
           instance = new GranularModule(id, this.audioCtx);

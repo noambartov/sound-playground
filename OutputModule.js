@@ -14,7 +14,8 @@ class OutputModule {
         this.inputGain = this.ctx.createGain();
 
         this.volumeGain = this.ctx.createGain();
-        this.volumeGain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+        this.volume = 0.8; // intended volume; gain.value lags behind while the audio engine ramps
+        this.volumeGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
 
         this.thruGain = this.ctx.createGain();
 
@@ -26,7 +27,7 @@ class OutputModule {
 
     getState() {
         return {
-            volume: this.volumeGain ? this.volumeGain.gain.value : 0.8
+            volume: this.volume
         };
     }
 
@@ -67,12 +68,13 @@ class OutputModule {
     setVolume(val) {
         this.ensureAudioRunning();
         const volume = parseFloat(val);
+        this.volume = volume;
         const now = this.ctx ? this.ctx.currentTime : 0;
         this.volumeGain.gain.setTargetAtTime(volume, now, 0.015);
     }
 
     renderHTML() {
-        const currentVol = this.volumeGain ? this.volumeGain.gain.value : 0.8;
+        const currentVol = this.volume;
 
         return `
             <div class="node-header">

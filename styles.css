@@ -62,6 +62,13 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* Safari reopened the page zoomed in: allow pinching the page back out (app.js resetPageZoom). */
+html.page-zoomed,
+html.page-zoomed body,
+html.page-zoomed #canvas-container {
+  touch-action: manipulation;
+}
+
 /* Areas that scroll by themselves keep finger scrolling (no pinch zoom). */
 .sidebar,
 .help-tabs-bar,

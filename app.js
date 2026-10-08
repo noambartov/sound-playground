@@ -1149,13 +1149,17 @@ if (!window.SoundSandboxApp) {
         };
       };
 
-      // Safari's own page zoom gesture is blocked everywhere.
+      // Safari's own page zoom gesture is blocked everywhere, except while the page is
+      // already zoomed in (Safari can keep an old zoom after a reload): then fingers may
+      // pinch the page back out, and the lock returns once it is at normal size.
+      const isPageZoomed = () => !!(window.visualViewport && window.visualViewport.scale > 1.01);
       ['gesturestart', 'gesturechange', 'gestureend'].forEach(type => {
-        document.addEventListener(type, (e) => e.preventDefault(), { passive: false });
+        document.addEventListener(type, (e) => { if (!isPageZoomed()) e.preventDefault(); }, { passive: false });
       });
       document.addEventListener('touchmove', (e) => {
-        if (e.touches.length > 1) e.preventDefault();
+        if (e.touches.length > 1 && !isPageZoomed()) e.preventDefault();
       }, { passive: false });
+      this.resetPageZoom();
 
       this.canvasContainer.addEventListener('pointerdown', (e) => {
         this.ensureAudioContextRunning();
@@ -1317,6 +1321,31 @@ if (!window.SoundSandboxApp) {
         const delta = e.deltaY < 0 ? 0.08 : -0.08;
         this.updateZoom(delta);
       }, { passive: false });
+    }
+
+    // iPad Safari may reopen the page still zoomed in, which pushes the menus off screen.
+    // Rewriting the viewport tag makes Safari return to normal size; if it does not,
+    // the 'page-zoomed' class unlocks pinching so the page can be pinched back out by hand.
+    resetPageZoom() {
+      const vv = window.visualViewport;
+      const meta = document.querySelector('meta[name="viewport"]');
+      if (!vv || !meta) return;
+      const lockedContent = meta.getAttribute('content');
+      const sync = () => {
+        const zoomed = vv.scale > 1.01;
+        document.documentElement.classList.toggle('page-zoomed', zoomed);
+        if (!zoomed && (window.scrollX || window.scrollY)) window.scrollTo(0, 0);
+      };
+      const forceReset = () => {
+        if (vv.scale <= 1.01) return;
+        meta.setAttribute('content', 'width=device-width, initial-scale=1.01, maximum-scale=1.0');
+        setTimeout(() => { meta.setAttribute('content', lockedContent); window.scrollTo(0, 0); sync(); }, 50);
+      };
+      vv.addEventListener('resize', sync);
+      vv.addEventListener('scroll', sync);
+      window.addEventListener('pageshow', forceReset);
+      forceReset();
+      sync();
     }
 
     updateSelectionUI() {
@@ -1570,6 +1599,11 @@ if (!window.SoundSandboxApp) {
           const saved = JSON.parse(localStorage.getItem(key) || 'null');
           if (saved && typeof saved.left === 'number' && typeof saved.top === 'number') placeAt(saved.left, saved.top);
         } catch (e) {}
+
+        // Keep a moved menu on screen when the window size changes (e.g. rotating the iPad).
+        window.addEventListener('resize', () => {
+          if (el.style.left) placeAt(parseFloat(el.style.left), parseFloat(el.style.top));
+        });
 
         handle.addEventListener('pointerdown', (e) => {
           if (e.button !== 0) return;

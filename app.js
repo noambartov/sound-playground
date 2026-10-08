@@ -550,13 +550,36 @@ if (!window.SoundSandboxApp) {
         connections: this.connections
       };
 
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(patch, null, 2));
+      const json = JSON.stringify(patch, null, 2);
+      const filename = `synth_patch_${Date.now()}.json`;
+      const blob = new Blob([json], { type: 'application/json' });
+
+      // iPad / iPhone: open the system share sheet so the user can pick "Save to Files".
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS && typeof File === 'function' && navigator.canShare) {
+        const file = new File([blob], filename, { type: 'application/json' });
+        if (navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: filename }).catch(err => {
+            if (err && err.name === 'AbortError') return;
+            this.downloadBlob(blob, filename);
+          });
+          return;
+        }
+      }
+      this.downloadBlob(blob, filename);
+    }
+
+    downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
       const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `synth_patch_${Date.now()}.json`);
+      downloadAnchor.href = url;
+      downloadAnchor.download = filename;
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      this.showNotification(`Patch saved as ${filename} (in your Downloads folder).`);
     }
 
     importPatch(e) {

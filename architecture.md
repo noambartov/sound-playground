@@ -9,7 +9,7 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
 
 ### Core Application & UI Logic
 - **`index.html`**: Main entry point. Houses the DOM skeleton including the categorized floating Sidebar, Toolbar (a `Move` drag handle, Undo `#undo-btn` (&#8630;) and Redo `#redo-btn` (&#8631;) arrow buttons, Help, Theme toggle, Presentation Mode, `Cables: Front/Back` toggle `#cable-layer-btn`, Zoom, Save/Load, Clear, Tooltips), Canvas Viewport overlay (`#connections-canvas`), Help & Presets Modal (`#help-modal`), and scripts loading order.
-- **`styles.css`**: Complete application design system using CSS Custom Properties (`:root` / `.dark-theme`). Defines Clean White & Dark theme colors, module card layouts, wide granular card layouts, VU meter animations, cable canvas positioning (`#connections-canvas` `z-index: 30`, above `#workspace-viewport` `z-index: 1`; `body.cables-behind` drops the canvas to `z-index: 0` so cables go behind the modules), draggable panel handles (`.panel-drag-handle`, `.panel-dragging`), custom scrollbars, and modal layouts. Toolbar buttons that are `:disabled` (e.g. Undo with nothing to undo) are faded to 35% opacity. `index.html` loads it as `styles.css?v=2.3` and `app.js?v=5` (bump the `?v=` number on each change to defeat browser caching).
+- **`styles.css`**: Complete application design system using CSS Custom Properties (`:root` / `.dark-theme`). Defines Clean White & Dark theme colors, module card layouts, wide granular card layouts, VU meter animations, cable canvas positioning (`#connections-canvas` `z-index: 30`, above `#workspace-viewport` `z-index: 1`; `body.cables-behind` drops the canvas to `z-index: 0` so cables go behind the modules), draggable panel handles (`.panel-drag-handle`, `.panel-dragging`), custom scrollbars, and modal layouts. Toolbar buttons that are `:disabled` (e.g. Undo with nothing to undo) are faded to 35% opacity. `index.html` loads it as `styles.css?v=2.4` and `app.js?v=7` (bump the `?v=` number on each change to defeat browser caching).
 - **`app.js` (`SoundSandboxApp`)**: Main controller class managing:
   - Global application state, module registry, and viewport Zoom/Pan (`Cmd`/`Ctrl` + Left-Click drag).
   - Web Audio Context initialization and user interaction audio unlock.
@@ -122,6 +122,12 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
 
 ## 7. Patch Persistence & Module Protocol (JSON Schema)
 
+### Saving and loading files
+- **Save** (`exportPatch()` in `app.js`) builds the patch object below and turns it into a `Blob` (`application/json`) named `synth_patch_<timestamp>.json`. Patches are not stored inside the site; they are always a file.
+- **On iPad / iPhone** (user agent `iPad|iPhone|iPod`, or `MacIntel` with `maxTouchPoints > 1` for iPadOS) and when `navigator.canShare({ files })` is true, Save opens the system share sheet (`navigator.share`) so the user picks **Save to Files** (or AirDrop, Mail, etc.). Cancelling the sheet does nothing; any other share error falls back to the download below.
+- **Everywhere else** `downloadBlob()` downloads the file through a temporary object URL (revoked after 10 s) and shows the toast `Patch saved as <name> (in your Downloads folder).`
+- **Load** opens the hidden `#import-patch-input` (`accept=".json,application/json"`), reads the file with `FileReader`, and passes it to `loadPatchData()`.
+
 ### Schema Format (`v1.0`)
 ```json
 {
@@ -192,3 +198,4 @@ Any other value (e.g. `audioinput`) fails to create the module. Presets live in 
 - **2026-10-08** - Connected ports are painted in their cable's color (`--cable-color`). Outputs can feed several cables (drag from an output always adds a cable, `Shift`+drag moves the last one); duplicate cables are ignored. Cable shades now differ per port pair. Bumped `styles.css?v=2.2`, `app.js?v=4`.
 - **2026-10-08** - Undo / Redo: snapshot history in `app.js` (100 steps), `Cmd/Ctrl+Z` and `Cmd/Ctrl+Shift+Z` shortcuts, two arrow buttons at the start of the Toolbar. Output, VCA and Filter `getState()` now return their stored intended values instead of the lagging `AudioParam.value`. Keyboard module ignores keys pressed with `Cmd`/`Ctrl`/`Alt`. Bumped `styles.css?v=2.3`, `app.js?v=5`.
 - **2026-10-08** - English-only site: translated every Hebrew notice and dialog in `app.js`, `WebcamModule.js`, `PatchManager.js`, `index.html` to English; Help opens in English with Hebrew as an optional toggle (section 3.5). Replaced the help.js toast-suppression hack and its separate banner with one clean `.app-toast` notification from `app.js` (section 3.6); the Output volume readout now also shows 0% after a load. Fixed the Oscilloscope demo preset (the oscillator now feeds both the scope and the Output; the scope has no output jack) and its manual text in both languages. Bumped `styles.css?v=2.4`, `helpData.js?v=2`, `help.js?v=3`, `app.js?v=6`.
+- **2026-10-08** - Saving on iPad: Save no longer uses a `data:` link (which iPad Safari does not save to Downloads). It now builds a `Blob`; on iPad / iPhone it opens the share sheet (Save to Files), elsewhere it downloads the file and shows a toast with the file name. Load accepts `application/json` too. Documented in section 7. Bumped `app.js?v=7`.

@@ -13,7 +13,7 @@ class RecorderModule {
         }
 
         // הגדרת הגדרות הקלטה
-        this.format = 'wav'; // 'wav' | 'mp3'
+        this.format = 'wav'; // always WAV (an old 'mp3' choice wrote WAV data under a .mp3 name that nothing could open)
         this.targetLufs = -10; // עוצמת יעד -10 LUFS
         this.isRecording = false;
 
@@ -53,14 +53,8 @@ class RecorderModule {
 
     setState(state) {
         if (!state) return;
-        if (state.format !== undefined) {
-            this.format = state.format;
-            const card = document.getElementById(`module_card_${this.id}`);
-            if (card) {
-                const selectEl = card.querySelector('select');
-                if (selectEl) selectEl.value = state.format;
-            }
-        }
+        // Old patches may say 'mp3'; recordings are always saved as WAV.
+        this.format = 'wav';
     }
 
     // --- חיבורי פורטים למערכת הכבלים ---
@@ -167,8 +161,7 @@ class RecorderModule {
         }
 
         const blob = this.encodeAudioBlob(normLeft, normRight, this.ctx.sampleRate, this.format);
-        const ext = this.format === 'mp3' ? 'mp3' : 'wav';
-        const filename = `synth_recording_${Date.now()}.${ext}`;
+        const filename = `synth_recording_${Date.now()}.wav`;
 
         this.triggerDownload(blob, filename);
     }
@@ -237,11 +230,28 @@ class RecorderModule {
             offset += 2;
         }
 
-        const mimeType = format === 'mp3' ? 'audio/mp3' : 'audio/wav';
-        return new Blob([buffer], { type: mimeType });
+        return new Blob([buffer], { type: 'audio/wav' });
     }
 
     triggerDownload(blob, filename) {
+        // iPad / iPhone: open the share sheet ("Save to Files"), like saving a patch.
+        // A plain download link there can leave a grey, unopenable file.
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (isIOS && typeof File === 'function' && navigator.canShare) {
+            const file = new File([blob], filename, { type: 'audio/wav' });
+            if (navigator.canShare({ files: [file] })) {
+                navigator.share({ files: [file], title: filename }).catch(err => {
+                    if (err && err.name === 'AbortError') return;
+                    this.downloadFile(blob, filename);
+                });
+                return;
+            }
+        }
+        this.downloadFile(blob, filename);
+    }
+
+    downloadFile(blob, filename) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
@@ -249,10 +259,12 @@ class RecorderModule {
         a.download = filename;
         document.body.appendChild(a);
         a.click();
-        setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 100);
+        a.remove();
+        // Keep the file data alive long enough for the browser to finish saving it.
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        if (window.synthApp && typeof window.synthApp.showNotification === 'function') {
+            window.synthApp.showNotification(`Recording saved as ${filename} (in your Downloads folder).`);
+        }
     }
 
     // --- עדכוני UI ---
@@ -284,11 +296,6 @@ class RecorderModule {
         }
     }
 
-    static setFormat(id, format) {
-        const mod = window.synthApp ? window.synthApp.getModule(id) : null;
-        if (mod) mod.format = format;
-    }
-
     static toggleRecord(id) {
         const mod = window.synthApp ? window.synthApp.getModule(id) : null;
         if (mod) mod.toggleRecording();
@@ -302,14 +309,6 @@ class RecorderModule {
             </div>
             <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
                 
-                <div class="ctrl-row" style="display: flex; justify-content: space-between; align-items: center;">
-                    <label style="font-size: 11px; font-weight: 600;">Format:</label>
-                    <select onchange="RecorderModule.setFormat('${this.id}', this.value)" style="padding: 4px 8px; border-radius: 4px; border: 1px solid #3f3f46; background: #27272a; color: #fff; font-size: 11px;">
-                        <option value="wav" ${this.format === 'wav' ? 'selected' : ''}>WAV (16-bit)</option>
-                        <option value="mp3" ${this.format === 'mp3' ? 'selected' : ''}>MP3</option>
-                    </select>
-                </div>
-
                 <div class="ctrl-row" style="display: flex; flex-direction: column; gap: 6px;">
                     <button id="rec_btn_${this.id}" class="action-btn" style="width: 100%; padding: 8px; font-weight: 700; cursor: pointer;" onclick="RecorderModule.toggleRecord('${this.id}')">
                         Record

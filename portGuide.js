@@ -13,7 +13,8 @@
 
   const GUIDE = {
     // Sound sources
-    'oscillator:in:fm': { name: 'FM IN', signal: 'CV', text: 'Pushes the pitch up and down. An LFO here gives vibrato; another oscillator gives metallic FM tones. Keyboard FREQ or Sequencer PITCH here plays notes.', from: 'LFO OUT, Keyboard FREQ, Sequencer PITCH CV, another Oscillator OUT', match: ['lfo:out:default', 'keyboard:out:freq', 'sequencer:out:pitch', 'oscillator:out:default', 'webcam:out:out_x', 'webcam:out:out_y'] },
+    'oscillator:in:pitch': { name: 'PITCH', signal: 'CV', text: 'Plays notes. While a cable is plugged in, the incoming note sets the pitch and the Frequency slider is set aside.', from: 'Keyboard FREQ, Sequencer PITCH CV', match: ['keyboard:out:freq', 'sequencer:out:pitch'] },
+    'oscillator:in:fm': { name: 'FM IN', signal: 'CV', text: 'Pushes the pitch up and down around the current note. An LFO here gives vibrato; another oscillator gives metallic FM tones.', from: 'LFO OUT, Webcam X / Y, Keyboard BEND, another Oscillator OUT', match: ['lfo:out:default', 'oscillator:out:default', 'webcam:out:out_x', 'webcam:out:out_y', 'keyboard:out:bend'] },
     'oscillator:out:default': { name: 'OUT', signal: 'Audio', text: 'The raw tone of the oscillator.', to: 'Filter IN, VCA IN, Mixer IN, Reverb IN L, Output IN, Oscilloscope IN', match: AUDIO_DESTS },
 
     'granular:in:in_l': { name: 'IN L', signal: 'Audio', text: 'Sound to cut into tiny grains (left side).', from: 'Mic / Audio In OUT, Oscillator OUT, Mixer OUT L', match: AUDIO_SOURCES },
@@ -26,12 +27,12 @@
     'audio_in:out:audio': { name: 'OUT', signal: 'Audio', text: 'Live sound from your microphone or sound card.', to: 'Filter IN, Granular IN L, Reverb IN L, VCA IN, Output IN', match: AUDIO_DESTS },
 
     // Controllers
-    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator FM IN', match: ['oscillator:in:fm'] },
-    'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN', match: ['envelope:in:gate'] },
+    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
+    'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN (shaped notes), or VCA CV (simple on/off notes)', match: ['envelope:in:gate', 'vca:in:cv'] },
     'keyboard:out:bend': { name: 'BEND', signal: 'CV', text: 'The pitch bend wheel.', to: 'Oscillator FM IN, Filter CUT MOD', match: ['oscillator:in:fm', 'filter:in:cutoff'] },
 
-    'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator FM IN', match: ['oscillator:in:fm'] },
-    'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN', match: ['envelope:in:gate'] },
+    'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
+    'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
 
     'webcam:out:out_x': { name: 'X CV', signal: 'CV', text: 'Where the movement is, left to right.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 1', match: MOD_DESTS },
     'webcam:out:out_y': { name: 'Y CV', signal: 'CV', text: 'Where the movement is, bottom to top.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 2', match: MOD_DESTS },
@@ -44,7 +45,7 @@
     'filter:out:default': { name: 'OUT', signal: 'Audio', text: 'The filtered sound.', to: 'VCA IN, Reverb IN L, Output IN, Oscilloscope IN', match: AUDIO_DESTS },
 
     'vca:in:audio': { name: 'IN', signal: 'Audio', text: 'The sound whose volume the VCA controls.', from: 'Oscillator OUT, Filter OUT, Granular OUT', match: AUDIO_SOURCES },
-    'vca:in:cv': { name: 'CV', signal: 'CV', text: 'Opens the volume. From an Envelope each note fades in and out; from an LFO you get tremolo.', from: 'Envelope ENV OUT, LFO OUT, Webcam MOTION', match: MOD_SOURCES },
+    'vca:in:cv': { name: 'CV', signal: 'CV', text: 'Opens the volume. From an Envelope each note fades in and out; from an LFO you get tremolo.', from: 'Envelope ENV OUT, LFO OUT, Keyboard / Sequencer GATE', match: MOD_SOURCES.concat(['keyboard:out:gate', 'sequencer:out:gate']) },
     'vca:out:audio': { name: 'OUT', signal: 'Audio', text: 'The sound after the volume control.', to: 'Reverb IN L, Mixer IN, Output IN, Recorder IN', match: AUDIO_DESTS },
 
     'mixer:in:ch_in': { name: 'IN', signal: 'Audio', text: 'One channel of the mixer. Each channel has its own level and pan.', from: 'Any audio OUT', match: AUDIO_SOURCES },

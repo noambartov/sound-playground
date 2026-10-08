@@ -71,6 +71,10 @@ class SequencerModule {
             if (modeSelect) modeSelect.value = this.playMode;
             const octInput = card.querySelector('input[oninput*="setOctave"]');
             if (octInput) octInput.value = this.octaveRange;
+            const octLabel = document.getElementById(`seq_oct_val_${this.id}`);
+            if (octLabel) octLabel.innerText = `${this.octaveRange} OCT`;
+            const bpmLabel = document.getElementById(`seq_bpm_val_${this.id}`);
+            if (bpmLabel) bpmLabel.innerText = `${this.bpm} BPM`;
         }
     }
 

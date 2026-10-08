@@ -134,10 +134,16 @@ class GranularModule {
       const liveR = this.liveBuffer.getChannelData(1);
       const maxLen = this.liveBuffer.length;
 
-      const chunk = 128;
+      // Copy exactly the samples that arrived since the last tick (the newest ones sit at the end
+      // of the analyser window), so the recorded buffer is continuous and plays at the right speed
+      const now = this.audioCtx.currentTime;
+      const elapsed = this.lastRecTime === undefined ? 0 : now - this.lastRecTime;
+      this.lastRecTime = now;
+      const chunk = Math.min(dataL.length, Math.round(elapsed * this.audioCtx.sampleRate));
+      const start = dataL.length - chunk;
       for (let i = 0; i < chunk; i++) {
-        liveL[this.writePos] = dataL[i] || 0;
-        liveR[this.writePos] = dataR[i] || 0;
+        liveL[this.writePos] = dataL[start + i] || 0;
+        liveR[this.writePos] = dataR[start + i] || 0;
         this.writePos = (this.writePos + 1) % maxLen;
       }
     }, 15);

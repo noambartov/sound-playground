@@ -722,222 +722,298 @@ window.helpData = {
 
 // מיקומיי מודולים מרווחים ביותר למניעת חפיפה + רווח מכל הצדדים
 window.presetData = {
+  // Every preset loads with the Output volume at 0 (app.js). Scopes show what each patch does.
   "demo-oscillator": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "sawtooth", frequency: 220 } },
-      { id: "out1", type: "output", x: 500, y: 150, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 100, y: 120, state: { waveform: "sawtooth", frequency: 220 } },
+      { id: "scope1", type: "oscilloscope", x: 480, y: 360, state: {} },
+      { id: "out1", type: "output", x: 480, y: 120, state: {} }
     ],
-    connections: [{ fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }]
+    connections: [
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
   },
   "demo-granular": {
     modules: [
-      { id: "gran1", type: "granular", x: 100, y: 150, state: { grainSize: 0.1, density: 0.8 } },
-      { id: "out1", type: "output", x: 520, y: 150, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 60, y: 120, state: { waveform: "triangle", frequency: 220 } },
+      { id: "lfo1", type: "lfo", x: 60, y: 420, state: { rate: 0.3, depth: 20 } },
+      { id: "gran1", type: "granular", x: 420, y: 120, state: { density: 25, grainSize: 0.12, spray: 0.4, pitch: 1.5 } },
+      { id: "scope1", type: "oscilloscope", x: 980, y: 380, state: {} },
+      { id: "out1", type: "output", x: 980, y: 120, state: {} }
     ],
-    connections: [{ fromNode: "gran1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }]
+    connections: [
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "osc1", toPortInfo: { type: "fm" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_l" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_r" } },
+      { fromNode: "gran1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "gran1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
   },
   "demo-audioinput": {
     modules: [
-      { id: "aud1", type: "audio_in", x: 100, y: 150, state: {} },
-      { id: "out1", type: "output", x: 500, y: 150, state: { volume: 0.7 } }
+      { id: "aud1", type: "audio_in", x: 100, y: 120, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 480, y: 360, state: {} },
+      { id: "out1", type: "output", x: 480, y: 120, state: {} }
     ],
-    connections: [{ fromNode: "aud1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }]
+    connections: [
+      { fromNode: "aud1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "aud1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
   },
   "demo-filter": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "sawtooth", frequency: 150 } },
-      { id: "filt1", type: "filter", x: 480, y: 150, state: { cutoff: 600, resonance: 5 } },
-      { id: "out1", type: "output", x: 860, y: 150, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 60, y: 120, state: { waveform: "sawtooth", frequency: 110 } },
+      { id: "filt1", type: "filter", x: 420, y: 120, state: { frequency: 600, resonance: 8 } },
+      { id: "scope1", type: "oscilloscope", x: 800, y: 380, state: {} },
+      { id: "out1", type: "output", x: 800, y: 120, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "input" } },
-      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-vca": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 100, state: { waveform: "sine", frequency: 330 } },
-      { id: "lfo1", type: "lfo", x: 100, y: 460, state: { frequency: 4 } },
-      { id: "vca1", type: "vca", x: 480, y: 220, state: { gain: 0.8 } },
-      { id: "out1", type: "output", x: 860, y: 220, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 60, y: 100, state: { waveform: "sine", frequency: 330 } },
+      { id: "lfo1", type: "lfo", x: 60, y: 420, state: { rate: 4, depth: 1 } },
+      { id: "vca1", type: "vca", x: 420, y: 220, state: { gain: 0.5 } },
+      { id: "scope1", type: "oscilloscope", x: 780, y: 420, state: {} },
+      { id: "out1", type: "output", x: 780, y: 160, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "input" } },
-      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "cv" } },
-      { fromNode: "vca1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-reverb": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "square", frequency: 200 } },
-      { id: "rev1", type: "reverb", x: 480, y: 150, state: { mix: 0.7 } },
-      { id: "out1", type: "output", x: 860, y: 150, state: { volume: 0.7 } }
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 90, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: false, pitch: 0 }, { active: true, pitch: 0.5833 }, { active: false, pitch: 0 },
+        { active: true, pitch: 0.4167 }, { active: false, pitch: 0 }, { active: true, pitch: 1 }, { active: false, pitch: 0 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 420, state: { waveform: "triangle" } },
+      { id: "env1", type: "envelope", x: 380, y: 420, state: { attack: 0.005, decay: 0.25, sustain: 0, release: 0.2 } },
+      { id: "vca1", type: "vca", x: 760, y: 420, state: { gain: 0 } },
+      { id: "rev1", type: "reverb", x: 1080, y: 380, state: { mix: 0.5, decay: 4 } },
+      { id: "out1", type: "output", x: 1480, y: 380, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 1480, y: 620, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { id: "input" } },
-      { fromNode: "rev1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-envelope": {
     modules: [
-      { id: "kb1", type: "keyboard", x: 60, y: 150, state: {} },
-      { id: "osc1", type: "oscillator", x: 700, y: 60, state: { frequency: 220 } },
-      { id: "env1", type: "envelope", x: 700, y: 420, state: {} },
-      { id: "vca1", type: "vca", x: 1080, y: 220, state: { gain: 0.8 } },
-      { id: "out1", type: "output", x: 1440, y: 220, state: { volume: 0.7 } }
+      { id: "kb1", type: "keyboard", x: 40, y: 100, state: {} },
+      { id: "osc1", type: "oscillator", x: 680, y: 40, state: { waveform: "sawtooth" } },
+      { id: "env1", type: "envelope", x: 680, y: 380, state: { attack: 0.3, decay: 0.4, sustain: 0.5, release: 0.8 } },
+      { id: "vca1", type: "vca", x: 1040, y: 160, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 1040, y: 440, state: {} },
+      { id: "out1", type: "output", x: 1380, y: 160, state: {} }
     ],
     connections: [
-      { fromNode: "kb1", fromPortInfo: { id: "pitch" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "kb1", fromPortInfo: { id: "gate" }, toNode: "env1", toPortInfo: { id: "gate" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "input" } },
-      { fromNode: "env1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "cv" } },
-      { fromNode: "vca1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "scope1", toPortInfo: { type: "audio" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } }
     ]
   },
   "demo-lfo": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 100, state: { waveform: "sawtooth", frequency: 180 } },
-      { id: "lfo1", type: "lfo", x: 100, y: 460, state: { frequency: 2 } },
-      { id: "filt1", type: "filter", x: 480, y: 220, state: { cutoff: 500, resonance: 6 } },
-      { id: "out1", type: "output", x: 860, y: 220, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 60, y: 80, state: { waveform: "sawtooth", frequency: 110 } },
+      { id: "lfo1", type: "lfo", x: 60, y: 400, state: { rate: 1, depth: 1 } },
+      { id: "filt1", type: "filter", x: 420, y: 160, state: { frequency: 800, resonance: 6, modDepth: 300 } },
+      { id: "scope1", type: "oscilloscope", x: 420, y: 520, state: {} },
+      { id: "out1", type: "output", x: 800, y: 160, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "input" } },
-      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "cutoff" } },
-      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }
     ]
   },
   "demo-webcam": {
     modules: [
-      { id: "cam1", type: "webcam", x: 100, y: 150, state: {} },
-      { id: "osc1", type: "oscillator", x: 500, y: 150, state: { frequency: 220 } },
-      { id: "out1", type: "output", x: 880, y: 150, state: { volume: 0.7 } }
+      { id: "cam1", type: "webcam", x: 60, y: 100, state: {} },
+      { id: "osc1", type: "oscillator", x: 460, y: 100, state: { waveform: "triangle", frequency: 220 } },
+      { id: "scope1", type: "oscilloscope", x: 820, y: 360, state: {} },
+      { id: "out1", type: "output", x: 820, y: 100, state: {} }
     ],
     connections: [
-      { fromNode: "cam1", fromPortInfo: { id: "cv" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "cam1", fromPortInfo: { id: "out_x" }, toNode: "osc1", toPortInfo: { type: "fm" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-keyboard": {
     modules: [
-      { id: "kb1", type: "keyboard", x: 60, y: 150, state: {} },
-      { id: "osc1", type: "oscillator", x: 700, y: 150, state: {} },
-      { id: "out1", type: "output", x: 1080, y: 150, state: { volume: 0.7 } }
+      { id: "kb1", type: "keyboard", x: 40, y: 100, state: {} },
+      { id: "osc1", type: "oscillator", x: 680, y: 60, state: { waveform: "square" } },
+      { id: "vca1", type: "vca", x: 1040, y: 100, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 1040, y: 380, state: {} },
+      { id: "out1", type: "output", x: 1380, y: 100, state: {} }
     ],
     connections: [
-      { fromNode: "kb1", fromPortInfo: { id: "pitch" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "gate" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-sequencer": {
     modules: [
-      { id: "seq1", type: "sequencer", x: 60, y: 150, state: { bpm: 120 } },
-      { id: "osc1", type: "oscillator", x: 680, y: 150, state: { waveform: "square" } },
-      { id: "out1", type: "output", x: 1040, y: 150, state: { volume: 0.7 } }
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 110, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: true, pitch: 0.25 }, { active: true, pitch: 0.4167 }, { active: true, pitch: 0.5833 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 420, state: { waveform: "square" } },
+      { id: "vca1", type: "vca", x: 420, y: 420, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 780, y: 620, state: {} },
+      { id: "out1", type: "output", x: 780, y: 420, state: {} }
     ],
     connections: [
-      { fromNode: "seq1", fromPortInfo: { id: "cv" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-mixer": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 100, state: { frequency: 220 } },
-      { id: "osc2", type: "oscillator", x: 100, y: 460, state: { frequency: 330 } },
-      { id: "mix1", type: "mixer", x: 480, y: 240, state: {} },
-      { id: "out1", type: "output", x: 840, y: 240, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 60, y: 60, state: { waveform: "sawtooth", frequency: 220 } },
+      { id: "osc2", type: "oscillator", x: 60, y: 360, state: { waveform: "sine", frequency: 330 } },
+      { id: "mix1", type: "mixer", x: 420, y: 160, state: { channels: { "1": { volumeValue: 0.6, panValue: -0.5 }, "2": { volumeValue: 0.8, panValue: 0.5 } } } },
+      { id: "scope1", type: "oscilloscope", x: 900, y: 400, state: {} },
+      { id: "out1", type: "output", x: 900, y: 160, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { id: "in1" } },
-      { fromNode: "osc2", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { id: "in2" } },
-      { fromNode: "mix1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "1", type: "ch_in_1" } },
+      { fromNode: "osc2", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "2", type: "ch_in_2" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-oscilloscope": {
     modules: [
       { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "sawtooth" } },
       { id: "scope1", type: "oscilloscope", x: 480, y: 150, state: {} },
-      { id: "out1", type: "output", x: 880, y: 150, state: { volume: 0.7 } }
+      { id: "out1", type: "output", x: 880, y: 150, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { id: "input" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }
     ]
   },
   "demo-recorder": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { frequency: 440 } },
+      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "triangle", frequency: 440 } },
       { id: "rec1", type: "recorder", x: 480, y: 150, state: {} },
-      { id: "out1", type: "output", x: 860, y: 150, state: { volume: 0.7 } }
+      { id: "out1", type: "output", x: 860, y: 150, state: {} }
     ],
     connections: [
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "rec1", toPortInfo: { id: "input" } },
-      { fromNode: "rec1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "rec1", toPortInfo: { id: "in" } },
+      { fromNode: "rec1", fromPortInfo: { id: "out" }, toNode: "out1", toPortInfo: { type: "in" } }
     ]
   },
   "demo-output": {
     modules: [
-      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { frequency: 261.63 } },
-      { id: "out1", type: "output", x: 500, y: 150, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 100, y: 150, state: { waveform: "sine", frequency: 261.63 } },
+      { id: "out1", type: "output", x: 500, y: 150, state: {} }
     ],
-    connections: [{ fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }]
+    connections: [{ fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }]
   },
 
   "classic-mono": {
     modules: [
-      { id: "kb1", type: "keyboard", x: 60, y: 150, state: {} },
-      { id: "osc1", type: "oscillator", x: 700, y: 60, state: { waveform: "sawtooth", frequency: 220 } },
-      { id: "env1", type: "envelope", x: 700, y: 420, state: { attack: 0.05, decay: 0.3, sustain: 0.6, release: 0.4 } },
-      { id: "vca1", type: "vca", x: 1080, y: 220, state: { gain: 0.8 } },
-      { id: "out1", type: "output", x: 1440, y: 220, state: { volume: 0.7 } }
+      { id: "kb1", type: "keyboard", x: 40, y: 100, state: {} },
+      { id: "osc1", type: "oscillator", x: 680, y: 40, state: { waveform: "sawtooth" } },
+      { id: "env1", type: "envelope", x: 680, y: 380, state: { attack: 0.01, decay: 0.3, sustain: 0.6, release: 0.4 } },
+      { id: "filt1", type: "filter", x: 1040, y: 40, state: { frequency: 900, resonance: 4 } },
+      { id: "vca1", type: "vca", x: 1040, y: 400, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 1400, y: 400, state: {} },
+      { id: "out1", type: "output", x: 1400, y: 120, state: {} }
     ],
     connections: [
-      { fromNode: "kb1", fromPortInfo: { id: "pitch" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "kb1", fromPortInfo: { id: "gate" }, toNode: "env1", toPortInfo: { id: "gate" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "input" } },
-      { fromNode: "env1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { id: "cv" } },
-      { fromNode: "vca1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "ambient-drone": {
     modules: [
-      { id: "gran1", type: "granular", x: 100, y: 150, state: { grainSize: 0.1, density: 0.8 } },
-      { id: "lfo1", type: "lfo", x: 100, y: 480, state: { frequency: 0.2, depth: 300 } },
-      { id: "filt1", type: "filter", x: 500, y: 240, state: { cutoff: 600, resonance: 4 } },
-      { id: "rev1", type: "reverb", x: 880, y: 240, state: { mix: 0.6, decay: 3.5 } },
-      { id: "out1", type: "output", x: 1240, y: 240, state: { volume: 0.7 } }
+      { id: "osc1", type: "oscillator", x: 40, y: 60, state: { waveform: "triangle", frequency: 110 } },
+      { id: "gran1", type: "granular", x: 380, y: 60, state: { density: 30, grainSize: 0.25, spray: 0.6, pitch: 2 } },
+      { id: "lfo1", type: "lfo", x: 40, y: 400, state: { rate: 0.2, depth: 1 } },
+      { id: "filt1", type: "filter", x: 940, y: 60, state: { frequency: 1200, resonance: 3, modDepth: 400 } },
+      { id: "rev1", type: "reverb", x: 940, y: 400, state: { mix: 0.6, decay: 6 } },
+      { id: "scope1", type: "oscilloscope", x: 1340, y: 420, state: {} },
+      { id: "out1", type: "output", x: 1340, y: 160, state: {} }
     ],
     connections: [
-      { fromNode: "gran1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "input" } },
-      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "cutoff" } },
-      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { id: "input" } },
-      { fromNode: "rev1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_l" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_r" } },
+      { fromNode: "gran1", fromPortInfo: { type: "out_l" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "seq-groove": {
     modules: [
-      { id: "seq1", type: "sequencer", x: 60, y: 150, state: { bpm: 120 } },
-      { id: "osc1", type: "oscillator", x: 680, y: 150, state: { waveform: "square", frequency: 110 } },
-      { id: "filt1", type: "filter", x: 1040, y: 150, state: { cutoff: 500, resonance: 6 } },
-      { id: "out1", type: "output", x: 1400, y: 150, state: { volume: 0.7 } }
+      { id: "seq1", type: "sequencer", x: 40, y: 60, state: { bpm: 120, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: true, pitch: 0 }, { active: true, pitch: 1 }, { active: true, pitch: 0.5833 },
+        { active: true, pitch: 0.8333 }, { active: false, pitch: 0 }, { active: true, pitch: 0.25 }, { active: true, pitch: 0.4167 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 420, state: { waveform: "square" } },
+      { id: "env1", type: "envelope", x: 380, y: 420, state: { attack: 0.005, decay: 0.15, sustain: 0.2, release: 0.1 } },
+      { id: "filt1", type: "filter", x: 760, y: 380, state: { frequency: 400, resonance: 7, modDepth: 2500 } },
+      { id: "vca1", type: "vca", x: 1120, y: 380, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 1460, y: 620, state: {} },
+      { id: "out1", type: "output", x: 1460, y: 380, state: {} }
     ],
     connections: [
-      { fromNode: "seq1", fromPortInfo: { id: "cv" }, toNode: "osc1", toPortInfo: { id: "pitch" } },
-      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "input" } },
-      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "ext-processing": {
     modules: [
-      { id: "audin1", type: "audio_in", x: 100, y: 150, state: {} },
-      { id: "filt1", type: "filter", x: 480, y: 150, state: { cutoff: 1200, resonance: 2 } },
-      { id: "rev1", type: "reverb", x: 860, y: 150, state: { mix: 0.4, decay: 2.0 } },
-      { id: "out1", type: "output", x: 1220, y: 150, state: { volume: 0.7 } }
+      { id: "audin1", type: "audio_in", x: 60, y: 120, state: {} },
+      { id: "filt1", type: "filter", x: 420, y: 120, state: { frequency: 1200, resonance: 2 } },
+      { id: "rev1", type: "reverb", x: 780, y: 120, state: { mix: 0.4, decay: 2 } },
+      { id: "scope1", type: "oscilloscope", x: 1180, y: 380, state: {} },
+      { id: "out1", type: "output", x: 1180, y: 120, state: {} }
     ],
     connections: [
-      { fromNode: "audin1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "input" } },
-      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { id: "input" } },
-      { fromNode: "rev1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "audin1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   }
 };

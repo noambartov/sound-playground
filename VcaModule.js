@@ -11,6 +11,14 @@ class VcaModule {
 
     this.audioInput = this.gainNode;
     this.audioOutput = this.gainNode;
+
+    // CV IN is limited to -1..+1 so a strong modulator (e.g. an LFO, whose output is sized for
+    // filter cutoffs in Hz) can never blow the volume up; an Envelope (0..1) passes unchanged.
+    this.cvInput = this.audioCtx.createGain();
+    this.cvClamp = this.audioCtx.createWaveShaper();
+    this.cvClamp.curve = new Float32Array([-1, 1]);
+    this.cvInput.connect(this.cvClamp);
+    this.cvClamp.connect(this.gainNode.gain);
   }
 
   getState() {
@@ -43,7 +51,7 @@ class VcaModule {
   getAudioInput(type) {
     // אם החיבור מגיע לכניסת CV, מחברים אותו ישירות אל פרמטר ה-gain
     if (type === 'cv' || type === 'gain') {
-      return this.gainNode.gain;
+      return this.cvInput;
     }
     return this.audioInput;
   }

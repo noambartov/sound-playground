@@ -19,6 +19,8 @@ if (!window.SoundSandboxApp) {
       this.selectedConnection = null;
       this.cableHitPaths = [];
       this.cablesBehind = false;
+      // LFO to slider modulation (modulation.js)
+      this.knobMod = window.KnobModulation ? new window.KnobModulation(this) : null;
 
       this.initResizeObserver();
       this.initAudioContext();
@@ -484,6 +486,11 @@ if (!window.SoundSandboxApp) {
     }
 
     takeSnapshot() {
+      if (this.knobMod) return this.knobMod.withBaseValues(() => this.takeSnapshotRaw());
+      return this.takeSnapshotRaw();
+    }
+
+    takeSnapshotRaw() {
       const modules = Object.values(this.modules).map(m => {
         let state = {};
         try { state = typeof m.instance.getState === 'function' ? m.instance.getState() : {}; } catch (e) {}
@@ -622,7 +629,7 @@ if (!window.SoundSandboxApp) {
     }
 
     exportPatch() {
-      const patch = {
+      const buildPatch = () => ({
         version: '1.0',
         timestamp: new Date().toISOString(),
         theme: this.theme,
@@ -637,7 +644,9 @@ if (!window.SoundSandboxApp) {
           };
         }),
         connections: this.connections
-      };
+      });
+      // Modulated sliders are saved at the value the user set, not a passing modulated value
+      const patch = this.knobMod ? this.knobMod.withBaseValues(buildPatch) : buildPatch();
 
       const json = JSON.stringify(patch, null, 2);
       const filename = `synth_patch_${Date.now()}.json`;
@@ -810,6 +819,8 @@ if (!window.SoundSandboxApp) {
 
     getPortElement(cardEl, isOutput, info = {}) {
       if (!cardEl) return null;
+      // קצה כבל שמחובר לסליידר (LFO לסליידר) - מחזיר את הסליידר עצמו
+      if (!isOutput && info.knob && window.KnobModulation) return window.KnobModulation.resolve(cardEl, info.knob);
       // חיפוש רק בין שקעי הכיוון הנכון (יציאות או כניסות), כדי שכניסה ויציאה מאותו סוג לא יתבלבלו
       const ports = Array.from(cardEl.querySelectorAll(isOutput ? '.port-out, .output-port' : '.port-in, .input-port'));
 
@@ -844,7 +855,7 @@ if (!window.SoundSandboxApp) {
         const color = this.getConnectionColor(conn, fromPort);
 
         [fromPort, toPort].forEach(port => {
-          if (!port) return;
+          if (!port || !port.classList.contains('port')) return;
           port.classList.add('connected');
           port.style.setProperty('--cable-color', color);
         });
@@ -928,7 +939,7 @@ if (!window.SoundSandboxApp) {
             if (e.shiftKey) {
               for (let i = this.connections.length - 1; i >= 0; i--) {
                 const c = this.connections[i];
-                if (c.fromNode === id && this.getPortElement(card, true, c.fromPortInfo) === port) {
+                if (c.fromNode === id && !(c.toPortInfo && c.toPortInfo.knob) && this.getPortElement(card, true, c.fromPortInfo) === port) {
                   existingConnIndex = i;
                   break;
                 }
@@ -1044,6 +1055,9 @@ if (!window.SoundSandboxApp) {
               }
             }
 
+            // שחרור כבל מיציאת LFO על סליידר במודול אחר: הסליידר זז עם ה-LFO
+            if (!targetPort && rawTarget && this.activeCable) this.tryConnectCableToSlider(rawTarget);
+
             // שמיטה באוויר (תמחק את הכבל במידה ונותק)
             this.activeCable = null;
             this.updatePortConnectedClasses();
@@ -1061,7 +1075,37 @@ if (!window.SoundSandboxApp) {
       });
     }
 
+    // A cable from LFO OUT dropped on a slider (input[type=range]) of another module
+    tryConnectCableToSlider(rawTarget) {
+      const cable = this.activeCable;
+      if (!this.knobMod || cable.fromPortType !== 'out' || !window.KnobModulation.canModulateFrom(this, cable.fromNode)) return;
+      const slider = rawTarget.closest('input[type="range"]');
+      const card = slider ? slider.closest('.module-card') : null;
+      if (!card) return;
+      const toId = card.id.replace('module_card_', '');
+      if (toId === cable.fromNode) return;
+      const ref = window.KnobModulation.refFor(slider, card);
+      const connection = {
+        fromNode: cable.fromNode,
+        fromPortInfo: {
+          id: cable.fromPortEl.getAttribute('data-port-id'),
+          type: cable.fromPortEl.getAttribute('data-port-type'),
+          name: cable.fromPortEl.getAttribute('data-port-name')
+        },
+        toNode: toId,
+        toPortInfo: { id: `knob:${ref}`, knob: ref }
+      };
+      const key = this.connectionKey(connection);
+      if (this.connections.some(c => this.connectionKey(c) === key)) return;
+      this.connections.push(connection);
+      this.connectAudio(connection);
+    }
+
     connectAudio(conn) {
+      if (conn.toPortInfo && conn.toPortInfo.knob) {
+        if (this.knobMod) this.knobMod.add(conn);
+        return;
+      }
       this.ensureAudioContextRunning();
 
       const fromCard = document.getElementById(`module_card_${conn.fromNode}`);
@@ -1100,6 +1144,10 @@ if (!window.SoundSandboxApp) {
     }
 
     disconnectAudio(conn) {
+      if (conn.toPortInfo && conn.toPortInfo.knob) {
+        if (this.knobMod) this.knobMod.remove(conn);
+        return;
+      }
       const fromCard = document.getElementById(`module_card_${conn.fromNode}`);
       const toCard = document.getElementById(`module_card_${conn.toNode}`);
       if (!fromCard || !toCard) return;
@@ -1423,6 +1471,10 @@ if (!window.SoundSandboxApp) {
     getPortCenter(portEl) {
       const cRect = this.canvasContainer.getBoundingClientRect();
       const pRect = portEl.getBoundingClientRect();
+      // A cable plugged into a slider (LFO to slider) ends at the slider's left end
+      if (!portEl.classList.contains('port')) {
+        return { x: pRect.left + 4 - cRect.left, y: pRect.top + pRect.height / 2 - cRect.top };
+      }
       return {
         x: pRect.left + pRect.width / 2 - cRect.left,
         y: pRect.top + pRect.height / 2 - cRect.top

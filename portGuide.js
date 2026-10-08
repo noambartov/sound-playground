@@ -63,7 +63,7 @@
     'envelope:out:env': { name: 'ENV OUT', signal: 'CV', text: 'The Attack / Decay / Sustain / Release shape.', to: 'VCA CV (note volume), Filter CUT MOD (note brightness)', match: ['vca:in:cv', 'filter:in:cutoff', 'granular:in:cv1', 'granular:in:cv2', 'oscilloscope:in:audio'] },
 
     'lfo:in:rate': { name: 'RATE IN', signal: 'CV', text: 'Speeds the LFO up and slows it down.', from: 'Another LFO OUT, Webcam X / Y, Envelope ENV OUT', match: MOD_SOURCES },
-    'lfo:out:default': { name: 'LFO OUT', signal: 'CV', text: 'A slow repeating wobble.', to: 'Filter CUT MOD (wah), VCA CV (tremolo), Oscillator FM IN (vibrato)', match: MOD_DESTS },
+    'lfo:out:default': { name: 'OUT', signal: 'CV', text: 'A slow repeating wobble. Drop the cable on any slider in another module to move that slider up and down.', to: 'Any slider, Filter CUT MOD (wah), VCA CV (tremolo), Oscillator FM IN (vibrato)', match: MOD_DESTS },
 
     // Output and monitoring
     'output:in:in': { name: 'IN', signal: 'Audio', text: 'Goes to your speakers. Raise Master Volume to hear it.', from: 'The last module in your chain: VCA, Reverb, Filter, Mixer', match: AUDIO_SOURCES },
@@ -220,6 +220,7 @@
     document.querySelectorAll('.port-suggested, .port-compatible, .port-incompatible').forEach(p => {
       p.classList.remove('port-suggested', 'port-compatible', 'port-incompatible');
     });
+    document.querySelectorAll('.knob-droppable').forEach(el => el.classList.remove('knob-droppable'));
   }
 
   function applyHighlights() {
@@ -246,6 +247,14 @@
       const isSuggested = suggested.has(k) || (otherGuide && otherGuide.match && otherGuide.match.includes(srcKey));
       p.classList.add(isSuggested ? 'port-suggested' : 'port-compatible');
     });
+
+    // A cable from LFO OUT can also be dropped on any slider of another module (modulation.js)
+    if (srcIsOut && window.KnobModulation && window.KnobModulation.canModulateFrom(app, cable.fromNode)) {
+      const srcCard = srcPort.closest('.module-card');
+      document.querySelectorAll('.module-card input[type="range"]').forEach(el => {
+        if (el.closest('.module-card') !== srcCard) el.classList.add('knob-droppable');
+      });
+    }
   }
 
   // Capture phase: the app stops propagation on port presses

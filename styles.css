@@ -973,3 +973,28 @@ body.cable-dragging .port.port-suggested {
   border: 1px solid var(--primary-color);
 }
 .dark-theme .port-chip-out { color: #0f172a; }
+/* LFO wave preview (theme-aware) */
+.lfo-preview {
+  display: block;
+  width: 100%;
+  height: 36px;
+  background: var(--subtle-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+}
+
+/* LFO to slider modulation (modulation.js): strip under a modulated slider showing how far it moves */
+.knob-mod-band {
+  position: absolute;
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* While a cable is dragged from LFO OUT, sliders it can be dropped on are outlined */
+body.cable-dragging .module-card input[type="range"].knob-droppable {
+  outline: 2px dashed var(--primary-color);
+  outline-offset: 3px;
+  border-radius: 4px;
+}

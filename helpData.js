@@ -291,7 +291,7 @@ window.helpData = {
                 </div>
                 <div><strong>יציאות (OUT):</strong> 
                   <ul>
-                    <li><span class="tag tag-audio">Thru OUT</span>: לאן? מעביר את האות הנכנס הלאה ל-Output.</li>
+                    <li>אין יציאה. כדי גם לשמוע את הצליל, חברו את אותו מקור גם ל-Output (מיציאה אחת אפשר למשוך כמה כבלים).</li>
                   </ul>
                 </div>
               </div>
@@ -650,7 +650,7 @@ window.helpData = {
                 </div>
                 <div><strong>Outputs (OUT):</strong> 
                   <ul>
-                    <li><span class="tag tag-audio">Thru OUT</span>: Passes original signal through to Output module.</li>
+                    <li>None. To also hear the sound, patch the same source into the Output too (one output can feed several cables).</li>
                   </ul>
                 </div>
               </div>
@@ -861,7 +861,7 @@ window.presetData = {
     ],
     connections: [
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { id: "input" } },
-      { fromNode: "scope1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { id: "input" } }
     ]
   },
   "demo-recorder": {

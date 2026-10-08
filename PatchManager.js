@@ -169,7 +169,7 @@ class PatchManager {
         const patchData = JSON.parse(e.target.result);
         this.loadPatchObject(patchData);
       } catch (err) {
-        alert("שגיאה בטעינת קובץ הפאצ' - פורמט JSON לא תקין");
+        alert("Could not load the patch file: invalid JSON.");
       }
     };
     reader.readAsText(file);

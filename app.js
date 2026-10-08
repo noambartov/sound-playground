@@ -168,36 +168,19 @@ if (!window.SoundSandboxApp) {
       if (!toast) {
         toast = document.createElement('div');
         toast.id = 'synth-toast-notification';
-        toast.style.cssText = `
-          position: fixed;
-          bottom: 24px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #1e293b;
-          color: #f8fafc;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-          z-index: 99999;
-          border: 1px solid #3b82f6;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: opacity 0.3s ease;
-        `;
+        toast.className = 'app-toast';
+        toast.setAttribute('role', 'status');
         document.body.appendChild(toast);
       }
-      toast.innerHTML = `🔊 <span>${message}</span>`;
-      toast.style.opacity = '1';
-      toast.style.display = 'flex';
+      toast.textContent = message;
+      toast.style.display = 'block';
+      requestAnimationFrame(() => toast.classList.add('visible'));
 
       if (this.toastTimeout) clearTimeout(this.toastTimeout);
       this.toastTimeout = setTimeout(() => {
-        toast.style.opacity = '0';
+        toast.classList.remove('visible');
         setTimeout(() => { toast.style.display = 'none'; }, 300);
-      }, 5500);
+      }, 6000);
     }
 
     createModule(type, customId = null, customX = null, customY = null, state = null) {
@@ -246,7 +229,7 @@ if (!window.SoundSandboxApp) {
 
       if (!instance) {
         console.warn(`[SoundSandboxApp] Module type "${type}" could not be created.`);
-        this.showNotification(`לא ניתן ליצור מודול מסוג "${type}" - וודא שהסקריפט שלו נטען כראוי.`);
+        this.showNotification(`Could not create a module of type "${type}". Make sure its script is loaded.`);
         return null;
       }
 
@@ -314,7 +297,7 @@ if (!window.SoundSandboxApp) {
 
       if (this.clearBtn) {
         this.clearBtn.addEventListener('click', () => {
-          if (confirm('האם ברצונך לנקות את משטח העבודה?')) {
+          if (confirm('Clear the whole workspace?')) {
             this.clearWorkspace();
           }
         });
@@ -588,7 +571,7 @@ if (!window.SoundSandboxApp) {
             this.loadPatchData(patch);
           }
         } catch (err) {
-          alert('שגיאה בטעינת הקובץ. אנא וודא כי מדובר בקובץ JSON תקין.');
+          alert('Could not load this file. Make sure it is a valid patch (JSON) file.');
         }
       };
       reader.readAsText(file);
@@ -644,6 +627,8 @@ if (!window.SoundSandboxApp) {
               if (typeof m.instance.setMasterVolume === 'function') m.instance.setMasterVolume(0);
               const slider = m.card.querySelector('input[type="range"]');
               if (slider) slider.value = 0;
+              const volLabel = m.card.querySelector(`#vol_val_${m.instance.id}`);
+              if (volLabel) volLabel.innerText = '0%';
             }
           });
 
@@ -651,7 +636,7 @@ if (!window.SoundSandboxApp) {
           this.resizeCanvas();
           this.render();
           this.scheduleHistoryCapture();
-          this.showNotification('הפאץ\' נטען בהצלחה! הווליום הראשי אופס ל-0. יש להרים את ה-Master Volume במודול ה-Output כדי לשמוע צליל.');
+          this.showNotification('Patch loaded. Volume starts at 0: raise Master Volume on the Output module to hear it.');
         });
       });
 

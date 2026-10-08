@@ -8,14 +8,18 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
 ## 2. File Hierarchy & Roles
 
 ### Core Application & UI Logic
-- **`index.html`**: Main entry point. Houses the DOM skeleton including the categorized floating Sidebar, Toolbar (Zoom, Theme toggle, Clear, Presentation Mode, Tooltips, Help), Canvas Viewport overlay (`#connections-canvas`), Help & Presets Modal (`#help-modal`), and scripts loading order.
-- **`styles.css`**: Complete application design system using CSS Custom Properties (`:root` / `.dark-theme`). Defines Clean White & Dark theme colors, module card layouts, wide granular card layouts, VU meter animations, cable canvas positioning (`z-index: 30`), custom scrollbars, and modal layouts.
+- **`index.html`**: Main entry point. Houses the DOM skeleton including the categorized floating Sidebar, Toolbar (a `Move` drag handle, Help, Theme toggle, Presentation Mode, `Cables: Front/Back` toggle `#cable-layer-btn`, Zoom, Save/Load, Clear, Tooltips), Canvas Viewport overlay (`#connections-canvas`), Help & Presets Modal (`#help-modal`), and scripts loading order.
+- **`styles.css`**: Complete application design system using CSS Custom Properties (`:root` / `.dark-theme`). Defines Clean White & Dark theme colors, module card layouts, wide granular card layouts, VU meter animations, cable canvas positioning (`#connections-canvas` `z-index: 30`, above `#workspace-viewport` `z-index: 1`; `body.cables-behind` drops the canvas to `z-index: 0` so cables go behind the modules), draggable panel handles (`.panel-drag-handle`, `.panel-dragging`), custom scrollbars, and modal layouts. `index.html` loads it as `styles.css?v=2.1` and `app.js?v=3` (bump the `?v=` number on each change to defeat browser caching).
 - **`app.js` (`SoundSandboxApp`)**: Main controller class managing:
   - Global application state, module registry, and viewport Zoom/Pan (`Cmd`/`Ctrl` + Left-Click drag).
   - Web Audio Context initialization and user interaction audio unlock.
   - **Dynamic Cable Redrawing & `ResizeObserver` Integration:** Automated observation of DOM element size changes inside module cards (e.g., dynamically showing/hiding sliders like Pulse Width). Triggers immediate cable repositioning and canvas redraws (`drawConnections()`), alongside manual control via `updateCables()`.
   - **Robust Instantiation & Webcam Fallback:** Enhanced type alias mapping (supporting `webcam`, `webcam_controller`, `webcam-controller`, `camera`) and graceful fallbacks/alerts if required module scripts are unmapped or missing.
   - Interactive cable connection drawing (dynamic Bezier curves color-coded by port type) on `#connections-canvas`.
+  - **Port lookup (`getPortElement(card, isOutput, info)`)**: searches only the ports of the requested direction (`.port-out`/`.output-port` or `.port-in`/`.input-port`), matching `info.channel` (`data-channel`) first, then `info.id || info.name || info.type` against `data-port-id`, then `data-port-name`, then `data-port-type`; falls back to the first port of that direction. When a port is pressed, the cable already plugged into it is found by comparing `getPortElement(...)` with the pressed element itself, never by port type alone (otherwise a free port of the same type, e.g. Keyboard `bend`, would pull out the `freq` cable).
+  - **Cable selection & deletion**: `drawConnections()` stores each drawn cable's Bezier points in `cableHitPaths`. A left click on the empty workspace runs `findCableAt(x, y)` (40-sample Bezier hit test, 8 px tolerance, topmost cable wins). First click selects (`selectedConnection`, drawn 6 px wide with a halo), a second click on the selected cable or `Delete`/`Backspace` deletes it (`deleteConnection()`), `Escape` or a click elsewhere deselects. Clicks inside a module card never reach cables, so moving a slider can never touch a cable.
+  - **Cable layer toggle (`toggleCableLayer()`)**: `Cables: Front` (default, cables over modules) or `Cables: Back` (button highlighted, `body.cables-behind`). Remembered in `localStorage` key `sp_cables_behind`.
+  - **Draggable panels (`initDraggablePanels()`)**: the Sidebar is dragged by its `Modules` title (`.sidebar h3`), the Toolbar by its `Move` label (`.toolbar .panel-drag-handle`). Positions are clamped to the window, saved in `localStorage` (`sp_panel_sidebar`, `sp_panel_toolbar`), and reset by double-clicking the handle. All `localStorage` access is wrapped in `try/catch`.
   - Module lifecycle (spawning, dragging, selecting, deletion with `unobserve`, clear canvas).
   - Presentation / Play Mode toggling (`isPresentationMode`).
   - Global tooltips state management (`toggleTooltips()`).
@@ -89,7 +93,9 @@ A browser-based, interactive modular synthesizer sandbox built with pure HTML5, 
    - Toggled via `Play Mode` button in Toolbar (`body.presentation-mode`).
    - Hides ports, wire connections (`#connections-canvas`), delete buttons, and module spawn Sidebar.
    - Disables card dragging and cable creation while keeping sliders, knobs, buttons, and visual meters fully playable for live performance.
-4. **Interactive Tooltips**: Toggled globally via `#toggle-tooltips-btn`. Displays descriptions of port types and functionality on hover.
+4. **Cables**: drag from a port to a port to connect; drag a plugged cable end into empty space to unplug. Click a cable on the empty workspace to select it, click it again (or press `Delete`) to delete it. The `Cables: Front/Back` toolbar button moves all cables in front of or behind the modules.
+5. **Moving the menus**: drag the Sidebar by its `Modules` title and the Toolbar by its `Move` label; double-click to return it to its default corner.
+6. **Interactive Tooltips**: Toggled globally via `#toggle-tooltips-btn`. Displays descriptions of port types and functionality on hover.
 
 ---
 
@@ -168,3 +174,4 @@ Any other value (e.g. `audioinput`) fails to create the module. Presets live in 
 ## 9. Changelog
 
 - **2026-10-08** - Imported v_4 into GitHub. Fixed the Audio Input demo and External Processing presets in `helpData.js` (module type `audioinput` changed to the canonical `audio_in`). Added `README.md`, `.gitignore`, `CLAUDE.md`. Enabled GitHub Pages. Documented module type IDs and the `PatchManager.js` load status.
+- **2026-10-08** - Cables and menus: fixed pressing a free port pulling out a cable from another port of the same type (exact element match; `getPortElement` now searches only the correct direction, which also fixes the VCA output cable being drawn from its input). Added click-to-select / click-again-or-Delete to remove a cable, the `Cables: Front/Back` toolbar button, and draggable Sidebar/Toolbar with remembered positions. Bumped `styles.css?v=2.1`, `app.js?v=3`.

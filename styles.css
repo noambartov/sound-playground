@@ -201,6 +201,29 @@ body {
   border-color: var(--danger-color);
 }
 
+/* ===== Draggable Panels (Sidebar & Toolbar) ===== */
+.panel-drag-handle {
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+.toolbar .panel-drag-handle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 4px;
+  border-right: 1px solid var(--panel-border);
+  padding-right: 10px;
+}
+
+.panel-dragging {
+  box-shadow: var(--shadow-md, 0 10px 25px rgba(0, 0, 0, 0.15));
+  transition: none;
+}
+
 .zoom-controls {
   display: flex;
   align-items: center;
@@ -231,7 +254,13 @@ body {
   z-index: 30;
 }
 
+/* Cables behind modules: toggled by the "Cables" toolbar button */
+body.cables-behind #connections-canvas {
+  z-index: 0;
+}
+
 #workspace-viewport {
+  z-index: 1;
   position: absolute;
   top: 0;
   left: 0;
@@ -741,4 +770,10 @@ body.presentation-mode .node-header {
   background-color: var(--success-color);
   color: #ffffff;
   border-color: var(--success-color);
+}
+
+#cable-layer-btn.active {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
 }

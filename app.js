@@ -256,9 +256,6 @@ if (!window.SoundSandboxApp) {
         try { instance.bindEvents(card); } catch (e) {}
       }
 
-      if (state && typeof instance.setState === 'function') {
-        try { instance.setState(state); } catch (e) {}
-      }
 
       const deleteBtn = card.querySelector('.delete-module-btn, .close-btn, .delete-btn, .action-btn-close');
       if (deleteBtn) {
@@ -273,6 +270,12 @@ if (!window.SoundSandboxApp) {
 
       if (this.modulesLayer) this.modulesLayer.appendChild(card);
       if (this.resizeObserver) this.resizeObserver.observe(card);
+
+      // State is applied once the card is in the page, so modules that look up their own
+      // controls by document id also update their sliders and labels
+      if (state && typeof instance.setState === 'function') {
+        try { instance.setState(state); } catch (e) {}
+      }
 
       // מודול חדש מהתפריט: ממקמים אותו במקום פנוי וגלוי, לא מתחת לתפריטים ולא על מודול קיים
       if (autoPlace) {
@@ -1079,12 +1082,21 @@ if (!window.SoundSandboxApp) {
         try {
           if (typeof source.connect === 'function') {
             source.connect(target);
+            this.notifyInputConnection(conn.toNode, toPortEl, true);
           }
         } catch (err) {
           console.error(`[AudioConnect Error]`, err);
         }
       }
       this.updatePortConnectedClasses();
+    }
+
+    // Lets a module react when a cable is plugged into or pulled out of one of its inputs
+    notifyInputConnection(moduleId, portEl, connected) {
+      const mod = this.getModule(moduleId);
+      if (!mod || typeof mod.onInputConnected !== 'function' || !portEl) return;
+      const key = portEl.getAttribute('data-port-id') || portEl.getAttribute('data-port-name') || portEl.getAttribute('data-port-type');
+      try { mod.onInputConnected(key, connected); } catch (e) {}
     }
 
     disconnectAudio(conn) {
@@ -1109,6 +1121,7 @@ if (!window.SoundSandboxApp) {
         } catch (err) {
           try { source.disconnect(); } catch (e) {}
         }
+        this.notifyInputConnection(conn.toNode, toPortEl, false);
       }
       this.updatePortConnectedClasses();
     }

@@ -234,6 +234,15 @@
             window.synthApp.audioCtx.resume();
           }
 
+          // Sequencers in a preset start running right away (the Output volume is still at 0)
+          setTimeout(() => {
+            Object.values(window.synthApp.modules || {}).forEach(m => {
+              if (m.type === 'sequencer' && m.instance && !m.instance.isPlaying && typeof m.instance.togglePlay === 'function') {
+                m.instance.togglePlay();
+              }
+            });
+          }, 300);
+
           closeModal();
         }
       };

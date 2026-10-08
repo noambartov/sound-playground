@@ -21,6 +21,12 @@ class OscillatorModule {
     this.audioOutput = this.outputGain;
     this.fmInput = this.oscNode.frequency;
 
+    // PITCH IN: a note in Hz (Keyboard FREQ, Sequencer PITCH CV). While it is patched the
+    // Frequency slider is set aside so the incoming note plays exactly in tune.
+    this.pitchInput = this.ctx.createGain();
+    this.pitchInput.connect(this.oscNode.frequency);
+    this.pitchConnections = 0;
+
     this.updateWaveformRouting();
     this.oscNode.start();
   }
@@ -46,8 +52,7 @@ class OscillatorModule {
       const freqSlider = this.card.querySelector(`#osc_freq_${this.id}`);
       if (freqSlider) freqSlider.value = this.currentFreq;
 
-      const freqLabel = this.card.querySelector(`#freq_val_${this.id}`);
-      if (freqLabel) freqLabel.innerText = `${Math.round(this.currentFreq)} Hz`;
+      this.updatePitchUI();
 
       const pwSlider = this.card.querySelector(`#osc_pw_${this.id}`);
       if (pwSlider) pwSlider.value = this.pulseWidth;
@@ -59,6 +64,31 @@ class OscillatorModule {
 
   getAudioOutput() { return this.audioOutput; }
   getFMInput() { return this.fmInput; }
+  getAudioInput(portType) { return portType === 'pitch' ? this.pitchInput : this.fmInput; }
+
+  // Called by app.js when a cable is plugged into / pulled out of one of this module's inputs
+  onInputConnected(portType, connected) {
+    if (portType !== 'pitch') return;
+    this.pitchConnections = Math.max(0, this.pitchConnections + (connected ? 1 : -1));
+    this.applyBaseFrequency();
+    this.updatePitchUI();
+  }
+
+  applyBaseFrequency() {
+    const target = this.pitchConnections > 0 ? 0 : this.currentFreq;
+    const now = this.ctx.currentTime;
+    this.oscNode.frequency.cancelScheduledValues(now);
+    this.oscNode.frequency.setTargetAtTime(target, now, 0.003);
+  }
+
+  updatePitchUI() {
+    if (!this.card) return;
+    const slider = this.card.querySelector(`#osc_freq_${this.id}`);
+    const label = this.card.querySelector(`#freq_val_${this.id}`);
+    const fromPitch = this.pitchConnections > 0;
+    if (slider) slider.disabled = fromPitch;
+    if (label) label.innerText = fromPitch ? 'from PITCH IN' : `${Math.round(this.currentFreq)} Hz`;
+  }
 
   makePulseCurve(width) {
     const samples = 1024;
@@ -86,9 +116,7 @@ class OscillatorModule {
 
   setFrequency(freq) {
     this.currentFreq = parseFloat(freq);
-    const now = this.ctx.currentTime;
-    this.oscNode.frequency.cancelScheduledValues(now);
-    this.oscNode.frequency.setTargetAtTime(this.currentFreq, now, 0.003);
+    this.applyBaseFrequency();
   }
 
   setPulseWidth(val) {
@@ -144,6 +172,10 @@ class OscillatorModule {
 
         <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #3f3f46;">
           <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
+            <div class="port port-in" data-node-id="${this.id}" data-port-type="pitch" title="Pitch Input"></div>
+            <span>PITCH</span>
+          </div>
+          <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
             <div class="port port-in" data-node-id="${this.id}" data-port-type="fm" title="FM Input"></div>
             <span>FM IN</span>
           </div>
@@ -170,7 +202,7 @@ class OscillatorModule {
     if (freqSlider) {
       freqSlider.addEventListener('input', (e) => {
         this.setFrequency(e.target.value);
-        if (freqLabel) freqLabel.innerText = `${Math.round(e.target.value)} Hz`;
+        if (freqLabel && this.pitchConnections === 0) freqLabel.innerText = `${Math.round(e.target.value)} Hz`;
       });
     }
 
@@ -190,5 +222,6 @@ class OscillatorModule {
     }
     if (this.shaperNode) try { this.shaperNode.disconnect(); } catch (e) {}
     if (this.outputGain) try { this.outputGain.disconnect(); } catch (e) {}
+    if (this.pitchInput) try { this.pitchInput.disconnect(); } catch (e) {}
   }
 }

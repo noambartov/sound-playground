@@ -237,10 +237,12 @@ if (!window.SoundSandboxApp) {
       card.className = 'module-card';
       card.id = `module_card_${id}`;
       
+      const autoPlace = customX === null || customY === null;
       const spawnX = customX !== null ? customX : (220 - this.panX) / this.scale;
       const spawnY = customY !== null ? customY : (120 - this.panY) / this.scale;
       card.style.left = `${spawnX}px`;
       card.style.top = `${spawnY}px`;
+      if (autoPlace) card.style.visibility = 'hidden';
 
       if (typeof instance.renderHTML === 'function') {
         card.innerHTML = instance.renderHTML();
@@ -272,7 +274,91 @@ if (!window.SoundSandboxApp) {
       if (this.modulesLayer) this.modulesLayer.appendChild(card);
       if (this.resizeObserver) this.resizeObserver.observe(card);
 
+      // מודול חדש מהתפריט: ממקמים אותו במקום פנוי וגלוי, לא מתחת לתפריטים ולא על מודול קיים
+      if (autoPlace) {
+        const spot = this.findFreeSpawnPoint(card);
+        card.style.left = `${spot.x}px`;
+        card.style.top = `${spot.y}px`;
+        card.style.visibility = '';
+      }
+
       return instance;
+    }
+
+    // The visible part of the canvas that is not covered by the sidebar or toolbar (screen px, canvas-relative)
+    getFreeViewRect() {
+      const c = this.canvasContainer.getBoundingClientRect();
+      const free = { left: 0, top: 0, right: c.width, bottom: c.height };
+      const panels = [document.querySelector('.sidebar'), document.querySelector('.toolbar')];
+      panels.forEach(el => {
+        if (!el || el.offsetParent === null) return;
+        const r = el.getBoundingClientRect();
+        const p = { left: r.left - c.left, top: r.top - c.top, right: r.right - c.left, bottom: r.bottom - c.top };
+        const isTall = (p.bottom - p.top) > (p.right - p.left);
+        if (isTall) {
+          if ((p.left + p.right) / 2 < c.width / 2) free.left = Math.max(free.left, p.right);
+          else free.right = Math.min(free.right, p.left);
+        } else {
+          if ((p.top + p.bottom) / 2 < c.height / 2) free.top = Math.max(free.top, p.bottom);
+          else free.bottom = Math.min(free.bottom, p.top);
+        }
+      });
+      const pad = 16;
+      free.left += pad; free.top += pad; free.right -= pad; free.bottom -= pad;
+      if (free.right - free.left < 200) { free.left = pad; free.right = c.width - pad; }
+      if (free.bottom - free.top < 200) { free.top = pad; free.bottom = c.height - pad; }
+      return free;
+    }
+
+    findFreeSpawnPoint(card) {
+      const w = card.offsetWidth || 240;
+      const h = card.offsetHeight || 220;
+      const s = this.scale;
+      const free = this.getFreeViewRect();
+      const gap = 24;
+      const others = Object.values(this.modules)
+        .filter(m => m.card && m.card !== card)
+        .map(m => ({ x: m.card.offsetLeft, y: m.card.offsetTop, w: m.card.offsetWidth, h: m.card.offsetHeight }));
+      const hits = (x, y) => others.some(o =>
+        x < o.x + o.w + gap && x + w + gap > o.x && y < o.y + o.h + gap && y + h + gap > o.y);
+
+      // סריקה במסך הפנוי: משמאל לימין ומלמעלה למטה, בצעדים קטנים
+      const toWorldX = sx => (sx - this.panX) / s;
+      const toWorldY = sy => (sy - this.panY) / s;
+      const step = 30;
+      for (let sy = free.top; sy + h * s <= free.bottom; sy += step) {
+        for (let sx = free.left; sx + w * s <= free.right; sx += step) {
+          const x = toWorldX(sx), y = toWorldY(sy);
+          if (!hits(x, y)) return { x, y };
+        }
+      }
+      // אין מקום פנוי במסך: שמים את המודול מימין לכל המודולים ומזיזים את התצוגה כך שיראו אותו
+      const maxRight = Math.max(...others.map(o => o.x + o.w));
+      const x = maxRight + gap * 2;
+      const y = toWorldY(free.top);
+      this.panX = free.right - (x + w) * s;
+      this.applyViewportTransform();
+      return { x, y };
+    }
+
+    // Zoom and pan so every module is visible inside the free part of the screen
+    fitToModules() {
+      const cards = Object.values(this.modules).map(m => m.card).filter(Boolean);
+      if (!cards.length) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      cards.forEach(c => {
+        minX = Math.min(minX, c.offsetLeft);
+        minY = Math.min(minY, c.offsetTop);
+        maxX = Math.max(maxX, c.offsetLeft + c.offsetWidth);
+        maxY = Math.max(maxY, c.offsetTop + c.offsetHeight);
+      });
+      const free = this.getFreeViewRect();
+      const fw = free.right - free.left, fh = free.bottom - free.top;
+      const bw = maxX - minX, bh = maxY - minY;
+      this.scale = Math.min(1, Math.max(0.4, Math.min(fw / bw, fh / bh)));
+      this.panX = free.left + (fw - bw * this.scale) / 2 - minX * this.scale;
+      this.panY = free.top + (fh - bh * this.scale) / 2 - minY * this.scale;
+      this.applyViewportTransform();
     }
 
     bindEvents() {
@@ -657,6 +743,7 @@ if (!window.SoundSandboxApp) {
 
           this.updatePortConnectedClasses();
           this.resizeCanvas();
+          this.fitToModules();
           this.render();
           this.scheduleHistoryCapture();
           this.showNotification('Patch loaded. Volume starts at 0: raise Master Volume on the Output module to hear it.');

@@ -824,3 +824,69 @@ body.presentation-mode .node-header {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Jack hint card (portGuide.js): shown when hovering a jack, follows the Tooltips ON/OFF button */
+.port-hint {
+  position: fixed;
+  display: none;
+  width: 250px;
+  background: var(--panel-bg);
+  color: var(--text-color);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  direction: ltr;
+  text-align: left;
+  z-index: 100000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.port-hint.visible { opacity: 1; }
+.port-hint-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.port-hint-head strong { font-size: 13px; }
+.port-hint-dir {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-text);
+}
+.port-hint-where {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--panel-border);
+}
+.port-hint-where span {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary-color);
+}
+
+/* While dragging a cable: matching jacks light up, recommended ones pulse, the rest fade */
+body.cable-dragging .port.port-incompatible {
+  opacity: 0.25;
+}
+body.cable-dragging .port.port-compatible {
+  box-shadow: 0 0 0 2px var(--panel-bg), 0 0 0 4px var(--muted-text);
+}
+body.cable-dragging .port.port-suggested {
+  box-shadow: 0 0 0 2px var(--panel-bg), 0 0 0 5px var(--primary-color), 0 0 12px 5px var(--primary-color);
+  animation: port-suggest-pulse 1s ease-in-out infinite;
+}
+@keyframes port-suggest-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+}

@@ -112,9 +112,23 @@ class AudioInputModule {
     }
   }
 
+  watchMicInterruptions(btn, card) {
+    if (this.onPageReturn) return;
+    this.onPageReturn = () => {
+      if (document.visibilityState !== 'visible' || !this.isActive || !this.mediaStream) return;
+      const live = this.mediaStream.getAudioTracks().some(t => t.readyState === 'live');
+      if (!live) {
+        this.stopMicrophone(btn, card);
+        this.startMicrophone(btn, card);
+      }
+    };
+    document.addEventListener('visibilitychange', this.onPageReturn);
+    window.addEventListener('pageshow', this.onPageReturn);
+  }
+
   async startMicrophone(btn, card) {
-    if (this.audioCtx.state === 'suspended') {
-      await this.audioCtx.resume();
+    if (this.audioCtx.state !== 'running' && this.audioCtx.state !== 'closed') {
+      try { await this.audioCtx.resume(); } catch (e) {}
     }
 
     const statusEl = card ? card.querySelector(`#status_${this.id}`) : null;
@@ -131,6 +145,9 @@ class AudioInputModule {
 
       this.sourceNode = this.audioCtx.createMediaStreamSource(this.mediaStream);
       this.reconnectChain();
+
+      // iPad / iPhone may cut the microphone while another app is open: reconnect it on return.
+      this.watchMicInterruptions(btn, card);
 
       this.isActive = true;
       if (btn) {
@@ -256,6 +273,11 @@ class AudioInputModule {
   }
 
   cleanup() {
+    if (this.onPageReturn) {
+      document.removeEventListener('visibilitychange', this.onPageReturn);
+      window.removeEventListener('pageshow', this.onPageReturn);
+      this.onPageReturn = null;
+    }
     this.stopMicrophone();
     if (this.outputNode) {
       try { this.outputNode.disconnect(); } catch (e) {}

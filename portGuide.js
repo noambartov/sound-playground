@@ -309,7 +309,10 @@
 
     const ports = Array.from(document.querySelectorAll('.module-card .port'));
     // Skip the frame when no jack moved since last time (keeps idle frames cheap, e.g. on iPad)
-    let sig = ports.length + '|' + document.body.className;
+    let sig = ports.length + '|' + document.body.className + '|';
+    // Module stacking order is part of the signature: bringing a module to the front changes which jacks are covered
+    document.querySelectorAll('.module-card').forEach(c => { sig += c.style.zIndex + ','; });
+    sig += '|';
     for (const p of ports) {
       const r = p.getBoundingClientRect();
       sig += `${Math.round(r.left)},${Math.round(r.top)};`;
@@ -329,6 +332,9 @@
       if (r.width > 0) jackRects.push(r);
       if (!chip) return;
       if (r.width === 0) { chip.style.display = 'none'; return; }
+      // A jack hidden under another module (or a menu) gets no label, so labels never show through a module
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (!hit || hit.closest('.module-card') !== port.closest('.module-card')) { chip.style.display = 'none'; return; }
       chip.style.display = '';
       chip.classList.remove('compact', 'tiny');
       placed.push({ chip, port: r, cx: r.left + r.width / 2, top: r.bottom + 3, level: 0 });

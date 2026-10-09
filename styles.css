@@ -1250,3 +1250,13 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   flex: 1 1 120px;
   min-width: 110px;
 }
+
+.dm-knobs[hidden] {
+  display: none;
+}
+
+.dm-small-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}

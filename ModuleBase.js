@@ -197,8 +197,9 @@ class ModuleBase {
 
   renderHTML() {
     const d = this.def;
-    const ports = (d.inputs || []).map(p => this.renderPort(p, 'in'))
-      .concat((d.outputs || []).map(p => this.renderPort(p, 'out'))).join('');
+    // Jacks marked `inline: true` are drawn by the module itself (renderPort) inside renderBody()
+    const ports = (d.inputs || []).filter(p => !p.inline).map(p => this.renderPort(p, 'in'))
+      .concat((d.outputs || []).filter(p => !p.inline).map(p => this.renderPort(p, 'out'))).join('');
     return `
       <div class="node-header">
         <span>${d.title}</span>

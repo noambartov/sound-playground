@@ -1061,3 +1061,172 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   display: flex;
   gap: 8px;
 }
+
+/* Drum Machine (DrumMachineModule.js) */
+.dm-top {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.dm-top .dm-play {
+  width: 90px;
+  flex: none;
+}
+
+.dm-play.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.dm-tempo { flex: 2; }
+.dm-top > .dm-knob:not(.dm-tempo) { flex: 1; }
+
+.dm-bpm-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dm-bpm {
+  width: 52px;
+  padding: 2px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-bg);
+  color: var(--text-color);
+}
+
+.dm-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: none;
+}
+
+.dm-bar-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.dm-small-btn {
+  width: auto;
+  padding: 4px 10px;
+  font-size: 11px;
+}
+
+.dm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.dm-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px; /* room for the always-visible jack labels under TRIG / OUT */
+}
+
+.dm-row-name {
+  font-size: 13px;
+  font-weight: 700;
+  width: 60px;
+}
+
+.dm-sound {
+  width: 130px;
+}
+
+.dm-row-jacks {
+  margin-left: auto;
+  display: flex;
+  gap: 18px;
+}
+
+.dm-row-jacks .port-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dm-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  max-width: 712px;
+}
+
+.dm-bar {
+  display: flex;
+  gap: 3px;
+}
+
+.dm-step {
+  width: 18px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--btn-bg, transparent);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.dm-step.dm-beat:not(:first-child) {
+  margin-left: 4px;
+}
+
+.dm-step.dm-beat {
+  border-color: var(--muted-text);
+}
+
+.dm-step.dm-on {
+  background: color-mix(in srgb, var(--primary-color) 50%, transparent);
+  border-color: var(--primary-color);
+}
+
+.dm-step.dm-accent {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, #fff 45%, var(--primary-color));
+}
+
+.dm-step.dm-now {
+  outline: 2px solid var(--text-color);
+  outline-offset: 1px;
+}
+
+.dm-knobs,
+.dm-custom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.dm-custom[hidden] {
+  display: none;
+}
+
+.dm-custom {
+  padding: 8px;
+  border: 1px dashed var(--panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.dm-knob {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 120px;
+  min-width: 110px;
+}

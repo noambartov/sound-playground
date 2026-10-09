@@ -72,7 +72,8 @@ if (!window.SoundSandboxApp) {
       if (window.audioEngine && typeof window.audioEngine.getContext === 'function') {
         this.audioCtx = window.audioEngine.getContext();
       }
-      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      // 'interrupted' is what iPad Safari reports after switching to another app
+      if (this.audioCtx && this.audioCtx.state !== 'running' && this.audioCtx.state !== 'closed') {
         this.audioCtx.resume().then(() => {
           console.log(`[AudioEngine] Context resumed successfully`);
         }).catch((err) => {
@@ -1410,10 +1411,19 @@ if (!window.SoundSandboxApp) {
       });
     }
 
+    // The module the user touches last is drawn above all others, so a moved module
+    // never slides underneath another one.
+    bringToFront(element) {
+      this.topZIndex = (this.topZIndex || 20) + 1;
+      element.style.zIndex = this.topZIndex;
+    }
+
     makeDraggable(element, id) {
       const header = element.querySelector('.node-header') || element;
       let isDragging = false;
       let initialPositions = {};
+
+      element.addEventListener('pointerdown', () => this.bringToFront(element), true);
 
       header.addEventListener('pointerdown', (e) => {
         if (this.isPresentationMode) return;

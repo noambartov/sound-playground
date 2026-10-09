@@ -5,6 +5,37 @@ class AudioEngine {
         this.masterLimiter = null;
         this.dcBlocker = null;
         this.initAudioContext();
+        this.watchInterruptions();
+    }
+
+    // iPad / iPhone: switching to another app puts the sound in an 'interrupted' state
+    // (not 'suspended'), so it must be woken up again when the page comes back.
+    isAsleep() {
+        return !!this.ctx && this.ctx.state !== 'running' && this.ctx.state !== 'closed';
+    }
+
+    wake() {
+        if (this.isAsleep()) this.ctx.resume().catch(() => {});
+    }
+
+    watchInterruptions() {
+        const onReturn = () => {
+            if (document.visibilityState !== 'visible') return;
+            this.wake();
+            // Safari only lets sound restart from a tap: if it is still off, say so.
+            setTimeout(() => {
+                if (this.hasPlayed && this.isAsleep() && document.visibilityState === 'visible' &&
+                    window.synthApp && typeof window.synthApp.showNotification === 'function') {
+                    window.synthApp.showNotification('Tap anywhere to turn the sound back on.');
+                }
+            }, 700);
+        };
+        document.addEventListener('visibilitychange', onReturn);
+        window.addEventListener('pageshow', onReturn);
+        // Every tap, click or key press wakes the sound if it is asleep (cheap when it is running).
+        ['pointerdown', 'touchend', 'keydown'].forEach(type => {
+            window.addEventListener(type, () => this.wake(), { capture: true, passive: true });
+        });
     }
 
     initAudioContext() {
@@ -42,12 +73,16 @@ class AudioEngine {
         if (!this.ctx) {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             this.ctx = new AudioCtx();
+            // Remember that sound has started once, so the "tap to turn the sound back on" note
+            // only appears after an interruption, never on the first visit.
+            this.hasPlayed = this.ctx.state === 'running';
+            this.ctx.addEventListener('statechange', () => {
+                if (this.ctx.state === 'running') this.hasPlayed = true;
+            });
             this.setupMasterProtection();
         }
         
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume().catch(() => {});
-        }
+        this.wake();
 
         return this.ctx;
     }
@@ -81,7 +116,7 @@ class AudioEngine {
 
     async resume() {
         const ctx = this.getContext();
-        if (ctx.state === 'suspended') {
+        if (this.isAsleep()) {
             await ctx.resume();
         }
         return ctx;

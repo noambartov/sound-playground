@@ -341,9 +341,29 @@ body.cables-behind #connections-canvas {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  resize: both;
+  resize: none;
   min-height: 180px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Resize grip (app.js makeDraggable): works with mouse, finger and Apple Pencil */
+.module-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 5;
+  background: linear-gradient(135deg, transparent 0 55%, var(--btn-border) 55% 62%, transparent 62% 72%, var(--btn-border) 72% 79%, transparent 79%);
+  border-bottom-right-radius: var(--radius-lg);
+}
+.module-resize-handle:hover {
+  background: linear-gradient(135deg, transparent 0 55%, var(--muted-text) 55% 62%, transparent 62% 72%, var(--muted-text) 72% 79%, transparent 79%);
+}
+body.presentation-mode .module-resize-handle {
+  display: none;
 }
 
 .module-card.selected {

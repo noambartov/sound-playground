@@ -1426,6 +1426,40 @@ if (!window.SoundSandboxApp) {
 
       element.addEventListener('pointerdown', () => this.bringToFront(element), true);
 
+      // Resize grip in the bottom-right corner (the browser's own resize corner does not work with touch / Apple Pencil)
+      const grip = document.createElement('div');
+      grip.className = 'module-resize-handle';
+      grip.title = 'Drag to resize';
+      element.appendChild(grip);
+      grip.addEventListener('pointerdown', (e) => {
+        if (this.isPresentationMode) return;
+        if (e.button && e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const cs = getComputedStyle(element);
+        const minW = parseFloat(cs.minWidth) || 120;
+        // Never shorter than the module's own content, so jacks at the bottom are never cut off
+        const savedH = element.style.height;
+        element.style.height = 'auto';
+        const minH = Math.max(parseFloat(cs.minHeight) || 80, element.offsetHeight);
+        element.style.height = savedH;
+        const startW = element.offsetWidth, startH = element.offsetHeight;
+        const startX = e.clientX, startY = e.clientY;
+        const onMove = (ev) => {
+          element.style.width = `${Math.max(minW, startW + (ev.clientX - startX) / this.scale)}px`;
+          element.style.height = `${Math.max(minH, startH + (ev.clientY - startY) / this.scale)}px`;
+          this.drawConnections();
+        };
+        const onUp = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onUp);
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+      });
+
       header.addEventListener('pointerdown', (e) => {
         if (this.isPresentationMode) return;
         if (e.button && e.button !== 0) return;

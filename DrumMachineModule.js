@@ -6,10 +6,10 @@
 // four rows mixed by their Pan. Built on the shared template (ModuleBase.js).
 
 const DM_ROWS = [
-  { key: 'kick', name: 'Kick', sounds: [['kick808', '808'], ['kick909', '909'], ['kick606', '606'], ['custom', 'Custom']] },
-  { key: 'snare', name: 'Snare', sounds: [['snare808', '808'], ['snare909', '909'], ['rim', 'Rimshot'], ['clap', 'Clap'], ['custom', 'Custom']] },
-  { key: 'hat', name: 'Hi-Hat', sounds: [['hat808c', '808 Closed'], ['hat808o', '808 Open'], ['hat909c', '909 Closed'], ['hat909o', '909 Open'], ['custom', 'Custom']] },
-  { key: 'cym', name: 'Cymbal', sounds: [['cym808', '808 Cymbal'], ['crash909', '909 Crash'], ['ride', 'Ride'], ['cowbell', 'Cowbell'], ['custom', 'Custom']] }
+  { key: 'kick', name: 'Kick', sounds: [['kick808', '808'], ['kick909', '909'], ['kick606', '606'], ['custom', 'Custom'], ['input', 'Input']] },
+  { key: 'snare', name: 'Snare', sounds: [['snare808', '808'], ['snare909', '909'], ['rim', 'Rimshot'], ['clap', 'Clap'], ['custom', 'Custom'], ['input', 'Input']] },
+  { key: 'hat', name: 'Hi-Hat', sounds: [['hat808c', '808 Closed'], ['hat808o', '808 Open'], ['hat909c', '909 Closed'], ['hat909o', '909 Open'], ['custom', 'Custom'], ['input', 'Input']] },
+  { key: 'cym', name: 'Cymbal', sounds: [['cym808', '808 Cymbal'], ['crash909', '909 Crash'], ['ride', 'Ride'], ['cowbell', 'Cowbell'], ['custom', 'Custom'], ['input', 'Input']] }
 ];
 
 // Row sliders: [id, label, min, max, step, default, format]
@@ -38,7 +38,7 @@ const DM_METAL = [205.3, 304.4, 369.6, 522.7, 540, 800]; // the 808's six square
 // Loudness trim per sound, measured so every sound peaks at a similar level at MAIN L / R
 const DM_TRIM = {
   kick808: 1, kick909: 0.65, kick606: 0.8, snare808: 0.6, snare909: 0.5, rim: 1.3, clap: 3.2,
-  hat808c: 7, hat808o: 6, hat909c: 1.3, hat909o: 0.9, cym808: 5, crash909: 1, ride: 2.6, cowbell: 2.4, custom: 1
+  hat808c: 7, hat808o: 6, hat909c: 1.3, hat909o: 0.9, cym808: 5, crash909: 1, ride: 2.6, cowbell: 2.4, custom: 1, input: 1
 };
 
 class DrumMachineModule extends ModuleBase {
@@ -49,6 +49,11 @@ class DrumMachineModule extends ModuleBase {
     width: 760,
     menu: { group: 'Controllers & Sequencing', label: 'Drum Machine' },
     params: [],
+    inputs: DM_ROWS.map(r => ({
+      id: `${r.key}_in`, label: 'IN', signal: 'audio', inline: true, title: `${r.name} Input`,
+      guide: { text: `Any sound to play as the ${r.name} (for example Oscillator OUT, or an Oscillator through a Filter). Plugging a cable in switches this row's Sound to Input: every step opens the incoming sound briefly, shaped by Decay (length) and Tone (brightness).`, from: 'Oscillator OUT, Filter OUT, Granular OUT, Mic', match: ['oscillator:out:default', 'filter:out:default', 'granular:out:out_l', 'audio_in:out:audio', 'vca:out:audio'] },
+      chip: 'Osc / Filter'
+    })),
     outputs: [].concat(
       ...DM_ROWS.map(r => [
         { id: `${r.key}_out`, label: 'OUT', signal: 'audio', inline: true, title: `${r.name} Output`,
@@ -114,6 +119,20 @@ class DrumMachineModule extends ModuleBase {
       row.level.connect(row.panner);
       row.panner.connect(this.mainBus);
       row.trig = this.makeConstant(0);
+      // IN jack: incoming sound -> low-pass (Tone) -> gate opened by each hit (Decay) -> row Level
+      row.inNode = this.own(this.audioCtx.createGain());
+      row.inFilter = this.own(this.audioCtx.createBiquadFilter());
+      row.inFilter.type = 'lowpass';
+      row.inFilter.Q.value = 0.7;
+      row.inVca = this.own(this.audioCtx.createGain());
+      row.inVca.gain.value = 0;
+      row.inNode.connect(row.inFilter);
+      row.inFilter.connect(row.inVca);
+      row.inVca.connect(row.level);
+      row.inCables = 0;
+      row.prevSound = null;
+      row.open = false;
+      this.inputNodes[`${r.key}_in`] = row.inNode;
       this.outputNodes[`${r.key}_out`] = row.level;
       this.outputNodes[`${r.key}_trig`] = row.trig;
       this.applyRowMix(row);
@@ -375,6 +394,16 @@ class DrumMachineModule extends ModuleBase {
       this.osc('square', 800 * p.tune, p.t, p.t + d + 0.05, sum);
     },
 
+    // Input: the sound plugged into the row's IN jack, opened briefly by each hit
+    input(p, row) {
+      const g = row.inVca.gain;
+      g.cancelScheduledValues(p.t);
+      g.setValueAtTime(0, p.t);
+      g.linearRampToValueAtTime(p.vel, p.t + 0.002);
+      g.setTargetAtTime(0, p.t + 0.002, 0.1 * p.decay);
+      row.inFilter.frequency.setValueAtTime(Math.min(18000, 2500 * p.tone), p.t);
+    },
+
     // Custom: oscillator (+ noise) with a pitch envelope, through a resonant low-pass, with an attack / decay envelope
     custom(p, row) {
       const c = row.custom;
@@ -426,17 +455,19 @@ class DrumMachineModule extends ModuleBase {
     const opts = r.sounds.map(([v, l]) => `<option value="${v}"${v === row.sound ? ' selected' : ''}>${l}</option>`).join('');
     const out = this.def.outputs.find(o => o.id === `${r.key}_out`);
     const trig = this.def.outputs.find(o => o.id === `${r.key}_trig`);
+    const inp = this.def.inputs.find(o => o.id === `${r.key}_in`);
     const waves = DM_WAVES.map(([v, l]) => `<option value="${v}"${v === row.custom.wave ? ' selected' : ''}>${l}</option>`).join('');
     return `<div class="dm-row" data-row="${i}">
         <div class="dm-row-head">
           <span class="dm-row-name">${r.name}</span>
           <select id="${this.elId(`sound_${r.key}`)}" class="control-select dm-sound">${opts}</select>
+          <button class="action-btn dm-small-btn" id="${this.elId(`edit_${r.key}`)}">${row.open ? 'Done' : 'Edit'}</button>
           <button class="action-btn dm-small-btn" id="${this.elId(`clear_${r.key}`)}">Clear</button>
-          <div class="dm-row-jacks">${this.renderPort(trig, 'out')}${this.renderPort(out, 'out')}</div>
+          <div class="dm-row-jacks">${this.renderPort(inp, 'in')}${this.renderPort(trig, 'out')}${this.renderPort(out, 'out')}</div>
         </div>
         <div class="dm-grid" id="${this.elId(`grid_${r.key}`)}">${this.renderGrid(i)}</div>
-        <div class="dm-knobs">${DM_ROW_KNOBS.map(k => this.slider(`${r.key}_${k[0]}`, k[1], k[2], k[3], k[4], row.knobs[k[0]], k[6])).join('')}</div>
-        <div class="dm-custom" id="${this.elId(`custom_${r.key}`)}"${row.sound === 'custom' ? '' : ' hidden'}>
+        <div class="dm-knobs" id="${this.elId(`knobs_${r.key}`)}"${row.open ? '' : ' hidden'}>${DM_ROW_KNOBS.map(k => this.slider(`${r.key}_${k[0]}`, k[1], k[2], k[3], k[4], row.knobs[k[0]], k[6])).join('')}</div>
+        <div class="dm-custom" id="${this.elId(`custom_${r.key}`)}"${row.open && row.sound === 'custom' ? '' : ' hidden'}>
           <div class="dm-knob"><label class="module-label">Wave</label>
             <select id="${this.elId(`wave_${r.key}`)}" class="control-select">${waves}</select></div>
           ${DM_CUSTOM_KNOBS.map(k => this.slider(`${r.key}_c_${k[0]}`, k[1], k[2], k[3], k[4], row.custom[k[0]], k[6])).join('')}
@@ -488,6 +519,7 @@ class DrumMachineModule extends ModuleBase {
       const row = this.rows[i];
       on(`sound_${r.key}`, 'change', e => this.setSound(i, e.target.value));
       on(`clear_${r.key}`, 'click', () => { row.steps.fill(0); this.redrawGrid(i); });
+      on(`edit_${r.key}`, 'click', () => { row.open = !row.open; this.updateRowPanels(i); });
       on(`wave_${r.key}`, 'change', e => { row.custom.wave = e.target.value; });
       DM_ROW_KNOBS.forEach(k => on(`p_${r.key}_${k[0]}`, 'input', e => {
         row.knobs[k[0]] = parseFloat(e.target.value);
@@ -559,8 +591,38 @@ class DrumMachineModule extends ModuleBase {
     row.sound = sound;
     const sel = this.el(`sound_${DM_ROWS[i].key}`);
     if (sel && sel.value !== sound) sel.value = sound;
-    const custom = this.el(`custom_${DM_ROWS[i].key}`);
-    if (custom) custom.hidden = sound !== 'custom';
+    this.updateRowPanels(i);
+  }
+
+  // A row's sliders (and the Custom panel) show only while its Edit button is open, so the card stays small
+  updateRowPanels(i) {
+    const row = this.rows[i];
+    const key = DM_ROWS[i].key;
+    const knobs = this.el(`knobs_${key}`);
+    const custom = this.el(`custom_${key}`);
+    const btn = this.el(`edit_${key}`);
+    if (knobs) knobs.hidden = !row.open;
+    if (custom) custom.hidden = !(row.open && row.sound === 'custom');
+    if (btn) {
+      btn.textContent = row.open ? 'Done' : 'Edit';
+      btn.classList.toggle('active', row.open);
+    }
+  }
+
+  // Called by app.js when a cable is plugged into / pulled out of an IN jack:
+  // plugging in switches the row to Input, pulling the last cable out brings back the previous sound
+  onInputConnected(key, connected) {
+    const i = DM_ROWS.findIndex(r => `${r.key}_in` === key);
+    if (i < 0) return;
+    const row = this.rows[i];
+    row.inCables = Math.max(0, row.inCables + (connected ? 1 : -1));
+    if (connected && row.inCables === 1 && row.sound !== 'input') {
+      row.prevSound = row.sound;
+      this.setSound(i, 'input');
+    } else if (!connected && row.inCables === 0 && row.sound === 'input' && row.prevSound) {
+      this.setSound(i, row.prevSound);
+      row.prevSound = null;
+    }
   }
 
   updatePlayButton() {

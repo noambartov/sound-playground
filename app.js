@@ -29,6 +29,7 @@ if (!window.SoundSandboxApp) {
       this.bindEvents();
       this.bindCanvasInteractions();
       this.initDraggablePanels();
+      this.initSidebarGroups();
       this.initHistory();
     }
 
@@ -1731,6 +1732,51 @@ if (!window.SoundSandboxApp) {
         this.cableLayerBtn.classList.toggle('active', this.cablesBehind);
       }
       try { localStorage.setItem('sp_cables_behind', this.cablesBehind ? '1' : '0'); } catch (e) {}
+    }
+
+    // Sidebar categories open and close by clicking their title. Groups and buttons added later
+    // (template modules) are handled too: delegated click, and a MutationObserver keeps titles in sync.
+    initSidebarGroups() {
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      let open = [];
+      try { open = JSON.parse(localStorage.getItem('sp_sidebar_open') || '[]') || []; } catch (e) {}
+      const name = (g) => (g.querySelector('.sidebar-group-title') || {}).textContent || '';
+      const save = () => {
+        const names = Array.from(sidebar.querySelectorAll('.sidebar-group:not(.collapsed)')).map(name);
+        try { localStorage.setItem('sp_sidebar_open', JSON.stringify(names)); } catch (e) {}
+      };
+      const sync = () => {
+        sidebar.querySelectorAll('.sidebar-group').forEach(g => {
+          const title = g.querySelector('.sidebar-group-title');
+          if (!title) return;
+          if (!g.dataset.groupReady) {
+            g.dataset.groupReady = '1';
+            g.classList.toggle('collapsed', !open.includes(name(g)));
+            title.setAttribute('role', 'button');
+            title.tabIndex = 0;
+          }
+          title.dataset.count = g.querySelectorAll('.add-module-btn').length;
+          title.setAttribute('aria-expanded', g.classList.contains('collapsed') ? 'false' : 'true');
+        });
+      };
+      const toggle = (title) => {
+        title.closest('.sidebar-group').classList.toggle('collapsed');
+        sync();
+        save();
+      };
+      sidebar.addEventListener('click', (e) => {
+        const title = e.target.closest('.sidebar-group-title');
+        if (title) toggle(title);
+      });
+      sidebar.addEventListener('keydown', (e) => {
+        const title = e.target.closest('.sidebar-group-title');
+        if (title && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(title); }
+      });
+      sync();
+      if (typeof MutationObserver !== 'undefined') {
+        new MutationObserver(sync).observe(sidebar, { childList: true, subtree: true });
+      }
     }
 
     initDraggablePanels() {

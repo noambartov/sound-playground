@@ -165,7 +165,39 @@ body {
   color: var(--muted-text);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding-left: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-group-title::after {
+  content: attr(data-count);
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.sidebar-group-title:hover,
+.sidebar-group-title:focus-visible {
+  color: var(--text-color);
+  background: var(--btn-bg);
+  outline: none;
+}
+
+.sidebar-group:not(.collapsed) > .sidebar-group-title {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.sidebar-group.collapsed > .add-module-btn {
+  display: none;
 }
 
 .add-module-btn {

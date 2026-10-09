@@ -1416,6 +1416,7 @@ if (!window.SoundSandboxApp) {
     bringToFront(element) {
       this.topZIndex = (this.topZIndex || 20) + 1;
       element.style.zIndex = this.topZIndex;
+      this.drawConnections();
     }
 
     makeDraggable(element, id) {
@@ -1508,6 +1509,10 @@ if (!window.SoundSandboxApp) {
 
       if (this.isPresentationMode) return;
 
+      // Cables: Front still keeps a cable under a module that is stacked above it: above both of its
+      // modules, or above the module whose jack it covers (then only a short stub shows at the visible jack).
+      const stack = this.cablesBehind ? null : this.getCardStack();
+
       this.connections.forEach(conn => {
         const fromCard = document.getElementById(`module_card_${conn.fromNode}`);
         const toCard = document.getElementById(`module_card_${conn.toNode}`);
@@ -1522,7 +1527,28 @@ if (!window.SoundSandboxApp) {
             const color = this.getConnectionColor(conn, fromPortEl);
 
             const isSelected = conn === this.selectedConnection;
+            const { rects: covers, stubAt } = stack ? this.getCoveringRects(stack, fromCard, toCard, p1, p2) : { rects: [], stubAt: null };
+            this.ctx.save();
+            if (covers.length) {
+              const w = this.canvas.width / dpr, h = this.canvas.height / dpr;
+              covers.forEach(r => {
+                // Each clip removes one module's area; successive clips intersect, so all are removed
+                this.ctx.beginPath();
+                this.ctx.rect(0, 0, w, h);
+                this.ctx.rect(r.x, r.y, r.w, r.h);
+                this.ctx.clip('evenodd');
+              });
+            }
             const points = this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);
+            this.ctx.restore();
+            if (stubAt) {
+              this.ctx.save();
+              this.ctx.beginPath();
+              this.ctx.arc(stubAt.x, stubAt.y, 18, 0, Math.PI * 2);
+              this.ctx.clip();
+              this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);
+              this.ctx.restore();
+            }
             this.cableHitPaths.push({ conn, points });
           }
         }
@@ -1538,6 +1564,43 @@ if (!window.SoundSandboxApp) {
           color
         );
       }
+    }
+
+    // Module cards in drawing order (bottom first): higher z-index on top, then later in the page.
+    getCardStack() {
+      const cRect = this.canvasContainer.getBoundingClientRect();
+      const cards = Array.from(document.querySelectorAll('#workspace-viewport .module-card'));
+      return cards
+        .map((card, i) => {
+          const r = card.getBoundingClientRect();
+          return {
+            card,
+            z: parseInt(card.style.zIndex, 10) || 20,
+            i,
+            rect: { x: r.left - cRect.left, y: r.top - cRect.top, w: r.width, h: r.height }
+          };
+        })
+        .sort((a, b) => (a.z - b.z) || (a.i - b.i))
+        .map((entry, rank) => ({ ...entry, rank }));
+    }
+
+    // Areas where a cable must not be drawn (Cables: Front). p1 / p2 are the cable's ends on fromCard / toCard.
+    getCoveringRects(stack, fromCard, toCard, p1, p2) {
+      const fromE = stack.find(e => e.card === fromCard);
+      const toE = stack.find(e => e.card === toCard);
+      if (!fromE || !toE) return { rects: [], stubAt: null };
+      const upper = fromE.rank >= toE.rank ? fromE : toE;
+      const lower = upper === fromE ? toE : fromE;
+      const upperPoint = upper === fromE ? p1 : p2;
+      const lowerPoint = upper === fromE ? p2 : p1;
+      const inside = (r, p) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+      const covers = stack.filter(e =>
+        e.rank > upper.rank || (e.rank > lower.rank && inside(e.rect, lowerPoint)));
+      return {
+        rects: covers.map(e => e.rect),
+        // The upper module covers the other end: still show the cable leaving its own jack
+        stubAt: covers.includes(upper) ? upperPoint : null
+      };
     }
 
     getBezierControlPoints(x1, y1, x2, y2) {

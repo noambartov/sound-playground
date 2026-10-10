@@ -10,6 +10,7 @@ const WT_LEVELS = 10;
 const WT_SIZE = 2048;
 const WT_BASE_F = 40;      // level k holds notes up to 40 Hz x 2^k
 const WT_MAX_H = 256;
+const WT_DRAW_N = 128;     // points in a drawn wave
 
 const WAVETABLE_WORKLET = `
   class WavetableProcessor extends AudioWorkletProcessor {
@@ -20,14 +21,18 @@ const WAVETABLE_WORKLET = `
         { name: 'pos', defaultValue: 0, automationRate: 'a-rate' },
         { name: 'posmod', defaultValue: 0, automationRate: 'a-rate' },
         { name: 'ratio', defaultValue: 1, automationRate: 'k-rate' },
-        { name: 'warp', defaultValue: 0, automationRate: 'k-rate' }
+        { name: 'warp', defaultValue: 0, automationRate: 'k-rate' },
+        { name: 'voices', defaultValue: 1, automationRate: 'k-rate' },
+        { name: 'detune', defaultValue: 0, automationRate: 'k-rate' }
       ];
     }
 
     constructor() {
       super();
       this.table = null;
-      this.phase = 0;
+      // One phase per Unison voice; voices other than the first start at random points so they do not sound as one
+      this.phases = new Float64Array(7).map((v, i) => (i ? Math.random() : 0));
+      this.vr = new Float64Array(7).fill(1);
       this.lastPos = -1;
       this.count = 0;
       this.port.onmessage = e => {
@@ -49,29 +54,40 @@ const WAVETABLE_WORKLET = `
       const ratio = P.ratio[0];
       const warp = Math.min(1, Math.max(0, P.warp[0]));
       const k = 0.5 - 0.45 * warp;
+      // Unison: the voices spread evenly from -Detune to +Detune cents around the note
+      const nv = Math.min(7, Math.max(1, Math.round(P.voices[0])));
+      const det = nv > 1 ? Math.max(0, P.detune[0]) : 0;
+      for (let v = 0; v < nv; v++) this.vr[v] = Math.pow(2, (nv > 1 ? det * (2 * v / (nv - 1) - 1) : 0) / 1200);
+      const vrMax = this.vr[nv - 1];
+      const gain = 1 / Math.sqrt(nv);
       let pos = 0;
       for (let i = 0; i < out.length; i++) {
         const f = one(P.freq, i) * ratio + one(P.fm, i);
-        const af = Math.abs(f);
+        const af = Math.abs(f) * vrMax;
         let level = af <= baseF ? 0 : Math.ceil(Math.log2(af / baseF));
         if (level > levels - 1) level = levels - 1;
-        this.phase += f / sampleRate;
-        this.phase -= Math.floor(this.phase);
-        // Warp: phase distortion, the first half of the wave is squeezed into a shorter time
-        const ph = warp > 0 ? (this.phase < k ? this.phase * 0.5 / k : 0.5 + (this.phase - k) * 0.5 / (1 - k)) : this.phase;
         pos = Math.min(1, Math.max(0, one(P.pos, i) + one(P.posmod, i)));
         const fp = pos * (frames - 1);
         const f0 = Math.min(frames - 2, Math.floor(fp));
         const fr = fp - f0;
-        const x = ph * size;
-        const i0 = Math.floor(x);
-        const xf = x - i0;
-        const i1 = (i0 + 1) % size;
         const a = f0 * frameLen + level * levelLen;
         const b = a + frameLen;
-        const va = data[a + i0] + (data[a + i1] - data[a + i0]) * xf;
-        const vb = data[b + i0] + (data[b + i1] - data[b + i0]) * xf;
-        out[i] = va + (vb - va) * fr;
+        let sum = 0;
+        for (let v = 0; v < nv; v++) {
+          let phase = this.phases[v] + f * this.vr[v] / sampleRate;
+          phase -= Math.floor(phase);
+          this.phases[v] = phase;
+          // Warp: phase distortion, the first half of the wave is squeezed into a shorter time
+          const ph = warp > 0 ? (phase < k ? phase * 0.5 / k : 0.5 + (phase - k) * 0.5 / (1 - k)) : phase;
+          const x = ph * size;
+          const i0 = Math.floor(x);
+          const xf = x - i0;
+          const i1 = (i0 + 1) % size;
+          const va = data[a + i0] + (data[a + i1] - data[a + i0]) * xf;
+          const vb = data[b + i0] + (data[b + i1] - data[b + i0]) * xf;
+          sum += va + (vb - va) * fr;
+        }
+        out[i] = sum * gain;
       }
       // Tell the card where Position is now (for the display), a few times per second
       this.count += out.length;
@@ -138,6 +154,13 @@ const WT_TABLES = {
     const fr = x - i;
     H.forEach((h, j) => { s[h] = R[i][j] * (1 - fr) + R[i + 1][j] * fr; });
   },
+  draw: (t, s, c, drawn) => {
+    // Your own wave (drawn on the display): Position 0% = sine, 100% = your wave
+    for (let h = 1; h <= WT_MAX_H; h++) {
+      s[h] = (h === 1 ? 1 - t : 0) + t * drawn.s[h];
+      c[h] = t * drawn.c[h];
+    }
+  },
   pwm: (t, s, c) => {
     // A pulse that narrows from 50% to 4%
     const w = 0.5 - t * 0.46;
@@ -153,9 +176,11 @@ class WavetableModule extends ModuleBase {
     menu: { group: 'Sound Sources', label: 'Wavetable Osc' },
     params: [
       { id: 'table', label: 'Table', kind: 'select', value: 'basic',
-        options: [['basic', 'Basic (Sine to Square)'], ['vocal', 'Vocal (A E I O U)'], ['digital', 'Digital'], ['organ', 'Organ'], ['pwm', 'PWM (Pulse)']] },
+        options: [['basic', 'Basic (Sine to Square)'], ['vocal', 'Vocal (A E I O U)'], ['digital', 'Digital'], ['organ', 'Organ'], ['pwm', 'PWM (Pulse)'], ['draw', 'Draw (your own wave)']] },
       { id: 'position', label: 'Position', min: 0, max: 100, step: 0.1, value: 0, format: v => `${Math.round(v)}%` },
       { id: 'warp', label: 'Warp', min: 0, max: 100, step: 1, value: 0, unit: '%' },
+      { id: 'voices', label: 'Unison Voices', min: 1, max: 7, step: 1, value: 1 },
+      { id: 'detune', label: 'Unison Detune', min: 0, max: 50, step: 1, value: 15, unit: 'cents' },
       { id: 'freq', label: 'Frequency', min: 20, max: 2000, step: 1, value: 220, unit: 'Hz' },
       { id: 'octave', label: 'Octave', min: -3, max: 3, step: 1, value: 0, format: v => (v > 0 ? `+${v}` : `${v}`) },
       { id: 'tune', label: 'Tune', min: -100, max: 100, step: 1, value: 0, format: v => `${v > 0 ? '+' : ''}${v} cents` },
@@ -197,9 +222,10 @@ class WavetableModule extends ModuleBase {
   }
 
   // All frames x levels x samples of one table, each frame scaled to a peak of 1
-  static buildTable(name, sampleRate) {
+  // `drawn` (harmonics of a drawn wave) is only used by the Draw table, which is not cached
+  static buildTable(name, sampleRate, drawn) {
     const key = `${name}@${sampleRate}`;
-    if (WavetableModule.tableCache[key]) return WavetableModule.tableCache[key];
+    if (name !== 'draw' && WavetableModule.tableCache[key]) return WavetableModule.tableCache[key];
     const recipe = WT_TABLES[name] || WT_TABLES.basic;
     const data = new Float32Array(WT_FRAMES * WT_LEVELS * WT_SIZE);
     const sinT = new Float32Array(WT_SIZE);
@@ -211,7 +237,7 @@ class WavetableModule extends ModuleBase {
     for (let fi = 0; fi < WT_FRAMES; fi++) {
       const s = new Float32Array(WT_MAX_H + 1);
       const c = new Float32Array(WT_MAX_H + 1);
-      recipe(fi / (WT_FRAMES - 1), s, c);
+      recipe(fi / (WT_FRAMES - 1), s, c, drawn);
       let peak = 0;
       for (let lv = 0; lv < WT_LEVELS; lv++) {
         const hmax = Math.max(1, Math.min(WT_MAX_H, Math.floor((sampleRate * 0.45) / (WT_BASE_F * Math.pow(2, lv)))));
@@ -231,8 +257,37 @@ class WavetableModule extends ModuleBase {
       for (let n = 0; n < WT_LEVELS * WT_SIZE; n++) data[start + n] *= g;
     }
     const table = { data, frames: WT_FRAMES, levels: WT_LEVELS, size: WT_SIZE, baseF: WT_BASE_F };
-    WavetableModule.tableCache[key] = table;
+    if (name !== 'draw') WavetableModule.tableCache[key] = table;
     return table;
+  }
+
+  // Sine and cosine amplitude of each harmonic of one drawn cycle (a plain DFT; DC is dropped)
+  static waveToHarmonics(wave) {
+    const N = wave.length;
+    const s = new Float32Array(WT_MAX_H + 1);
+    const c = new Float32Array(WT_MAX_H + 1);
+    for (let h = 1; h < N / 2; h++) {
+      let ss = 0;
+      let cc = 0;
+      for (let n = 0; n < N; n++) {
+        ss += wave[n] * Math.sin(2 * Math.PI * h * n / N);
+        cc += wave[n] * Math.cos(2 * Math.PI * h * n / N);
+      }
+      s[h] = 2 * ss / N;
+      c[h] = 2 * cc / N;
+    }
+    return { s, c };
+  }
+
+  // The table for the current Table choice (the Draw table is built from this card's drawing)
+  currentTable() {
+    if (this.params.table !== 'draw') return WavetableModule.buildTable(this.params.table, this.audioCtx.sampleRate);
+    if (!this.drawTable) this.drawTable = WavetableModule.buildTable('draw', this.audioCtx.sampleRate, WavetableModule.waveToHarmonics(this.drawn));
+    return this.drawTable;
+  }
+
+  sendTable() {
+    if (this.processor) this.processor.port.postMessage(this.currentTable());
   }
 
   build() {
@@ -245,6 +300,9 @@ class WavetableModule extends ModuleBase {
     this.inputNodes = { pitch: this.pitchIn, fm: this.fmIn, pos: this.posIn };
     this.outputNodes = { out: this.outNode };
     this.pitchCables = 0;
+    // The Draw table's wave: 128 points of one cycle, -1..1 (starts as a saw)
+    this.drawn = new Float32Array(WT_DRAW_N).map((v, i) => 1 - 2 * i / WT_DRAW_N);
+    this.drawTable = null;
     this.livePos = this.params.position / 100;
     this.processor = null;
     this.destroyed = false;
@@ -259,7 +317,7 @@ class WavetableModule extends ModuleBase {
       node.port.onmessage = e => {
         if (e.data && e.data.pos !== undefined) { this.livePos = e.data.pos; this.requestDraw(); }
       };
-      ['table', 'position', 'warp', 'freq', 'octave'].forEach(id => this.onParamChange(id, this.params[id]));
+      ['table', 'position', 'warp', 'voices', 'freq', 'octave'].forEach(id => this.onParamChange(id, this.params[id]));
     }).catch(err => console.warn('Wavetable: AudioWorklet unavailable.', err));
   }
 
@@ -270,7 +328,11 @@ class WavetableModule extends ModuleBase {
   onParamChange(id, value) {
     const now = this.audioCtx.currentTime;
     if (id === 'table') {
-      if (this.processor) this.processor.port.postMessage(WavetableModule.buildTable(value, this.audioCtx.sampleRate));
+      this.sendTable();
+      const hint = this.el('drawhint');
+      if (hint) hint.hidden = value !== 'draw';
+      const cv = this.el('display');
+      if (cv) cv.classList.toggle('wt-drawing', value === 'draw');
       this.requestDraw();
     } else if (id === 'position') {
       const p = this.param('pos');
@@ -281,6 +343,11 @@ class WavetableModule extends ModuleBase {
       const p = this.param('warp');
       if (p) p.setValueAtTime(value / 100, now);
       this.requestDraw();
+    } else if (id === 'voices' || id === 'detune') {
+      const pv = this.param('voices');
+      const pd = this.param('detune');
+      if (pv) pv.setValueAtTime(this.params.voices, now);
+      if (pd) pd.setValueAtTime(this.params.detune, now);
     } else if (id === 'freq') {
       this.applyBaseFrequency();
     } else if (id === 'octave' || id === 'tune') {
@@ -317,10 +384,65 @@ class WavetableModule extends ModuleBase {
   }
 
   renderBody() {
-    return `<canvas id="${this.elId('display')}" class="wt-display" width="480" height="240"></canvas>`;
+    return `<canvas id="${this.elId('display')}" class="wt-display${this.params.table === 'draw' ? ' wt-drawing' : ''}" width="480" height="240"></canvas>
+      <div id="${this.elId('drawhint')}" class="wt-hint"${this.params.table === 'draw' ? '' : ' hidden'}>Draw a wave with the mouse or pencil. Position 0% plays a sine, 100% your wave.</div>`;
   }
 
   onMount() {
+    const cv = this.el('display');
+    if (cv) {
+      // Drawing (Draw table only): each move sets the points between the last and the current x
+      let last = null;
+      const at = e => {
+        const r = cv.getBoundingClientRect();
+        const x = Math.min(WT_DRAW_N - 1, Math.max(0, Math.round(((e.clientX - r.left) / r.width) * (WT_DRAW_N - 1))));
+        const y = Math.min(1, Math.max(-1, 1 - 2 * (e.clientY - r.top) / r.height));
+        return { x, y };
+      };
+      const paint = pt => {
+        const from = last || pt;
+        const n = Math.abs(pt.x - from.x);
+        for (let j = 0; j <= n; j++) {
+          const t = n ? j / n : 1;
+          const x = Math.round(from.x + (pt.x - from.x) * t);
+          this.drawn[x] = from.y + (pt.y - from.y) * t;
+        }
+        last = pt;
+        this.requestDraw();
+      };
+      cv.addEventListener('pointerdown', e => {
+        if (this.params.table !== 'draw') return;
+        e.preventDefault();
+        e.stopPropagation();
+        cv.setPointerCapture(e.pointerId);
+        last = null;
+        paint(at(e));
+      });
+      cv.addEventListener('pointermove', e => {
+        if (last && cv.hasPointerCapture(e.pointerId)) { e.stopPropagation(); paint(at(e)); }
+      });
+      const end = () => {
+        if (!last) return;
+        last = null;
+        this.drawTable = null;
+        this.sendTable();
+        this.requestDraw();
+      };
+      cv.addEventListener('pointerup', end);
+      cv.addEventListener('pointercancel', end);
+    }
+    this.requestDraw();
+  }
+
+  getExtraState() {
+    return { drawn: Array.from(this.drawn, v => Math.round(v * 1000) / 1000) };
+  }
+
+  setExtraState(state) {
+    if (!Array.isArray(state.drawn) || state.drawn.length !== WT_DRAW_N) return;
+    this.drawn = Float32Array.from(state.drawn, v => Math.min(1, Math.max(-1, +v || 0)));
+    this.drawTable = null;
+    if (this.params.table === 'draw') this.sendTable();
     this.requestDraw();
   }
 
@@ -345,7 +467,8 @@ class WavetableModule extends ModuleBase {
     const muted = css.getPropertyValue('--muted-text').trim() || '#64748b';
     const primary = css.getPropertyValue('--primary-color').trim() || '#2563eb';
     g.clearRect(0, 0, W, H);
-    const t = WavetableModule.buildTable(this.params.table, this.audioCtx.sampleRate);
+    if (this.params.table === 'draw') { this.drawDrawMode(g, W, H, css); return; }
+    const t = this.currentTable();
     const pad = 14;
     const waveW = W * 0.6;
     const amp = H * 0.14;
@@ -385,6 +508,46 @@ class WavetableModule extends ModuleBase {
       const p = warp > 0 ? (ph < k ? ph * 0.5 / k : 0.5 + (ph - k) * 0.5 / (1 - k)) : ph;
       return sample(f0, p) * (1 - fr) + sample(f0 + 1, p) * fr;
     });
+  }
+
+  // Draw table: one big flat view, the wave you draw (text color) and the wave playing now (primary)
+  drawDrawMode(g, W, H, css) {
+    const muted = css.getPropertyValue('--muted-text').trim() || '#64748b';
+    const text = css.getPropertyValue('--text-color').trim() || '#0f172a';
+    const primary = css.getPropertyValue('--primary-color').trim() || '#2563eb';
+    const pad = 10;
+    const yOf = v => H / 2 - v * (H / 2 - pad);
+    g.strokeStyle = muted;
+    g.globalAlpha = 0.4;
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(0, H / 2);
+    g.lineTo(W, H / 2);
+    g.stroke();
+    g.globalAlpha = 1;
+    g.lineWidth = 3;
+    g.strokeStyle = text;
+    g.beginPath();
+    for (let n = 0; n < WT_DRAW_N; n++) {
+      const x = (n / (WT_DRAW_N - 1)) * W;
+      if (n) g.lineTo(x, yOf(this.drawn[n])); else g.moveTo(x, yOf(this.drawn[n]));
+    }
+    g.stroke();
+    const t = this.currentTable();
+    const frameLen = WT_LEVELS * WT_SIZE;
+    const fp = Math.min(1, Math.max(0, this.livePos)) * (WT_FRAMES - 1);
+    const f0 = Math.min(WT_FRAMES - 2, Math.floor(fp));
+    const fr = fp - f0;
+    g.lineWidth = 2;
+    g.strokeStyle = primary;
+    g.beginPath();
+    for (let n = 0; n <= 160; n++) {
+      const idx = Math.floor((n / 160) * WT_SIZE) % WT_SIZE;
+      const v = t.data[f0 * frameLen + idx] * (1 - fr) + t.data[(f0 + 1) * frameLen + idx] * fr;
+      const x = (n / 160) * W;
+      if (n) g.lineTo(x, yOf(v)); else g.moveTo(x, yOf(v));
+    }
+    g.stroke();
   }
 
   destroy() {

@@ -181,7 +181,9 @@ class SequencerModule {
 
         if (step && step.active) {
             const baseFreq = 110;
-            const freq = baseFreq * Math.pow(2, step.pitch * this.octaveRange);
+            // Snap to the nearest semitone (equal temperament, A = 440 Hz), so every step plays a real note
+            const semis = Math.round(step.pitch * this.octaveRange * 12);
+            const freq = baseFreq * Math.pow(2, semis / 12);
             
             // Pitch scheduling
             this.pitchNode.offset.setValueAtTime(freq, time);

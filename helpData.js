@@ -182,6 +182,10 @@ window.helpData = {
         summary: "A four-row step drum machine (Kick, Snare, Hi-Hat, Cymbal) with classic 808 and 909 style sounds, all made by synthesis.",
         controls: ["Play / Stop. Tempo: 40 to 240 BPM (type a number in the box, then Enter). Swing: delays every second 16th note for a shuffle feel.", "Add Bar / Remove Bar: 1 to 4 bars of 16 steps.", "Steps: tap once for a hit, again for an accent (louder, full color), again to switch it off.", "Sound: the drum model for the row (808, 909, Rimshot, Clap, Open / Closed hat, Ride, Cowbell...), Custom (build your own) or Input.", "Edit opens the row's sliders: Tune, Decay, Tone, Level and Pan. Clear empties the row.", "Custom: Wave, Pitch, Pitch Env, Noise, Attack, Decay, Cutoff and Resonance of a small synth voice."],
         tips: ["MAIN L and MAIN R carry all four rows mixed; each row's OUT carries that drum alone, for its own effect.", "A row's TRIG into an Envelope GATE IN lets an Oscillator play in time with that drum.", "Plug any sound into a row's IN and every step plays a short burst of it, shaped by Decay and Tone."] },
+      { type: "metronome", group: "controllers", name: "Metronome", preset: "demo-metronome",
+        summary: "Keeps time: a click on every beat, and a CLOCK output that keeps other modules in step with it.",
+        controls: ["Play / Stop. Tap: tap it a few times in time and the tempo follows your taps.", "Tempo: 20 to 300 BPM. Drag the slider, or type a number in the box and press Enter.", "Beats per Bar: how many beats before the count starts again. The lights show the beat, the first one is the accented one.", "Sound: Click, Wood Block or Beep. Volume: how loud the click is.", "Accent: On makes the first beat of every bar louder and higher."],
+        tips: ["CLICK into the Output to hear the metronome; it stays silent until a cable is connected.", "CLOCK pulses on every 16th note (four times per beat). Plug it into a module's CLOCK input to follow this tempo, or into an Envelope GATE IN to play a 16th-note pattern.", "An LFO cable dropped on the Tempo slider speeds the metronome up and slows it down by itself."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "Removes part of the sound: darker, brighter or thinner.",
         controls: ["Type: Lowpass (keeps the lows), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
@@ -434,6 +438,10 @@ window.helpData = {
         summary: "מכונת תופים של ארבע שורות צעדים (Kick, Snare, Hi-Hat, Cymbal) עם צלילים בסגנון 808 ו-909 הקלאסיים, כולם נוצרים בסינתזה.",
         controls: ["Play / Stop. Tempo: מ-40 עד 240 BPM (אפשר להקליד מספר בתיבה ואז Enter). Swing: מאחר כל תו שישית-עשרית שני לתחושה מקפצת.", "Add Bar / Remove Bar: מ-1 עד 4 תיבות של 16 צעדים.", "צעדים: הקשה אחת למכה, עוד הקשה להדגשה (חזק יותר, צבע מלא), עוד הקשה לכיבוי.", "Sound: דגם התוף של השורה (808, 909, Rimshot, Clap, היי-האט פתוח או סגור, Ride, Cowbell...), Custom (בונים לבד) או Input.", "Edit פותח את הסליידרים של השורה: Tune, Decay, Tone, Level ו-Pan. Clear מרוקן את השורה.", "Custom: Wave, Pitch, Pitch Env, Noise, Attack, Decay, Cutoff ו-Resonance של קול סינתיסייזר קטן."],
         tips: ["MAIN L ו-MAIN R מוציאים את ארבע השורות יחד; ה-OUT של כל שורה מוציא את התוף הזה לבד, לאפקט משלו.", "TRIG של שורה אל GATE IN של Envelope נותן לאוסילטור לנגן בתזמון של אותו תוף.", "חברו כל צליל ל-IN של שורה, וכל צעד ינגן ממנו קטע קצר שמעוצב לפי Decay ו-Tone."] },
+      { type: "metronome", group: "controllers", name: "Metronome", preset: "demo-metronome",
+        summary: "שומר על הקצב: קליק בכל פעמה, ויציאת CLOCK שמשאירה מודולים אחרים באותו קצב.",
+        controls: ["Play / Stop. Tap: מקישים עליו כמה פעמים בקצב, והטמפו נקבע לפי ההקשות.", "Tempo: מ-20 עד 300 BPM. גוררים את הסליידר, או מקלידים מספר בתיבה ולוחצים Enter.", "Beats per Bar: כמה פעמות עד שהספירה מתחילה מחדש. הנורות מראות את הפעמה, הראשונה היא המודגשת.", "Sound: Click, Wood Block או Beep. Volume: כמה חזק הקליק.", "Accent: במצב On הפעמה הראשונה בכל תיבה חזקה וגבוהה יותר."],
+        tips: ["חברו את CLICK ל-Output כדי לשמוע את המטרונום; בלי כבל הוא שקט.", "CLOCK נותן דפיקה בכל תו שש-עשרית (ארבע בכל פעמה). חברו אותו לכניסת CLOCK של מודול כדי שילך לפי הטמפו הזה, או ל-GATE IN של Envelope כדי לנגן תבנית של שש-עשריות.", "כבל LFO שמופל על סליידר ה-Tempo מאיץ ומאט את המטרונום לבד."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "מוריד חלק מהצליל: כהה יותר, בהיר יותר או דק יותר.",
         controls: ["Type: Lowpass (משאיר נמוכים), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
@@ -571,9 +579,11 @@ window.helpData = {
       "sequencer:out:clock": { text: "פולס בכל צעד (שש-עשרית) בזמן הנגינה, פעיל או לא, כדי שמודולים אחרים ילכו לפי הקצב.", where: "CLOCK של Stereo Delay (עם Sync דלוק)" },
       "delay:in:in_l": { text: "הצליל להדהוד, צד שמאל. אם IN R ריק, הוא נכנס לשני הצדדים.", where: "Oscillator, Filter, VCA, MAIN L של מכונת התופים, Mixer" },
       "delay:in:in_r": { text: "הצליל להדהוד, צד ימין (לא חובה).", where: "MAIN R של מכונת התופים, OUT R של Mixer או Granular" },
-      "delay:in:clock": { text: "פולס בכל שש-עשרית. כש-Sync דלוק, ה-Time של כל צד הולך לפי הקצב והחלוקה שלו.", where: "CLOCK של מכונת התופים או של הסיקוונסר" },
+      "delay:in:clock": { text: "פולס בכל שש-עשרית. כש-Sync דלוק, ה-Time של כל צד הולך לפי הקצב והחלוקה שלו.", where: "CLOCK של המטרונום, של מכונת התופים או של הסיקוונסר" },
       "delay:out:out_l": { text: "צד שמאל: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN L של Reverb, Mixer, Recorder" },
       "delay:out:out_r": { text: "צד ימין: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN R של Reverb, Mixer" },
+      "metronome:out:click": { text: "צליל הקליק, אחד בכל פעמה, חזק וגבוה יותר בפעמה הראשונה של התיבה (כש-Accent דלוק).", where: "IN של Output, Mixer, Recorder" },
+      "metronome:out:clock": { text: "דפיקה קצרה בכל תו שש-עשרית (ארבע בכל פעמה) כל עוד המטרונום מנגן. משאירה מודולים אחרים בקצב שלו, למשל CLOCK של Stereo Delay, או GATE IN של Envelope לתבנית של שש-עשריות.", where: "CLOCK של Stereo Delay, GATE IN של Envelope, CV של VCA" },
       "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
       "recorder:out:out": { text: "מעביר את הצליל הלאה בלי שינוי.", where: "Output" }
     }
@@ -859,6 +869,24 @@ window.presetData = {
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-metronome": {
+    modules: [
+      { id: "met1", type: "metronome", x: 40, y: 80, state: { tempo: 96, beats: 4, sound: "wood", volume: 70, accent: true } },
+      { id: "osc1", type: "oscillator", x: 40, y: 520, state: { waveform: "triangle", frequency: 330 } },
+      { id: "env1", type: "envelope", x: 380, y: 80, state: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.05 } },
+      { id: "vca1", type: "vca", x: 380, y: 460, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 720, y: 380, state: {} },
+      { id: "out1", type: "output", x: 720, y: 80, state: {} }
+    ],
+    connections: [
+      { fromNode: "met1", fromPortInfo: { id: "click" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "met1", fromPortInfo: { id: "clock" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "met1", fromPortInfo: { id: "clock" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-recorder": {

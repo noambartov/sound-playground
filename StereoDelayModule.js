@@ -37,8 +37,8 @@ class StereoDelayModule extends ModuleBase {
         guide: { text: 'The sound to echo, right side (optional).', from: 'Drum Machine MAIN R, Mixer OUT R, Granular OUT R', match: ['drums:out:main_r', 'mixer:out:out_r', 'granular:out:out_r'] },
         chip: 'Drums R / Mixer R' },
       { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Input',
-        guide: { text: 'A pulse on every 16th note. With Sync on, each side\'s Time follows this tempo and its division.', from: 'Drum Machine CLOCK, Sequencer CLOCK', match: ['drums:out:clock', 'sequencer:out:clock'] },
-        chip: 'Drums / Seq CLOCK' }
+        guide: { text: 'A pulse on every 16th note. With Sync on, each side\'s Time follows this tempo and its division.', from: 'Metronome CLOCK, Drum Machine CLOCK, Sequencer CLOCK', match: ['metronome:out:clock', 'drums:out:clock', 'sequencer:out:clock'] },
+        chip: 'Metronome / Drums CLOCK' }
     ],
     outputs: [
       { id: 'out_l', label: 'OUT L', signal: 'audio', title: 'Left Output',

@@ -154,6 +154,10 @@ window.helpData = {
         summary: "Makes a steady tone. The starting point of most sounds.",
         controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure).", "Frequency: the pitch, 20 to 4000 Hz. Greyed out while a cable is in PITCH.", "Pulse Width: only for Square; changes the tone from hollow to thin."],
         tips: ["Plug Keyboard FREQ into PITCH to play notes in tune.", "A slow LFO into FM IN gives vibrato."] },
+      { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
+        summary: "An oscillator that glides between a row of different waves, so the tone can change and move while it plays.",
+        controls: ["The display: the table's 8 waves stacked from front to back; the bright wave is the one playing now, at its place in the stack.", "Table: Basic (sine, triangle, saw, square), Vocal (vowels A E I O U), Digital (a bright band that climbs), Organ (drawbar settings), PWM (a pulse that gets thinner).", "Position: where in the table you are; in between two waves you hear a smooth blend.", "Warp: bends each wave (squeezes its first half), for brighter, more nasal colors.", "Frequency: the pitch, 20 to 2000 Hz; set aside while a cable is in PITCH. Octave and Tune shift the pitch (also a note from PITCH).", "POS Depth: how far a cable in POS moves Position."],
+        tips: ["Drop an LFO OUT cable on the Position slider: the tone keeps moving through the waves.", "Envelope ENV OUT into POS: every note travels through the table, like a filter sweep but different.", "High notes stay clean: higher notes use waves with fewer harmonics."] },
       { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
         summary: "Records the sound coming in (or a loaded file) and replays it as a cloud of tiny overlapping grains.",
         controls: ["Source: Live Input (records IN L / IN R) or Audio File (Load File).", "Position: where in the recording grains are taken from.", "Size: grain length. Density: grains per second.", "Pitch: grain speed (2 = one octave up). Spray: randomness. Reverse: chance a grain plays backwards.", "CV 1 / CV 2 Target: which setting each CV input moves."],
@@ -410,6 +414,10 @@ window.helpData = {
         summary: "מייצר צליל קבוע. נקודת ההתחלה של רוב הצלילים.",
         controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אפור כשיש כבל ב-PITCH.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק."],
         tips: ["FREQ של המקלדת אל PITCH: מנגנים תווים מכוונים.", "LFO איטי אל FM IN נותן ויברטו."] },
+      { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
+        summary: "אוסילטור שעובר בהדרגה בין שורה של צורות גל שונות, כך שהצליל יכול להשתנות ולזוז תוך כדי נגינה.",
+        controls: ["המסך: 8 הגלים של הטבלה בערימה מקדימה לאחור; הגל הבהיר הוא זה שמתנגן עכשיו, במקום שלו בערימה.", "Table: Basic (סינוס, משולש, מסור, ריבוע), Vocal (תנועות A E I O U), Digital (פס בהיר שמטפס), Organ (הגדרות של עוגב), PWM (פולס שהולך ונעשה דק).", "Position: איפה בטבלה נמצאים; בין שני גלים שומעים מעבר חלק.", "Warp: מעקם כל גל (מכווץ את החצי הראשון שלו), לצבעים בהירים ואפיים יותר.", "Frequency: גובה הצליל, 20 עד 2000 הרץ; לא פעיל כשיש כבל ב-PITCH. Octave ו-Tune מזיזים את הגובה (גם של תו שמגיע מ-PITCH).", "POS Depth: כמה כבל ב-POS מזיז את Position."],
+        tips: ["הפילו כבל מ-LFO OUT על הסליידר Position: הצליל נע כל הזמן בין הגלים.", "ENV OUT של Envelope אל POS: כל תו עובר דרך הטבלה, קצת כמו פתיחת פילטר אבל אחרת.", "תווים גבוהים נשארים נקיים: לתווים גבוהים יש גלים עם פחות הרמוניות."] },
       { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
         summary: "מקליט את הצליל שנכנס (או קובץ שנטען) ומשמיע אותו כענן של גרגרים קטנטנים.",
         controls: ["Source: Live Input (מקליט מ-IN L / IN R) או Audio File (Load File).", "Position: מאיפה בהקלטה לוקחים גרגרים.", "Size: אורך גרגר. Density: גרגרים בשנייה.", "Pitch: מהירות הגרגר (2 = אוקטבה למעלה). Spray: אקראיות. Reverse: הסיכוי שגרגר יתנגן הפוך.", "CV 1 / CV 2 Target: איזו הגדרה כל כניסת CV מזיזה."],
@@ -550,6 +558,10 @@ window.helpData = {
       "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output, Mixer" },
       "degrader:in:in": { text: "הצליל שרוצים לקלקל.", where: "OUT של VCA, Filter, Oscillator, Mixer, MAIN L של Drum Machine" },
       "degrader:out:out": { text: "הצליל אחרי הקלקול.", where: "Output, IN L של Reverb, Mixer, Oscilloscope" },
+      "wavetable:in:pitch": { text: "מנגן תווים (בהרץ). כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת; Octave ו-Tune עדיין פועלים.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר, PITCH של Ribbon" },
+      "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
+      "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
+      "wavetable:out:out": { text: "הצליל של אוסילטור הוויב-טייבל.", where: "Filter, VCA, Mixer, Output, Oscilloscope" },
       "envelope:in:gate": { text: "מתחיל את המעטפת כשתו מתחיל ומשחרר אותה כשהתו נגמר.", where: "GATE של המקלדת, הסיקוונסר או המצלמה" },
       "envelope:out:env": { text: "הצורה של Attack / Decay / Sustain / Release.", where: "CV של VCA (עוצמת התו), CUT MOD של פילטר (בהירות התו)" },
       "lfo:in:rate": { text: "מאיץ ומאט את ה-LFO.", where: "LFO אחר, X / Y של המצלמה, ENV OUT" },
@@ -681,6 +693,31 @@ window.presetData = {
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-wavetable": {
+    modules: [
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 100, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: true, pitch: 0.25 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 0.4167 },
+        { active: true, pitch: 0 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 1 }, { active: true, pitch: 0.25 }
+      ] } },
+      { id: "wt1", type: "wavetable", x: 40, y: 420, state: { table: "vocal", position: 50, warp: 15, octave: 1 } },
+      { id: "lfo1", type: "lfo", x: 420, y: 80, state: { rate: 0.15, depth: 0.5 } },
+      { id: "env1", type: "envelope", x: 420, y: 520, state: { attack: 0.01, decay: 0.35, sustain: 0.4, release: 0.3 } },
+      { id: "vca1", type: "vca", x: 800, y: 420, state: { gain: 0 } },
+      { id: "rev1", type: "reverb", x: 1120, y: 300, state: {} },
+      { id: "out1", type: "output", x: 1460, y: 300, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 1460, y: 560, state: {} }
+    ],
+    connections: [
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "wt1", toPortInfo: { id: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "wt1", toPortInfo: { id: "knob:#wavetable_p_position_wt1", knob: "#wavetable_p_position_wt1" } },
+      { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-degrader": {

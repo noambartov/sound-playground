@@ -20,7 +20,7 @@ class RibbonModule extends ModuleBase {
     ],
     outputs: [
       { id: 'pitch', label: 'PITCH', signal: 'cv', title: 'Pitch Output',
-        guide: { text: 'The note under your finger or pencil, left = Base Note.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
+        guide: { text: 'The note under your finger or pencil, left = Base Note.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
         chip: 'Osc PITCH / any slider' },
       { id: 'gate', label: 'GATE', signal: 'gate', title: 'Gate Output',
         guide: { text: 'On while you touch the strip (stays on with Hold).', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },

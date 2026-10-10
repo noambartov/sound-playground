@@ -40,6 +40,12 @@ class KeyboardModule {
     this.handleMIDIMessage = this.handleMIDIMessage.bind(this);
     this.pointerKeys = new Map(); // pointerId -> key index under that finger / mouse / pencil
 
+    // Hold: lifted keys keep sounding until pressed again (or Hold is switched off).
+    // Slide: the FREQ output glides from note to note while a key is still held.
+    this.hold = false;
+    this.slide = false;
+    this.consumedSources = new Set(); // presses that only un-held a key: their release does nothing
+
     this.initMIDI();
   }
 
@@ -117,6 +123,7 @@ class KeyboardModule {
   pressMIDINote(midiNote) {
     const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
     const sourceId = `midi_${midiNote}`;
+    if (this.unholdIfHeld(midiNote, sourceId)) return;
 
     this.activeKeyOrder = this.activeKeyOrder.filter(k => k.sourceId !== sourceId);
     this.activeKeyOrder.push({ keyIdx: null, midiNote, sourceId, freq });
@@ -133,6 +140,7 @@ class KeyboardModule {
 
   releaseMIDINote(midiNote) {
     const sourceId = `midi_${midiNote}`;
+    if (this.holdInsteadOfRelease(sourceId)) return;
     this.activeKeyOrder = this.activeKeyOrder.filter(k => k.sourceId !== sourceId);
 
     const visualBaseMidi = (this.baseOctave + 1) * 12;
@@ -142,6 +150,80 @@ class KeyboardModule {
     }
 
     this.updateOutput();
+  }
+
+  // Hold on: a press on a note that is already held only releases it
+  unholdIfHeld(midiNote, sourceId) {
+    if (!this.hold) return false;
+    const held = this.activeKeyOrder.find(k => k.midiNote === midiNote && k.held);
+    if (!held) return false;
+    this.activeKeyOrder = this.activeKeyOrder.filter(k => k !== held);
+    this.consumedSources.add(sourceId);
+    this.refreshNoteVisual(midiNote);
+    this.updateOutput();
+    return true;
+  }
+
+  // Hold on: lifting a key keeps its note (marked held) instead of releasing it
+  holdInsteadOfRelease(sourceId) {
+    if (this.consumedSources.delete(sourceId)) return true;
+    if (!this.hold) return false;
+    const entry = this.activeKeyOrder.find(k => k.sourceId === sourceId);
+    if (!entry) return true;
+    if (this.activeKeyOrder.some(k => k !== entry && k.held && k.midiNote === entry.midiNote)) {
+      this.activeKeyOrder = this.activeKeyOrder.filter(k => k !== entry);
+    } else {
+      entry.held = true;
+      entry.sourceId = `held_${entry.midiNote}`;
+    }
+    return true;
+  }
+
+  refreshNoteVisual(midiNote) {
+    const keyIdx = midiNote - (this.baseOctave + 1) * 12;
+    if (keyIdx < 0 || keyIdx > 24) return;
+    this.updateKeyVisual(keyIdx, this.activeKeyOrder.some(k => k.midiNote === midiNote));
+  }
+
+  setHold(on) {
+    this.hold = !!on;
+    if (!this.hold) {
+      const held = this.activeKeyOrder.filter(k => k.held);
+      this.activeKeyOrder = this.activeKeyOrder.filter(k => !k.held);
+      this.consumedSources.clear();
+      held.forEach(k => this.refreshNoteVisual(k.midiNote));
+      if (held.length) this.updateOutput();
+    }
+    this.refreshToggles();
+  }
+
+  setSlide(on) {
+    this.slide = !!on;
+    this.refreshToggles();
+  }
+
+  refreshToggles() {
+    const card = document.getElementById(`module_card_${this.id}`);
+    if (!card) return;
+    const holdBtn = card.querySelector(`#hold_btn_${this.id}`);
+    const slideBtn = card.querySelector(`#slide_btn_${this.id}`);
+    if (holdBtn) { holdBtn.textContent = `Hold: ${this.hold ? 'On' : 'Off'}`; holdBtn.classList.toggle('active', this.hold); }
+    if (slideBtn) { slideBtn.textContent = `Slide: ${this.slide ? 'On' : 'Off'}`; slideBtn.classList.toggle('active', this.slide); }
+  }
+
+  getState() {
+    return { octave: this.baseOctave, hold: this.hold, slide: this.slide };
+  }
+
+  setState(state) {
+    if (!state) return;
+    if (typeof state.octave === 'number') {
+      this.baseOctave = Math.max(1, Math.min(6, state.octave));
+      const octVal = document.getElementById(`oct_val_${this.id}`);
+      if (octVal) octVal.textContent = `Oct C${this.baseOctave}`;
+    }
+    if (state.hold !== undefined) this.setHold(state.hold);
+    if (state.slide !== undefined) this.setSlide(state.slide);
   }
 
   setPitchBendValue(val) {
@@ -179,6 +261,11 @@ class KeyboardModule {
             <button id="oct_down_${this.id}" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 0.8rem;">-</button>
             <span style="font-size: 0.8rem; color: #eee; font-weight: bold; min-width: 65px; text-align: center;" id="oct_val_${this.id}">Oct C${this.baseOctave}</span>
             <button id="oct_up_${this.id}" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 0.8rem;">+</button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button id="hold_btn_${this.id}" class="action-btn module-toggle kb-toggle" title="Lifted keys keep playing; press a key again to stop it">Hold: Off</button>
+            <button id="slide_btn_${this.id}" class="action-btn module-toggle kb-toggle" title="FREQ glides between notes played legato">Slide: Off</button>
           </div>
 
           <div style="font-size: 0.9rem; color: #4caf50; font-weight: bold; font-family: monospace;" id="note_display_${this.id}">
@@ -292,6 +379,12 @@ class KeyboardModule {
       });
     }
 
+    const holdBtn = card.querySelector(`#hold_btn_${this.id}`);
+    if (holdBtn) holdBtn.addEventListener('click', () => this.setHold(!this.hold));
+    const slideBtn = card.querySelector(`#slide_btn_${this.id}`);
+    if (slideBtn) slideBtn.addEventListener('click', () => this.setSlide(!this.slide));
+    this.refreshToggles();
+
     const keysContainer = card.querySelector(`#keys_container_${this.id}`);
     if (keysContainer) {
       // Pointer events: each finger (or the mouse / pencil) holds its own key, so chords can be
@@ -310,7 +403,7 @@ class KeyboardModule {
         this.pressKey(keyIdx, `ptr_${e.pointerId}`);
       });
       this.handlePointerMove = (e) => {
-        if (!this.pointerKeys.has(e.pointerId)) return;
+        if (!this.pointerKeys.has(e.pointerId) || this.hold) return;
         const prev = this.pointerKeys.get(e.pointerId);
         const keyIdx = keyAt(e);
         if (keyIdx === prev) return;
@@ -374,6 +467,7 @@ class KeyboardModule {
   pressKey(keyIdx, sourceId = 'mouse') {
     const midiNote = (this.baseOctave + 1) * 12 + keyIdx;
     const freq = 440 * Math.pow(2, (midiNote - 69) / 12);
+    if (this.unholdIfHeld(midiNote, sourceId)) return;
 
     this.activeKeyOrder = this.activeKeyOrder.filter(k => !(k.keyIdx === keyIdx && k.sourceId === sourceId));
     this.activeKeyOrder.push({ keyIdx, sourceId, freq, midiNote });
@@ -383,6 +477,7 @@ class KeyboardModule {
   }
 
   releaseKey(keyIdx, sourceId = 'mouse') {
+    if (this.holdInsteadOfRelease(sourceId)) return;
     this.activeKeyOrder = this.activeKeyOrder.filter(k => !(k.keyIdx === keyIdx && k.sourceId === sourceId));
     
     const stillPressed = this.activeKeyOrder.some(k => k.keyIdx === keyIdx);
@@ -402,8 +497,11 @@ class KeyboardModule {
     if (this.activeKeyOrder.length > 0) {
       const topNote = this.activeKeyOrder[this.activeKeyOrder.length - 1];
       
+      // Slide: glide only when moving from a sounding note (legato); a fresh note starts in tune
+      const glide = this.slide && this.gateOpen ? 0.06 : 0.003;
       this.freqNode.offset.cancelScheduledValues(now);
-      this.freqNode.offset.setTargetAtTime(topNote.freq, now, 0.003);
+      this.freqNode.offset.setTargetAtTime(topNote.freq, now, glide);
+      this.gateOpen = true;
 
       this.gateNode.offset.cancelScheduledValues(now);
       this.gateNode.offset.setTargetAtTime(1.0, now, 0.002);
@@ -414,6 +512,7 @@ class KeyboardModule {
         noteDisplay.textContent = `${noteName}${octave} (${Math.round(topNote.freq)}Hz)`;
       }
     } else {
+      this.gateOpen = false;
       this.gateNode.offset.cancelScheduledValues(now);
       this.gateNode.offset.setTargetAtTime(0.0, now, 0.003);
       if (noteDisplay) {

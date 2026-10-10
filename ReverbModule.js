@@ -10,7 +10,14 @@ class ReverbModule {
     this.rightIn.channelCount = 1;
     this.rightIn.channelCountMode = 'explicit';
 
-    this.convolver = this.audioCtx.createConvolver();
+    // Two convolvers (A / B): a new room is built in the silent one and crossfaded in,
+    // so moving Radius or Decay never cuts the sound (swapping a convolver's buffer resets it)
+    this.convolvers = [this.audioCtx.createConvolver(), this.audioCtx.createConvolver()];
+    this.convFades = [this.audioCtx.createGain(), this.audioCtx.createGain()];
+    this.convFades[1].gain.value = 0;
+    this.activeConv = 0;
+    this.fadeEnd = 0;
+    this.irTimer = null;
     this.dampingFilter = this.audioCtx.createBiquadFilter();
     this.dampingFilter.type = 'lowpass';
 
@@ -38,10 +45,12 @@ class ReverbModule {
     this.leftIn.connect(this.dampingFilter);
     this.rightIn.connect(this.dampingFilter);
     this.dampingFilter.connect(this.saturator);
-    this.saturator.connect(this.convolver);
-
-    this.convolver.connect(this.wetGainL);
-    this.convolver.connect(this.wetGainR);
+    for (let i = 0; i < 2; i++) {
+      this.saturator.connect(this.convolvers[i]);
+      this.convolvers[i].connect(this.convFades[i]);
+      this.convFades[i].connect(this.wetGainL);
+      this.convFades[i].connect(this.wetGainR);
+    }
 
     this.wetGainL.connect(this.leftOut);
     this.wetGainR.connect(this.rightOut);
@@ -49,7 +58,7 @@ class ReverbModule {
     this.updateGains();
     this.updateFilter();
     this.updateWarp();
-    this.generateSphereImpulse();
+    this.convolvers[0].buffer = this.generateSphereImpulse();
   }
 
   getState() {
@@ -102,7 +111,30 @@ class ReverbModule {
       rightBuffer[i] = noiseR * (0.8 - 0.2 * sphericalMod);
     }
 
-    this.convolver.buffer = impulse;
+    return impulse;
+  }
+
+  // Radius / Decay changed: build the new room in the silent convolver and crossfade to it.
+  // While a crossfade is still running, the latest setting waits and is applied right after it.
+  rebuildImpulse() {
+    const ctx = this.audioCtx;
+    const t = ctx.currentTime;
+    if (ctx.state === 'running' && t < this.fadeEnd) {
+      if (!this.irTimer) {
+        this.irTimer = setTimeout(() => { this.irTimer = null; this.rebuildImpulse(); }, (this.fadeEnd - t) * 1000 + 10);
+      }
+      return;
+    }
+    const fade = ReverbModule.CROSSFADE;
+    const next = 1 - this.activeConv;
+    this.convolvers[next].buffer = this.generateSphereImpulse();
+    [[this.convFades[next], 1], [this.convFades[this.activeConv], 0]].forEach(([g, to]) => {
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(1 - to, t);
+      g.gain.linearRampToValueAtTime(to, t + fade);
+    });
+    this.activeConv = next;
+    this.fadeEnd = t + fade;
   }
 
   updateGains() {
@@ -216,11 +248,11 @@ class ReverbModule {
     if (param === 'radius') {
       mod.radius = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}m`;
-      mod.generateSphereImpulse();
+      mod.rebuildImpulse();
     } else if (param === 'decay') {
       mod.decay = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}s`;
-      mod.generateSphereImpulse();
+      mod.rebuildImpulse();
     } else if (param === 'damping') {
       mod.damping = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}Hz`;
@@ -236,3 +268,5 @@ class ReverbModule {
     }
   }
 }
+
+ReverbModule.CROSSFADE = 0.25;   // seconds from the old room to the new one

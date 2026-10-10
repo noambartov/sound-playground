@@ -198,6 +198,10 @@ window.helpData = {
         summary: "Puts the sound in a room, from a small space to a huge hall.",
         controls: ["Radius: room size. Decay: how long the tail lasts.", "Damping: darker or brighter tail. Warp: a little movement in the tail.", "Mix: how much reverb against the dry sound."],
         tips: ["Short notes with a long Decay sound much bigger than a steady tone."] },
+      { type: "degrader", group: "processors", name: "Degrader", preset: "demo-degrader",
+        summary: "A one-knob lo-fi effect: turning Degrade ages the sound from clean, through warm tape and lo-fi, to fully wrecked.",
+        controls: ["Degrade 0%: clean, the sound passes through untouched.", "Up to 30% (Tape): soft saturation, and the highs soften a little.", "30% to 60% (Lo-Fi): fewer bits (16 down to 8), a lower sample rate (down to 8 kHz) for a rough digital sound, and a slight tape wobble in pitch.", "60% to 100% (Wrecked): only 3 to 4 bits, a very low sample rate that rings metallic, rising hiss and record crackle, and the highs almost closed."],
+        tips: ["Drop an LFO OUT cable on the Degrade slider: the sound falls apart and comes back by itself.", "Above 60% you hear hiss and crackle even when nothing plays, like an old record."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "Draws the shape of a note over time each time a gate arrives.",
         controls: ["Attack: fade-in time.", "Decay: time to fall to the Sustain level.", "Sustain: level held while the key is down.", "Release: fade-out after the key is let go."],
@@ -442,6 +446,10 @@ window.helpData = {
         summary: "שם את הצליל בתוך חדר, מחלל קטן ועד אולם ענק.",
         controls: ["Radius: גודל החדר. Decay: כמה זמן הזנב נמשך.", "Damping: זנב כהה או בהיר. Warp: קצת תנועה בזנב.", "Mix: כמה ריוורב לעומת הצליל היבש."],
         tips: ["תווים קצרים עם Decay ארוך נשמעים הרבה יותר גדולים מצליל קבוע."] },
+      { type: "degrader", group: "processors", name: "Degrader", preset: "demo-degrader",
+        summary: "אפקט לו-פיי עם כפתור אחד: סיבוב של Degrade \"מזקין\" את הצליל, מנקי, דרך חום של טייפ ולו-פיי, ועד הרס מלא.",
+        controls: ["Degrade על 0%: נקי, הצליל עובר בלי שינוי.", "עד 30% (Tape): עיוות רך (סטורציה), והגבהים מתעמעמים מעט.", "30% עד 60% (Lo-Fi): פחות ביטים (מ-16 ל-8), קצב דגימה נמוך יותר (עד 8 kHz) לצליל דיגיטלי ומחוספס, ורעד קל בגובה הצליל כמו בקלטת.", "60% עד 100% (Wrecked): רק 3 עד 4 ביטים, קצב דגימה נמוך מאוד שמצלצל מתכתי, רעש רקע ופצפוצי תקליט שעולים, והגבהים כמעט סגורים."],
+        tips: ["הפילו כבל מ-LFO OUT על הסליידר Degrade: הצליל מתפרק ומתאחה לבד.", "מעל 60% שומעים רעש ופצפוצים גם כשלא מנגן כלום, כמו בתקליט ישן."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "משרטט את הצורה של תו לאורך זמן בכל פעם שמגיע Gate.",
         controls: ["Attack: זמן הכניסה.", "Decay: הזמן לרדת לרמת ה-Sustain.", "Sustain: הרמה שנשארת כל עוד הקליד לחוץ.", "Release: הדעיכה אחרי שעוזבים את הקליד."],
@@ -524,6 +532,8 @@ window.helpData = {
       "reverb:in:in_r": { text: "צליל שנשלח לחדר (ימין).", where: "OUT R של Mixer, Granular" },
       "reverb:out:out_l": { text: "הצליל עם הריוורב, צד שמאל.", where: "Output, Recorder, Oscilloscope" },
       "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output, Mixer" },
+      "degrader:in:in": { text: "הצליל שרוצים לקלקל.", where: "OUT של VCA, Filter, Oscillator, Mixer, MAIN L של Drum Machine" },
+      "degrader:out:out": { text: "הצליל אחרי הקלקול.", where: "Output, IN L של Reverb, Mixer, Oscilloscope" },
       "envelope:in:gate": { text: "מתחיל את המעטפת כשתו מתחיל ומשחרר אותה כשהתו נגמר.", where: "GATE של המקלדת, הסיקוונסר או המצלמה" },
       "envelope:out:env": { text: "הצורה של Attack / Decay / Sustain / Release.", where: "CV של VCA (עוצמת התו), CUT MOD של פילטר (בהירות התו)" },
       "lfo:in:rate": { text: "מאיץ ומאט את ה-LFO.", where: "LFO אחר, X / Y של המצלמה, ENV OUT" },
@@ -646,6 +656,31 @@ window.presetData = {
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-degrader": {
+    modules: [
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 110, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: true, pitch: 0.25 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 0.25 },
+        { active: true, pitch: 1 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 0.4167 }, { active: false, pitch: 0 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 420, state: { waveform: "sawtooth" } },
+      { id: "env1", type: "envelope", x: 380, y: 420, state: { attack: 0.005, decay: 0.3, sustain: 0.3, release: 0.2 } },
+      { id: "vca1", type: "vca", x: 760, y: 420, state: { gain: 0 } },
+      { id: "deg1", type: "degrader", x: 1080, y: 420, state: { amount: 55 } },
+      { id: "lfo1", type: "lfo", x: 1080, y: 80, state: { rate: 0.1, depth: 0.45 } },
+      { id: "out1", type: "output", x: 1400, y: 380, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 1400, y: 620, state: {} }
+    ],
+    connections: [
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "deg1", toPortInfo: { id: "in" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "deg1", toPortInfo: { id: "knob:#degrader_p_amount_deg1", knob: "#degrader_p_amount_deg1" } },
+      { fromNode: "deg1", fromPortInfo: { id: "out" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "deg1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-envelope": {

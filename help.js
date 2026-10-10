@@ -336,12 +336,12 @@
     // The app itself shows the "patch added, raise the volume" notice
     const newIds = window.synthApp.loadPatchData(preset, { add: true }) || [];
     if (window.synthApp.audioCtx && window.synthApp.audioCtx.state === 'suspended') window.synthApp.audioCtx.resume();
-    // The preset's Sequencers and Drum Machines start running right away (its Output volume is still at 0)
+    // The preset's Sequencers, Drum Machines and Metronomes (any template module with start()) start right away (its Output volume is still at 0)
     setTimeout(() => {
       Object.values(window.synthApp.modules || {}).forEach(m => {
         if (!m.instance || !newIds.includes(m.id)) return;
         if (m.type === 'sequencer' && !m.instance.isPlaying && typeof m.instance.togglePlay === 'function') m.instance.togglePlay();
-        if (m.instance.def && m.instance.def.type === 'drums' && !m.instance.playing && typeof m.instance.start === 'function') m.instance.start();
+        if (m.instance.def && !m.instance.playing && typeof m.instance.start === 'function') m.instance.start();
       });
     }, 300);
     closeModal();

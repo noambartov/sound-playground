@@ -1381,3 +1381,37 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-weight: 600;
   color: var(--muted-text);
 }
+/* Metronome (MetronomeModule.js) */
+.metro-top {
+  display: flex;
+  gap: 8px;
+}
+
+.metro-top .action-btn { flex: 1; }
+
+.metro-play.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.metro-lights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.metro-light {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  transition: background 0.05s;
+}
+
+.metro-light.metro-first { border-color: var(--primary-color); }
+.metro-light.metro-now { background: var(--text-color); }
+.metro-light.metro-first.metro-now { background: var(--primary-color); }

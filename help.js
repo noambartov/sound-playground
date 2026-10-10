@@ -7,7 +7,12 @@
   let activeModule = null;
   let query = '';
 
-  const GROUP_ORDER = ['sources', 'controllers', 'processors', 'modulation', 'output', 'other'];
+  const GROUP_ORDER = ['sources', 'controllers', 'processors', 'modulation', 'output'];
+  // Sidebar group title -> manual group, for modules that have no manual entry yet
+  const SIDEBAR_GROUPS = {
+    'sound sources': 'sources', 'controllers & sequencing': 'controllers', 'processors & effects': 'processors',
+    'modulation': 'modulation', 'output & monitoring': 'output'
+  };
 
   function injectModalStyles() {
     if (document.getElementById('help-custom-css')) return;
@@ -123,7 +128,8 @@
     return (window.helpData && window.helpData[currentLang]) || null;
   }
 
-  // Every module in the manual: the written entries plus any Sidebar module that has none yet (new modules)
+  // Every module in the manual: the written entries plus any Sidebar module that has none yet,
+  // listed in its Sidebar group with its jacks (every module should get a written entry, see architecture.md)
   function moduleEntries(data) {
     const list = (data.modules || []).slice();
     const known = new Set(list.map(m => m.type));
@@ -131,7 +137,9 @@
       const type = btn.dataset.type;
       if (known.has(type)) return;
       known.add(type);
-      list.push({ type, group: 'other', name: btn.textContent.trim() || type, isNew: true, controls: [], tips: [] });
+      const titleEl = btn.closest('.sidebar-group') && btn.closest('.sidebar-group').querySelector('.sidebar-group-title');
+      const group = SIDEBAR_GROUPS[((titleEl && titleEl.textContent) || '').trim().toLowerCase()] || 'controllers';
+      list.push({ type, group, name: btn.textContent.trim() || type, controls: [], tips: [] });
     });
     return list;
   }
@@ -142,11 +150,15 @@
     if (!pg || !pg.GUIDE) return [];
     const prefix = `${type}:${dir}:`;
     const he = currentLang === 'he' && window.helpData.he ? (window.helpData.he.ports || {}) : {};
-    return Object.keys(pg.GUIDE).filter(k => k.indexOf(prefix) === 0).map(k => {
+    const keys = Object.keys(pg.GUIDE).filter(k => k.indexOf(prefix) === 0);
+    const names = keys.map(k => pg.GUIDE[k].name || k.slice(prefix.length).toUpperCase());
+    return keys.map((k, i) => {
       const g = pg.GUIDE[k];
       const tr = he[k] || {};
+      // Several jacks with the same label (e.g. a Drum Machine IN per row): show the jack's title instead
+      const repeated = names.indexOf(names[i]) !== names.lastIndexOf(names[i]);
       return {
-        name: g.name || k.slice(prefix.length).toUpperCase(),
+        name: repeated && g.title ? g.title : names[i],
         signal: g.signal || 'CV',
         text: tr.text || g.text || '',
         where: tr.where || (dir === 'in' ? g.from : g.to) || ''
@@ -175,7 +187,6 @@
       <div class="book-mod-head"><h3>${esc(m.name)}</h3>
         ${hasPreset(m.preset) ? `<button class="preset-btn" data-preset="${esc(m.preset)}">${esc(ui.tryIt)}</button>` : ''}
       </div>`;
-    if (m.isNew) html += `<p class="book-note">${esc(ui.newModule)}</p>`;
     if (m.summary) html += `<p class="book-summary">${esc(m.summary)}</p>`;
     if (m.controls && m.controls.length) html += `<div class="book-sub">${esc(ui.controls)}</div>${list(m.controls)}`;
     html += `<div class="book-sub">${esc(ui.inputs)}</div>${portsTable(portsFor(m.type, 'in'), ui, 'in')}`;
@@ -190,7 +201,7 @@
     if (!mods.find(m => m.type === activeModule)) activeModule = mods.length ? mods[0].type : null;
     let listHTML = '';
     GROUP_ORDER.forEach(g => {
-      const inGroup = mods.filter(m => (GROUP_ORDER.includes(m.group) ? m.group : 'other') === g);
+      const inGroup = mods.filter(m => (GROUP_ORDER.includes(m.group) ? m.group : 'controllers') === g);
       if (!inGroup.length) return;
       listHTML += `<div class="book-mod-group">${esc(ui.groups[g] || g)}</div>`;
       listHTML += inGroup.map(m => `<button class="book-mod-btn${m.type === activeModule ? ' active' : ''}" data-module="${esc(m.type)}">${esc(m.name)}</button>`).join('');
@@ -243,7 +254,7 @@
       results.push(`<div><div class="book-result-label">${esc(data.tabs.modules)}</div>
         <div class="help-card"><div class="book-mod-head"><h4 style="margin:0;">${esc(m.name)}</h4>
         <button class="book-link-btn" data-open-module="${esc(m.type)}">${esc(data.tabs.modules)}</button></div>
-        <p style="margin:8px 0 0;">${esc(m.summary || ui.newModule)}</p></div></div>`);
+        ${m.summary ? `<p style="margin:8px 0 0;">${esc(m.summary)}</p>` : ''}</div></div>`);
     });
     (data.recipes || []).forEach(r => {
       const card = recipeCardHTML(r, ui);
@@ -318,18 +329,19 @@
     });
   }
 
+  // A preset is added next to the modules already on the canvas (an empty canvas just gets the preset)
   function loadPreset(key) {
     const preset = window.presetData ? window.presetData[key] : null;
-    if (!preset || !window.synthApp) return;
-    // The app itself shows the "patch loaded, raise the volume" notice
-    if (typeof window.synthApp.loadPatchData === 'function') window.synthApp.loadPatchData(preset);
+    if (!preset || !window.synthApp || typeof window.synthApp.loadPatchData !== 'function') return;
+    // The app itself shows the "patch added, raise the volume" notice
+    const newIds = window.synthApp.loadPatchData(preset, { add: true }) || [];
     if (window.synthApp.audioCtx && window.synthApp.audioCtx.state === 'suspended') window.synthApp.audioCtx.resume();
-    // Sequencers in a preset start running right away (the Output volume is still at 0)
+    // The preset's Sequencers and Drum Machines start running right away (its Output volume is still at 0)
     setTimeout(() => {
       Object.values(window.synthApp.modules || {}).forEach(m => {
-        if (m.type === 'sequencer' && m.instance && !m.instance.isPlaying && typeof m.instance.togglePlay === 'function') {
-          m.instance.togglePlay();
-        }
+        if (!m.instance || !newIds.includes(m.id)) return;
+        if (m.type === 'sequencer' && !m.instance.isPlaying && typeof m.instance.togglePlay === 'function') m.instance.togglePlay();
+        if (m.instance.def && m.instance.def.type === 'drums' && !m.instance.playing && typeof m.instance.start === 'function') m.instance.start();
       });
     }, 300);
     closeModal();

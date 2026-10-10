@@ -27,8 +27,7 @@ window.helpData = {
       youLearn: "What you learn",
       howToPlay: "How to play it",
       noResults: "Nothing found. Try another word.",
-      newModule: "This module is new. Its manual page is coming soon; the jack list below is already up to date.",
-      groups: { sources: "Sound sources", controllers: "Controllers", processors: "Processors and effects", modulation: "Modulation", output: "Output and monitoring", other: "New modules" }
+      groups: { sources: "Sound sources", controllers: "Controllers", processors: "Processors and effects", modulation: "Modulation", output: "Output and monitoring" }
     },
     sections: {
       start: `
@@ -175,10 +174,14 @@ window.helpData = {
         summary: "Turns movement in front of your camera into control signals.",
         controls: ["Start Camera.", "Sens (Thresh): how much movement counts.", "Smoothing: calmer or faster response.", "CV Depth (Hz): how strong the X / Y outputs are."],
         tips: ["X CV into an Oscillator FM IN: move your hand left and right to change the pitch."] },
-      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "",
+      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "demo-ribbon",
         summary: "A rainbow strip you play by sliding a mouse, a finger or the iPad pencil along it.",
-        controls: ["Left to right sets the pitch. The Note readout shows the note you are on.", "Base Note: the note at the left end. Range: how many octaves the strip covers.", "Glide: how smoothly the pitch slides between positions.", "Snap: On jumps to whole notes, Off slides freely.", "Hold: On keeps the gate open after you lift your finger.", "Y / Press Range: how strong the Y and PRESS outputs are (x1 for a VCA, around x1000 for a Filter CUT MOD)."],
+        controls: ["Left to right sets the pitch. The Note readout shows the note you are on.", "Base Note: the note at the left end. Range: how many octaves the strip covers.", "Glide: how smoothly the pitch slides between positions.", "Snap: On jumps to whole notes, Off slides freely.", "Hold: On keeps the gate open after you lift your finger.", "Y / Press Range: multiplies the Y and PRESS outputs. x1 suits a VCA CV or a Filter CUT MOD (its Mod Depth sets how far it opens)."],
         tips: ["PITCH to Oscillator PITCH and GATE to Envelope GATE IN: a playable synth you slide on.", "Y and PRESS cables can be dropped on any slider, like the LFO: touch higher or press harder to move it."] },
+      { type: "drums", group: "controllers", name: "Drum Machine", preset: "demo-drums",
+        summary: "A four-row step drum machine (Kick, Snare, Hi-Hat, Cymbal) with classic 808 and 909 style sounds, all made by synthesis.",
+        controls: ["Play / Stop. Tempo: 40 to 240 BPM (type a number in the box, then Enter). Swing: delays every second 16th note for a shuffle feel.", "Add Bar / Remove Bar: 1 to 4 bars of 16 steps.", "Steps: tap once for a hit, again for an accent (louder, full color), again to switch it off.", "Sound: the drum model for the row (808, 909, Rimshot, Clap, Open / Closed hat, Ride, Cowbell...), Custom (build your own) or Input.", "Edit opens the row's sliders: Tune, Decay, Tone, Level and Pan. Clear empties the row.", "Custom: Wave, Pitch, Pitch Env, Noise, Attack, Decay, Cutoff and Resonance of a small synth voice."],
+        tips: ["MAIN L and MAIN R carry all four rows mixed; each row's OUT carries that drum alone, for its own effect.", "A row's TRIG into an Envelope GATE IN lets an Oscillator play in time with that drum.", "Plug any sound into a row's IN and every step plays a short burst of it, shaped by Decay and Tone."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "Removes part of the sound: darker, brighter or thinner.",
         controls: ["Type: Lowpass (keeps the lows), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
@@ -268,8 +271,7 @@ window.helpData = {
       youLearn: "מה לומדים",
       howToPlay: "איך מנגנים",
       noResults: "לא נמצא כלום. נסה מילה אחרת.",
-      newModule: "זה מודול חדש. העמוד שלו בספר יגיע בקרוב; רשימת השקעים למטה כבר מעודכנת.",
-      groups: { sources: "מקורות צליל", controllers: "בקרים", processors: "מעבדים ואפקטים", modulation: "אפנון", output: "יציאה וניטור", other: "מודולים חדשים" }
+      groups: { sources: "מקורות צליל", controllers: "בקרים", processors: "מעבדים ואפקטים", modulation: "אפנון", output: "יציאה וניטור" }
     },
     sections: {
       start: `
@@ -416,10 +418,14 @@ window.helpData = {
         summary: "הופך תנועה מול המצלמה לאותות שליטה.",
         controls: ["Start Camera.", "Sens (Thresh): כמה תנועה נחשבת.", "Smoothing: תגובה רגועה או מהירה.", "CV Depth (Hz): כמה חזקות יציאות X / Y."],
         tips: ["X CV אל FM IN של האוסילטור: מזיזים יד ימינה ושמאלה ומשנים את הגובה."] },
-      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "",
+      { type: "ribbon", group: "controllers", name: "Ribbon", preset: "demo-ribbon",
         summary: "רצועה בצבעי קשת שמנגנים עליה בהחלקה של עכבר, אצבע או העיפרון של האייפד.",
-        controls: ["משמאל לימין קובע את גובה הצליל. התצוגה Note מראה על איזה תו אתם.", "Base Note: התו בקצה השמאלי. Range: כמה אוקטבות הרצועה מכסה.", "Glide: כמה חלק הגובה מחליק בין מקומות.", "Snap: במצב On קופץ לתווים שלמים, במצב Off מחליק חופשי.", "Hold: במצב On ה-Gate נשאר פתוח גם אחרי שמרימים את האצבע.", "Y / Press Range: כמה חזקות היציאות Y ו-PRESS (x1 ל-VCA, בערך x1000 ל-CUT MOD של פילטר)."],
+        controls: ["משמאל לימין קובע את גובה הצליל. התצוגה Note מראה על איזה תו אתם.", "Base Note: התו בקצה השמאלי. Range: כמה אוקטבות הרצועה מכסה.", "Glide: כמה חלק הגובה מחליק בין מקומות.", "Snap: במצב On קופץ לתווים שלמים, במצב Off מחליק חופשי.", "Hold: במצב On ה-Gate נשאר פתוח גם אחרי שמרימים את האצבע.", "Y / Press Range: מכפיל את היציאות Y ו-PRESS. x1 מתאים ל-CV של VCA או ל-CUT MOD של פילטר (ה-Mod Depth שלו קובע כמה הוא נפתח)."],
         tips: ["PITCH אל PITCH של האוסילטור ו-GATE אל GATE IN של ה-Envelope: סינתסייזר שמנגנים עליו בהחלקה.", "את הכבלים מ-Y ומ-PRESS אפשר להפיל על כל סליידר, כמו ה-LFO: נגיעה גבוהה יותר או לחיצה חזקה יותר מזיזה אותו."] },
+      { type: "drums", group: "controllers", name: "Drum Machine", preset: "demo-drums",
+        summary: "מכונת תופים של ארבע שורות צעדים (Kick, Snare, Hi-Hat, Cymbal) עם צלילים בסגנון 808 ו-909 הקלאסיים, כולם נוצרים בסינתזה.",
+        controls: ["Play / Stop. Tempo: מ-40 עד 240 BPM (אפשר להקליד מספר בתיבה ואז Enter). Swing: מאחר כל תו שישית-עשרית שני לתחושה מקפצת.", "Add Bar / Remove Bar: מ-1 עד 4 תיבות של 16 צעדים.", "צעדים: הקשה אחת למכה, עוד הקשה להדגשה (חזק יותר, צבע מלא), עוד הקשה לכיבוי.", "Sound: דגם התוף של השורה (808, 909, Rimshot, Clap, היי-האט פתוח או סגור, Ride, Cowbell...), Custom (בונים לבד) או Input.", "Edit פותח את הסליידרים של השורה: Tune, Decay, Tone, Level ו-Pan. Clear מרוקן את השורה.", "Custom: Wave, Pitch, Pitch Env, Noise, Attack, Decay, Cutoff ו-Resonance של קול סינתיסייזר קטן."],
+        tips: ["MAIN L ו-MAIN R מוציאים את ארבע השורות יחד; ה-OUT של כל שורה מוציא את התוף הזה לבד, לאפקט משלו.", "TRIG של שורה אל GATE IN של Envelope נותן לאוסילטור לנגן בתזמון של אותו תוף.", "חברו כל צליל ל-IN של שורה, וכל צעד ינגן ממנו קטע קצר שמעוצב לפי Decay ו-Tone."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "מוריד חלק מהצליל: כהה יותר, בהיר יותר או דק יותר.",
         controls: ["Type: Lowpass (משאיר נמוכים), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
@@ -529,6 +535,20 @@ window.helpData = {
       "ribbon:out:gate": { text: "דלוק כל עוד נוגעים ברצועה (נשאר דלוק עם Hold).", where: "GATE IN של Envelope, או CV של VCA" },
       "ribbon:out:y": { text: "כמה גבוה נוגעים בתוך הרצועה, 0 בתחתית, כפול Y / Press Range. אפשר להפיל את הכבל גם על כל סליידר.", where: "CV של VCA, CUT MOD של פילטר, או כל סליידר" },
       "ribbon:out:press": { text: "לחץ העיפרון (עכבר ואצבע נותנים לחץ מלא), כפול Y / Press Range. אפשר להפיל את הכבל גם על כל סליידר.", where: "CV של VCA, CUT MOD של פילטר, או כל סליידר" },
+      "drums:in:kick_in": { text: "כל צליל שינוגן בתור הבס-דראם (Kick). חיבור כבל מעביר את Sound של השורה ל-Input: כל צעד פותח לרגע את הצליל הנכנס, לפי Decay (אורך) ו-Tone (בהירות).", where: "OUT של Oscillator, Filter, Granular, Mic" },
+      "drums:out:kick_out": { text: "הבס-דראם (Kick) לבד, אחרי ה-Level שלו (בלי ה-Pan).", where: "IN של Mixer, Filter, Reverb, כל אפקט" },
+      "drums:out:kick_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת הבס-דראם (Kick) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
+      "drums:in:snare_in": { text: "כל צליל שינוגן בתור הסנר (Snare). חיבור כבל מעביר את Sound של השורה ל-Input: כל צעד פותח לרגע את הצליל הנכנס, לפי Decay (אורך) ו-Tone (בהירות).", where: "OUT של Oscillator, Filter, Granular, Mic" },
+      "drums:out:snare_out": { text: "הסנר (Snare) לבד, אחרי ה-Level שלו (בלי ה-Pan).", where: "IN של Mixer, Filter, Reverb, כל אפקט" },
+      "drums:out:snare_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת הסנר (Snare) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
+      "drums:in:hat_in": { text: "כל צליל שינוגן בתור ההיי-האט (Hi-Hat). חיבור כבל מעביר את Sound של השורה ל-Input: כל צעד פותח לרגע את הצליל הנכנס, לפי Decay (אורך) ו-Tone (בהירות).", where: "OUT של Oscillator, Filter, Granular, Mic" },
+      "drums:out:hat_out": { text: "ההיי-האט (Hi-Hat) לבד, אחרי ה-Level שלו (בלי ה-Pan).", where: "IN של Mixer, Filter, Reverb, כל אפקט" },
+      "drums:out:hat_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת ההיי-האט (Hi-Hat) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
+      "drums:in:cym_in": { text: "כל צליל שינוגן בתור המצילה (Cymbal). חיבור כבל מעביר את Sound של השורה ל-Input: כל צעד פותח לרגע את הצליל הנכנס, לפי Decay (אורך) ו-Tone (בהירות).", where: "OUT של Oscillator, Filter, Granular, Mic" },
+      "drums:out:cym_out": { text: "המצילה (Cymbal) לבד, אחרי ה-Level שלו (בלי ה-Pan).", where: "IN של Mixer, Filter, Reverb, כל אפקט" },
+      "drums:out:cym_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת המצילה (Cymbal) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
+      "drums:out:main_l": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד שמאל.", where: "IN של Output, Mixer, IN L של Reverb, Recorder" },
+      "drums:out:main_r": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד ימין.", where: "IN של Output, Mixer, IN R של Reverb" },
       "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
       "recorder:out:out": { text: "מעביר את הצליל הלאה בלי שינוי.", where: "Output" }
     }
@@ -732,6 +752,45 @@ window.presetData = {
     connections: [
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } },
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }
+    ]
+  },
+  "demo-ribbon": {
+    modules: [
+      { id: "rib1", type: "ribbon", x: 40, y: 80, state: { base: 48, range: 2, glide: 40, cvRange: 1, snap: false, hold: false } },
+      { id: "osc1", type: "oscillator", x: 40, y: 600, state: { waveform: "sawtooth" } },
+      { id: "env1", type: "envelope", x: 420, y: 80, state: { attack: 0.01, decay: 0.2, sustain: 0.8, release: 0.4 } },
+      { id: "flt1", type: "filter", x: 420, y: 420, state: { type: "lowpass", frequency: 600, resonance: 6, modDepth: 2400 } },
+      { id: "vca1", type: "vca", x: 780, y: 80, state: { gain: 0 } },
+      { id: "scope1", type: "oscilloscope", x: 1120, y: 380, state: {} },
+      { id: "out1", type: "output", x: 1120, y: 80, state: {} }
+    ],
+    connections: [
+      { fromNode: "rib1", fromPortInfo: { id: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "rib1", fromPortInfo: { id: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "rib1", fromPortInfo: { id: "y" }, toNode: "flt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "flt1", toPortInfo: { type: "audio" } },
+      { fromNode: "flt1", fromPortInfo: { type: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-drums": {
+    modules: [
+      { id: "dm1", type: "drums", x: 40, y: 80, state: { tempo: 100, swing: 20, bars: 1, rows: [
+        { sound: "kick808", steps: "2000001000200000" },
+        { sound: "clap", steps: "0000200000002001" },
+        { sound: "hat808c", steps: "1010101210101012" },
+        { sound: "cowbell", steps: "0000000000000100" }
+      ] } },
+      { id: "rev1", type: "reverb", x: 860, y: 80, state: { mix: 0.15 } },
+      { id: "scope1", type: "oscilloscope", x: 1200, y: 380, state: {} },
+      { id: "out1", type: "output", x: 1200, y: 80, state: {} }
+    ],
+    connections: [
+      { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-recorder": {

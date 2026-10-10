@@ -730,7 +730,7 @@ window.presetData = {
         { active: true, pitch: 0 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 1 }, { active: true, pitch: 0.25 }
       ] } },
       { id: "wt1", type: "wavetable", x: 40, y: 420, state: { table: "vocal", position: 50, warp: 15, octave: 1 } },
-      { id: "lfo1", type: "lfo", x: 420, y: 80, state: { rate: 0.15, depth: 0.5 } },
+      { id: "lfo1", type: "lfo", x: 420, y: 80, state: { rate: 0.15, depth: 50 } },
       { id: "env1", type: "envelope", x: 420, y: 520, state: { attack: 0.01, decay: 0.35, sustain: 0.4, release: 0.3 } },
       { id: "vca1", type: "vca", x: 800, y: 420, state: { gain: 0 } },
       { id: "rev1", type: "reverb", x: 1120, y: 300, state: {} },
@@ -758,7 +758,7 @@ window.presetData = {
       { id: "env1", type: "envelope", x: 380, y: 420, state: { attack: 0.005, decay: 0.3, sustain: 0.3, release: 0.2 } },
       { id: "vca1", type: "vca", x: 760, y: 420, state: { gain: 0 } },
       { id: "deg1", type: "degrader", x: 1080, y: 420, state: { amount: 55 } },
-      { id: "lfo1", type: "lfo", x: 1080, y: 80, state: { rate: 0.1, depth: 0.45 } },
+      { id: "lfo1", type: "lfo", x: 1080, y: 80, state: { rate: 0.1, depth: 45 } },
       { id: "out1", type: "output", x: 1400, y: 380, state: {} },
       { id: "scope1", type: "oscilloscope", x: 1400, y: 620, state: {} }
     ],

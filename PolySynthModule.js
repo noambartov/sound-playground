@@ -47,6 +47,7 @@ window.PolyNoteBus = PolyNoteBus;
 const POLY_MAX_VOICES = 8;
 const POLY_CLASSIC_WAVES = ['sawtooth', 'square', 'triangle', 'sine'];
 const POLY_WARP_N = 2048;   // samples per cycle when Warp is applied (harmonics up to 256 fit easily)
+const POLY_WAVE_FADE = 0.03;   // seconds to crossfade to a new waveform (Position / Warp / Waveform)
 
 class PolySynthModule extends ModuleBase {
   static def = {
@@ -236,25 +237,41 @@ class PolySynthModule extends ModuleBase {
     this.outputNodes = { out: this.outNode };
     this.order = 0;
 
-    // Each voice runs all the time and is silent until a note opens its volume envelope
+    // Each voice runs all the time and is silent until a note opens its volume envelope.
+    // Its two oscillators exist twice (side A and side B, started together so they stay in phase):
+    // a new waveform is put on the silent side and crossfaded in, because swapping the waveform of
+    // a sounding oscillator jumps mid-cycle and clicks (e.g. an LFO moving Position).
     this.voices = [];
+    this.side = 0;
+    this.fadeEnd = 0;
+    this.waveKey = null;
+    this.pendingWave = null;
+    this.waveTimer = null;
     for (let i = 0; i < POLY_MAX_VOICES; i++) {
-      const osc1 = this.own(ctx.createOscillator());
-      const osc2 = this.own(ctx.createOscillator());
       const mix = this.own(ctx.createGain());
       mix.gain.value = 0.5;
+      const sides = [0, 1].map(si => {
+        const gain = this.own(ctx.createGain());
+        gain.gain.value = si === 0 ? 1 : 0;
+        const o1 = this.own(ctx.createOscillator());
+        const o2 = this.own(ctx.createOscillator());
+        o1.connect(gain);
+        o2.connect(gain);
+        gain.connect(mix);
+        return { osc1: o1, osc2: o2, gain };
+      });
       const filter = this.own(ctx.createBiquadFilter());
       filter.type = 'lowpass';
       const amp = this.own(ctx.createGain());
       amp.gain.value = 0;
-      osc1.connect(mix);
-      osc2.connect(mix);
       mix.connect(filter);
       filter.connect(amp);
       amp.connect(this.outNode);
-      osc1.start();
-      osc2.start();
-      this.voices.push({ osc1, osc2, filter, amp, note: null, freq: 440, gate: false, freeAt: 0, started: 0, order: 0 });
+      const t0 = ctx.currentTime;
+      sides.forEach(sd => { sd.osc1.start(t0); sd.osc2.start(t0); });
+      // osc1s / osc2s: the first / second oscillator of both sides (pitch and detune go to both)
+      this.voices.push({ sides, osc1s: sides.map(sd => sd.osc1), osc2s: sides.map(sd => sd.osc2),
+        filter, amp, note: null, freq: 440, gate: false, freeAt: 0, started: 0, order: 0 });
     }
 
     // The NOTES input: app.js connects the Keyboard's PolyNoteBus to this object
@@ -288,8 +305,8 @@ class PolySynthModule extends ModuleBase {
       this.applyWave();
     } else if (id === 'detune') {
       this.voices.forEach(v => {
-        v.osc1.detune.setTargetAtTime(-value / 2, t, 0.02);
-        v.osc2.detune.setTargetAtTime(value / 2, t, 0.02);
+        v.osc1s.forEach(o => o.detune.setTargetAtTime(-value / 2, t, 0.02));
+        v.osc2s.forEach(o => o.detune.setTargetAtTime(value / 2, t, 0.02));
       });
     } else if (id === 'reso') {
       this.voices.forEach(v => v.filter.Q.setTargetAtTime(value, t, 0.02));
@@ -322,23 +339,68 @@ class PolySynthModule extends ModuleBase {
   applyWave() {
     const wave = this.params.wave;
     const classic = POLY_CLASSIC_WAVES.includes(wave);
+    let next;
     if (classic) {
-      this.voices.forEach(v => { v.osc1.type = wave; v.osc2.type = wave; });
-      this.currentWave = null;
+      next = { key: wave, type: wave };
     } else {
-      const table = wave.replace(/^wt_/, '');
-      const pw = PolySynthModule.tableWave(this.audioCtx, WT_TABLES[table] ? table : 'basic',
-        (this.params.position || 0) / 100, (this.params.warp || 0) / 100);
-      if (pw !== this.currentWave) {
-        this.voices.forEach(v => { v.osc1.setPeriodicWave(pw); v.osc2.setPeriodicWave(pw); });
-        this.currentWave = pw;
-      }
+      const table = WT_TABLES[wave.replace(/^wt_/, '')] ? wave.replace(/^wt_/, '') : 'basic';
+      const pos = (this.params.position || 0) / 100;
+      const warp = (this.params.warp || 0) / 100;
+      next = { key: `${table}|${pos.toFixed(3)}|${warp.toFixed(2)}`,
+        pw: PolySynthModule.tableWave(this.audioCtx, table, pos, warp) };
+    }
+    if (next.key !== this.waveKey) {
+      this.pendingWave = next;
+      this.flushWave();
     }
     // Position and Warp only work with a wavetable
     ['position', 'warp'].forEach(id => {
       const sl = this.el(`p_${id}`);
       if (sl) sl.disabled = classic;
     });
+  }
+
+  static setWave(osc, w) {
+    if (w.pw) osc.setPeriodicWave(w.pw);
+    else osc.type = w.type;
+  }
+
+  // Puts the waiting waveform on the silent side and crossfades to it. While a crossfade is still
+  // running, the latest waveform waits and is applied right after it (at most ~30 swaps a second).
+  flushWave() {
+    const w = this.pendingWave;
+    if (!w || this.destroyed) return;
+    const ctx = this.audioCtx;
+    const t = ctx.currentTime;
+    if (this.waveKey === null || ctx.state !== 'running') {
+      // First waveform, or no sound is running: set both sides directly
+      this.voices.forEach(v => v.sides.forEach(sd => {
+        PolySynthModule.setWave(sd.osc1, w);
+        PolySynthModule.setWave(sd.osc2, w);
+      }));
+    } else if (t < this.fadeEnd) {
+      if (!this.waveTimer) {
+        this.waveTimer = setTimeout(() => { this.waveTimer = null; this.flushWave(); }, (this.fadeEnd - t) * 1000 + 5);
+      }
+      return;
+    } else {
+      const next = 1 - this.side;
+      this.voices.forEach(v => {
+        const on = v.sides[next];
+        const off = v.sides[this.side];
+        PolySynthModule.setWave(on.osc1, w);
+        PolySynthModule.setWave(on.osc2, w);
+        [[on.gain, 1], [off.gain, 0]].forEach(([g, to]) => {
+          g.gain.cancelScheduledValues(t);
+          g.gain.setValueAtTime(1 - to, t);
+          g.gain.linearRampToValueAtTime(to, t + POLY_WAVE_FADE);
+        });
+      });
+      this.side = next;
+      this.fadeEnd = t + POLY_WAVE_FADE;
+    }
+    this.waveKey = w.key;
+    this.pendingWave = null;
   }
 
   cutoffBase() {
@@ -392,8 +454,7 @@ class PolySynthModule extends ModuleBase {
     const start = stolen ? t + 0.006 : t;
     PolySynthModule.hold(v.amp.gain, t);
     if (stolen) v.amp.gain.linearRampToValueAtTime(0, start);
-    v.osc1.frequency.setValueAtTime(freq, start);
-    v.osc2.frequency.setValueAtTime(freq, start);
+    v.osc1s.concat(v.osc2s).forEach(o => o.frequency.setValueAtTime(freq, start));
 
     v.amp.gain.linearRampToValueAtTime(1, start + a);
     v.amp.gain.setTargetAtTime(s, start + a, Math.max(0.005, d / 4));
@@ -446,6 +507,7 @@ class PolySynthModule extends ModuleBase {
 
   destroy() {
     this.destroyed = true;
+    if (this.waveTimer) clearTimeout(this.waveTimer);
   }
 }
 

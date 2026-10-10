@@ -99,3 +99,34 @@
 - **Shimmer Reverb** - Reverb עם הרמת אוקטבה, מתאים לגרנולר.
 - **Resonator** בסגנון Rings.
 - **Frequency Shifter** - אפקט פשוט עם צליל מיוחד.
+
+---
+
+## סקירת מודולים חדשים (2026-10-10)
+מה חדש ומעניין ברשת (בעיקר Superbooth 2026 ו-NAMM 2026), רק מה שעוד לא בנוי או מתוכנן אצלנו. הכל `רעיון`.
+
+### מתאים במיוחד לסינת בדפדפן (קל לבנות, בלי דגימות)
+| רעיון | השראה | מה זה נותן |
+|---|---|---|
+| **Random + Quantizer** | Befaco Random8, Xaoc Skopje, Mutable Marbles | מתח אקראי שמיושר לסולם, כך שמתקבלות מלודיות "גנרטיביות" שתמיד נשמעות במקום. כפתור Loop שומר רצף שאהבת. |
+| **Euclidean / Pattern Trigger** | Noise Engineering Multi Repetitor, Mutable Grids | מוציא דפיקות לפי חוקים מתמטיים (Euclidean, מקצבים אפריקאיים). מחברים לשורות של מכונת התופים ומקבלים מקצבים חיים בלי לצייר צעדים. |
+| **Low Pass Gate + Wavefolder** | Buchla Ziggy, סגנון West Coast | "קיפול" גל שמוסיף הרמוניות מבריקות, ושער שסוגר עוצמה וגבהים יחד, צליל "פלאק" מקושי של מרימבה. |
+| **Comb / Spectral Resonator** | Xaoc Budapeszt, Verbos Filter Resonator | כמה פילטרים מסורקים עם Feedback, הופך רעש או תופים לאקורדים מצלצלים. (קרוב לרעיון ה-Resonator בסגנון Rings למעלה, אפשר לאחד.) |
+| **Karplus-Strong Strings** | Strymon SuperKar+, firmware "Mini-Elements" ל-Rings | מיתרים ופעמונים במידול פיזיקלי, כמה קולות. משתלב עם הסיקוונסר והמקלדת. |
+
+### אפקטים
+| רעיון | השראה | מה זה נותן |
+|---|---|---|
+| **Texturizer: Reverb שהופך ל-Multi-tap** | Make Noise Plexiphon | כפתור אחד שעובר ברצף מרברב שטוף לדיליי עם הרבה חזרות. |
+| **Plate Reverb עם Freeze ו-Shimmer** | 4ms Mesa (Valley Plateau), WMD Cosmic Debris | שדרוג לרברב הקיים: הקפאת הזנב, הרמת אוקטבה, LFO פנימיים. |
+| **Performance Looper** | Synthux Spotykach, Koma Haloplane | שני "דקים" של לופ עם חיתוך וסחיפה גרנולרית, מקליטים ומנגנים בזמן אמת. |
+| **Reverse Delay עם משטח מגע** | Enjoy Electronics Memento | משטח שגוררים עליו באצבע או בעט, מתאים במיוחד לאייפד. |
+
+### אוסילטורים
+- **2D Wavetable** (Ferry Island Undertow) - מעבר בין גלים בשני צירים, כמו משטח. אפשר לשלב ברעיון ה-Wavetable שבסעיף 2.
+- **מצבי Supersaw / Hypersine** (Bastl Citadel Alchemist) - מצבים נוספים לאוסילטור.
+
+### המלצה
+שלושת הראשונים: **Random + Quantizer**, **Euclidean Trigger** ו-**Low Pass Gate + Wavefolder**. כל אחד קטן לבנייה על `ModuleBase.js`, לא דורש דגימות, ומשתלב מיד עם מה שכבר קיים (סיקוונסר, מכונת תופים, מטרונום).
+
+מקורות: [MusicRadar Superbooth 2026](https://www.musicradar.com/music-tech/from-stochastic-sequences-to-a-render-farm-of-drums-8-of-our-favourite-eurorack-releases-from-superbooth-2026), [Milk Audio Superbooth 2026](https://www.milkaudiostore.com/us/articles/tutorials-and-insights-on-synthesis-and-synthesizers/the-10-best-synths-and-modules-from-superbooth-2026/), [NAMM 2026 roundup](https://blog.imseankim.com/namm-2026-eurorack-modular-synth-new-modules-roundup/), [Synthtopia: SuperKar+](https://www.synthtopia.com/content/2025/10/13/strymon-superkar-packs-32-physical-modeling-voices-into-a-12hp-eurorack-module/).

@@ -29,7 +29,8 @@
 
 ## 4. אפקטים חדשים
 - **Degrader** - Bitcrush (הורדת ביטים) ו-Sample-rate reduction, אולי גם "Lossy" (צליל של קובץ דחוס). `רעיון`
-- **Delay מורכב** - זמנים שונים לימין ולשמאל, Ping-Pong, Reverse, Feedback עם פילטר. `רעיון`
+- **Delay מורכב** - זמנים שונים לימין ולשמאל, Ping-Pong, Reverse, Feedback עם פילטר. `הושלם` (2026-10-10) - מודול Stereo Delay: עמודות Left / Both / Right, Reverse, Ping-Pong, Sync לכבל CLOCK (ממכונת התופים או מהסיקוונסר), ומסך הדים שאפשר לגרור.
+  - בהמשך: מודול BPM / Clock עצמאי שמוציא CLOCK לכל המודולים.
 - **Saturation** - חימום ועיוות במצבים: Tape, Tube, Hard Clip, Fold. `רעיון`
 - **Chorus / Flanger** - עם אפשרויות מתקדמות, כולל Reverse (לבדוק עם הבעלים מה הכוונה המדויקת). `רעיון`
 

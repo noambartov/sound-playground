@@ -33,6 +33,7 @@
 
     'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
     'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
+    'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },
 
     'webcam:out:out_x': { name: 'X CV', signal: 'CV', text: 'Where the movement is, left to right.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 1', match: MOD_DESTS },
     'webcam:out:out_y': { name: 'Y CV', signal: 'CV', text: 'Where the movement is, bottom to top.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 2', match: MOD_DESTS },
@@ -90,6 +91,7 @@
     'keyboard:out:bend': 'Osc FM',
     'sequencer:out:pitch': 'Osc PITCH',
     'sequencer:out:gate': 'Env GATE / VCA CV',
+    'sequencer:out:clock': 'Delay CLOCK',
     'webcam:out:out_x': 'Osc FM / Filter',
     'webcam:out:out_y': 'Osc FM / Filter',
     'webcam:out:out_motion': 'VCA CV / Granular',

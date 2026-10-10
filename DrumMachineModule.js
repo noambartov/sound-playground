@@ -69,7 +69,10 @@ class DrumMachineModule extends ModuleBase {
           chip: 'Output / Reverb L' },
         { id: 'main_r', label: 'MAIN R', signal: 'audio', title: 'Main Right',
           guide: { text: 'All four drums mixed by their Pan, right side.', to: 'Output IN, Mixer, Reverb IN R', match: ['output:in:in', 'mixer:in:ch_in', 'reverb:in:in_r'] },
-          chip: 'Output / Reverb R' }
+          chip: 'Output / Reverb R' },
+        { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
+          guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },
+          chip: 'Delay CLOCK' }
       ])
   };
 
@@ -103,6 +106,8 @@ class DrumMachineModule extends ModuleBase {
     this.splitter.connect(this.mainR, 1);
     this.outputNodes.main_l = this.mainL;
     this.outputNodes.main_r = this.mainR;
+    this.clockOut = this.makeConstant(0);
+    this.outputNodes.clock = this.clockOut;
 
     this.rows = DM_ROWS.map((r, i) => {
       const row = {
@@ -193,6 +198,9 @@ class DrumMachineModule extends ModuleBase {
         if (v) this.trigger(row, t, v === 2 ? 1 : 0.7, dur);
       });
       this.visualQueue.push({ step: this.currentStep, time: t });
+      // CLOCK OUT: a pulse on every (unswung) 16th, half a step long
+      this.clockOut.offset.setValueAtTime(1, this.nextTime);
+      this.clockOut.offset.setValueAtTime(0, this.nextTime + dur * 0.5);
       this.nextTime += dur;
       this.currentStep = (this.currentStep + 1) % (this.bars * 16);
     }

@@ -1292,3 +1292,92 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   border-color: var(--primary-color);
   color: #fff;
 }
+
+/* Stereo Delay (StereoDelayModule.js) */
+.sd-display {
+  width: 100%;
+  height: 120px;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+  touch-action: none;
+  cursor: grab;
+}
+
+.sd-hint {
+  font-size: 10px;
+  color: var(--muted-text);
+  margin-top: -4px;
+}
+
+.sd-grid {
+  display: grid;
+  grid-template-columns: 64px 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.sd-grid[hidden] {
+  display: none;
+}
+
+.sd-head span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-text);
+  text-align: center;
+}
+
+.sd-name {
+  font-size: 11px;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+.sd-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sd-cell input[type="range"] {
+  width: 100%;
+}
+
+.sd-cell input[type="range"]:disabled {
+  opacity: 0.4;
+}
+
+.sd-readout {
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sd-cell .control-select {
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.sd-toggle {
+  width: 100%;
+}
+
+.sd-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-bottom .sd-toggle {
+  width: auto;
+}
+
+.sd-clock {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-text);
+}

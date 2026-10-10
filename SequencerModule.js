@@ -42,6 +42,11 @@ class SequencerModule {
         this.gateNode = this.ctx.createConstantSource();
         this.gateNode.offset.setValueAtTime(0, this.ctx.currentTime);
         this.gateNode.start();
+
+        // CLOCK OUT: a pulse on every step (16th note), active or not, so other modules can follow the tempo
+        this.clockNode = this.ctx.createConstantSource();
+        this.clockNode.offset.setValueAtTime(0, this.ctx.currentTime);
+        this.clockNode.start();
     }
 
     // --- State Protocol ---
@@ -82,6 +87,9 @@ class SequencerModule {
         this.ensureAudioRunning();
         if (portType === 'gate') {
             return this.gateNode;
+        }
+        if (portType === 'clock') {
+            return this.clockNode;
         }
         return this.pitchNode;
     }
@@ -189,6 +197,9 @@ class SequencerModule {
         } else {
             this.gateNode.offset.setValueAtTime(0.0, time);
         }
+
+        this.clockNode.offset.setValueAtTime(1, time);
+        this.clockNode.offset.setValueAtTime(0, time + stepDurationSec * 0.5);
 
         // Push to queue for UI sync
         this.scheduledStepsQueue.push({ stepIndex: this.currentStep, time: time });
@@ -299,6 +310,7 @@ class SequencerModule {
         if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
         try { this.pitchNode.stop(); } catch(e){}
         try { this.gateNode.stop(); } catch(e){}
+        try { this.clockNode.stop(); } catch(e){}
     }
 
     // --- Static Event Handlers ---
@@ -422,6 +434,10 @@ class SequencerModule {
                         <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <span style="font-size: 0.65rem; font-weight: 700;">GATE</span>
                             <div class="port port-out" data-node-id="${this.id}" data-port-type="gate" title="Gate Output"></div>
+                        </div>
+                        <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <span style="font-size: 0.65rem; font-weight: 700;">CLOCK</span>
+                            <div class="port port-out" data-node-id="${this.id}" data-port-id="clock" data-port-type="gate" title="Clock Output"></div>
                         </div>
                     </div>
                 </div>

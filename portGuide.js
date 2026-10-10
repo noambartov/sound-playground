@@ -27,11 +27,11 @@
     'audio_in:out:audio': { name: 'OUT', signal: 'Audio', text: 'Live sound from your microphone or sound card.', to: 'Filter IN, Granular IN L, Reverb IN L, VCA IN, Output IN', match: AUDIO_DESTS },
 
     // Controllers
-    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
+    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN (shaped notes), or VCA CV (simple on/off notes)', match: ['envelope:in:gate', 'vca:in:cv'] },
     'keyboard:out:bend': { name: 'BEND', signal: 'CV', text: 'The pitch bend wheel.', to: 'Oscillator FM IN, Filter CUT MOD', match: ['oscillator:in:fm', 'filter:in:cutoff'] },
 
-    'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch'] },
+    'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
     'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },
 

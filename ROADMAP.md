@@ -14,7 +14,8 @@
   - זו תשתית לכל המודולים העתידיים, לכן כדאי לבנות אותה מוקדם.
 
 ## 2. אוסילטור
-- **Wavetables מורכבים יותר** - גלים מורכבים ומעבר רציף ביניהם (Morph / Position). `רעיון`
+- **Wavetables מורכבים יותר** - גלים מורכבים ומעבר רציף ביניהם (Morph / Position). `הושלם` (2026-10-10) - מודול Wavetable Osc: חמש טבלאות (Basic, Vocal, Digital, Organ, PWM), Position, Warp, כניסות PITCH, FM ו-POS ותצוגת גלים בערימה.
+  - שלב שני: Unison (כמה קולות מעט מכוונים זה מזה) וציור גל משלך בעט.
   - השראה: Vital (חינמי), Serum, Mutable Instruments Plaits.
   - טכנית: `PeriodicWave` לגלים מותאמים, ומעבר רציף בעזרת crossfade בין שני גלים או AudioWorklet.
   - אפשרות: מודול נפרד "Wavetable Osc" כדי לא להעמיס על האוסילטור הקיים.
@@ -51,7 +52,7 @@
 1. ניקוי עיצובי (פלוסים, כפתורי מחיקה) - קטן ומהיר.
 2. עיצוב מחודש ל-LFO יחד עם חיבור LFO לכפתורים - תשתית לכל השאר. `הושלם`
 3. אפקטים: Saturation ו-Degrader (פשוטים), אחר כך Delay מורכב, אחר כך Chorus / Flanger.
-4. Wavetable Oscillator.
+4. Wavetable Oscillator. `הושלם` (2026-10-10)
 5. מכונת תופים 808. `הושלם` (2026-10-09)
 
 ---

@@ -1457,3 +1457,14 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 .metro-light.metro-first { border-color: var(--primary-color); }
 .metro-light.metro-now { background: var(--text-color); }
 .metro-light.metro-first.metro-now { background: var(--primary-color); }
+
+/* Wavetable Osc (WavetableModule.js): the stacked-waves display */
+.wt-display {
+  width: 100%;
+  height: 120px;
+  display: block;
+  margin-bottom: 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+}

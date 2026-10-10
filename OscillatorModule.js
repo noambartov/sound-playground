@@ -50,7 +50,7 @@ class OscillatorModule {
       if (typeSelect) typeSelect.value = this.currentType;
 
       const freqSlider = this.card.querySelector(`#osc_freq_${this.id}`);
-      if (freqSlider) freqSlider.value = this.currentFreq;
+      if (freqSlider) freqSlider.value = OscillatorModule.freqToSlider(this.currentFreq);
 
       this.updatePitchUI();
 
@@ -162,7 +162,7 @@ class OscillatorModule {
 
         <div class="control-group">
           <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Frequency: <span id="freq_val_${this.id}">${Math.round(this.currentFreq)} Hz</span></label>
-          <input type="range" id="osc_freq_${this.id}" min="20" max="4000" step="1" value="${this.currentFreq}">
+          <input type="range" id="osc_freq_${this.id}" min="0" max="1" step="0.001" value="${OscillatorModule.freqToSlider(this.currentFreq)}">
         </div>
 
         <div class="control-group" id="pwm_container_${this.id}" style="display: ${this.currentType === 'square' ? 'flex' : 'none'};">
@@ -201,8 +201,8 @@ class OscillatorModule {
     const freqLabel = card.querySelector(`#freq_val_${this.id}`);
     if (freqSlider) {
       freqSlider.addEventListener('input', (e) => {
-        this.setFrequency(e.target.value);
-        if (freqLabel && this.pitchConnections === 0) freqLabel.innerText = `${Math.round(e.target.value)} Hz`;
+        this.setFrequency(OscillatorModule.sliderToFreq(e.target.value));
+        if (freqLabel && this.pitchConnections === 0) freqLabel.innerText = `${Math.round(this.currentFreq)} Hz`;
       });
     }
 
@@ -225,3 +225,19 @@ class OscillatorModule {
     if (this.pitchInput) try { this.pitchInput.disconnect(); } catch (e) {}
   }
 }
+
+// Frequency slider curve: the slider moves 0..1 and maps to 20..4000 Hz on a
+// logarithmic scale bent so the midpoint reads 200 Hz: freq = 20 * 200^(pos^k).
+OscillatorModule.FREQ_MIN = 20;
+OscillatorModule.FREQ_MAX = 4000;
+OscillatorModule.FREQ_CURVE = Math.log(Math.log(200 / 20) / Math.log(4000 / 20)) / Math.log(0.5);
+OscillatorModule.sliderToFreq = (val) => {
+  const pos = Math.min(1, Math.max(0, parseFloat(val)));
+  const { FREQ_MIN: lo, FREQ_MAX: hi, FREQ_CURVE: k } = OscillatorModule;
+  return lo * Math.pow(hi / lo, Math.pow(pos, k));
+};
+OscillatorModule.freqToSlider = (freq) => {
+  const { FREQ_MIN: lo, FREQ_MAX: hi, FREQ_CURVE: k } = OscillatorModule;
+  const f = Math.min(hi, Math.max(lo, parseFloat(freq)));
+  return Math.pow(Math.log(f / lo) / Math.log(hi / lo), 1 / k);
+};

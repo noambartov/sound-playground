@@ -54,9 +54,7 @@ class FilterModule {
             if (labelEl) {
                 labelEl.innerText = this.currentFreq >= 1000 ? (this.currentFreq / 1000).toFixed(1) + 'k' : Math.round(this.currentFreq);
             }
-            const minLog = Math.log(this.minFreq);
-            const maxLog = Math.log(this.maxFreq);
-            const sliderVal = (Math.log(this.currentFreq) - minLog) / (maxLog - minLog);
+            const sliderVal = this.freqToSlider(this.currentFreq);
             const slider = document.querySelector(`#module_card_${this.id} input[oninput*="setCutoffFromSlider"]`);
             if (slider) slider.value = sliderVal;
         }
@@ -76,11 +74,22 @@ class FilterModule {
         }
     }
 
+    // Cutoff slider curve: logarithmic, bent so the slider's midpoint reads 700 Hz.
+    // freq = min * (max/min)^(pos^k), with k chosen so pos 0.5 lands on 700 Hz.
+    cutoffCurve() {
+        const span = Math.log(this.maxFreq / this.minFreq);
+        return Math.log(Math.log(700 / this.minFreq) / span) / Math.log(0.5);
+    }
+
     sliderToFreq(val) {
-        const normalized = parseFloat(val);
-        const minLog = Math.log(this.minFreq);
-        const maxLog = Math.log(this.maxFreq);
-        return Math.exp(minLog + (maxLog - minLog) * normalized);
+        const pos = Math.min(1, Math.max(0, parseFloat(val)));
+        return this.minFreq * Math.pow(this.maxFreq / this.minFreq, Math.pow(pos, this.cutoffCurve()));
+    }
+
+    freqToSlider(freq) {
+        const f = Math.min(this.maxFreq, Math.max(this.minFreq, freq));
+        const t = Math.log(f / this.minFreq) / Math.log(this.maxFreq / this.minFreq);
+        return Math.pow(t, 1 / this.cutoffCurve());
     }
 
     getAudioInput() { return this.audioInput; }
@@ -132,9 +141,7 @@ class FilterModule {
     }
 
     renderHTML() {
-        const minLog = Math.log(this.minFreq);
-        const maxLog = Math.log(this.maxFreq);
-        const currentSliderVal = (Math.log(this.currentFreq) - minLog) / (maxLog - minLog);
+        const currentSliderVal = this.freqToSlider(this.currentFreq);
         const displayFreq = Math.round(this.currentFreq);
 
         setTimeout(() => {

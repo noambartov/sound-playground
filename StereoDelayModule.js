@@ -112,8 +112,17 @@ class StereoDelayModule extends ModuleBase {
 
   // ---- Values ----
   // Effective delay time of a side in seconds (from the clock when Sync is on and a clock is running)
+  // True only while a clock is actually arriving (a pulse within the last 3 s)
+  clockLive() {
+    return !!this.clockInterval && performance.now() - (this.lastClockAt || 0) < 3000;
+  }
+
+  isSynced() {
+    return this.sync && this.clockLive();
+  }
+
   effectiveTime(s) {
-    if (this.sync && this.clockInterval) return Math.min(2, this.clockInterval * parseFloat(this.side[s].div));
+    if (this.isSynced()) return Math.min(2, this.clockInterval * parseFloat(this.side[s].div));
     return this.side[s].time / 1000;
   }
 
@@ -134,7 +143,7 @@ class StereoDelayModule extends ModuleBase {
   }
 
   onClock(interval) {
-    const changed = Math.abs(interval - this.clockInterval) > 0.002;
+    const changed = Math.abs(interval - this.clockInterval) > 0.002 || !this.clockLive();
     this.clockInterval = interval;
     this.lastClockAt = performance.now();
     if (changed) {
@@ -237,13 +246,13 @@ class StereoDelayModule extends ModuleBase {
 
   updateSyncUI() {
     const info = this.el('clockinfo');
-    const live = this.clockInterval && performance.now() - this.lastClockAt < 3000;
+    const live = this.clockLive();
     if (info) info.textContent = live ? `Clock: ${Math.round(60 / (this.clockInterval * 4))} BPM` : 'No clock';
     // While synced to a running clock, the Time readouts show the synced time and the sliders rest
     SD_COLS.forEach(c => {
       const sl = this.el(`p_time_${c}`);
       const ro = this.el(`v_time_${c}`);
-      const synced = this.sync && this.clockInterval;
+      const synced = this.isSynced();
       if (sl) sl.disabled = !!synced;
       if (ro) {
         const ms = c === 'B' ? (this.effectiveTime('L') + this.effectiveTime('R')) * 500 : this.effectiveTime(c) * 1000;
@@ -288,7 +297,13 @@ class StereoDelayModule extends ModuleBase {
       if (this.destroyed || !this.card || !this.card.isConnected) return;
       this.detectHits();
       this.drawDisplay();
-      if (this.sync && this.clockInterval && performance.now() - this.lastClockAt > 3000) this.updateSyncUI();
+      // When the clock stops (or starts) the Time sliders unlock (or lock) and the delay follows
+      const live = this.clockLive();
+      if (live !== this.wasLive) {
+        this.wasLive = live;
+        this.sendParams();
+        this.updateSyncUI();
+      }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -349,7 +364,7 @@ class StereoDelayModule extends ModuleBase {
       ctx.fillText(s === 0 ? 'L' : 'R', 8, top + g.laneH * 0.6);
     }
     // Beat grid when synced
-    if (this.sync && this.clockInterval) {
+    if (this.isSynced()) {
       ctx.strokeStyle = border;
       ctx.lineWidth = 1;
       for (let t = this.clockInterval * 4; t < SD_SPAN; t += this.clockInterval * 4) {
@@ -469,7 +484,7 @@ class StereoDelayModule extends ModuleBase {
     this.side[s].fb = Math.round(frac * 95);
     // Left / right: Time (or the nearest division when synced)
     const t = Math.min(2, Math.max(0.01, ((pt.x - g.padX) / (g.w - g.padX - 12)) * SD_SPAN));
-    if (this.sync && this.clockInterval) {
+    if (this.isSynced()) {
       let bestDiv = this.side[s].div;
       let bestD = Infinity;
       SD_DIVS.forEach(([v]) => {

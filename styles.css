@@ -1506,3 +1506,27 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   margin-bottom: 10px;
 }
 .wt-hint[hidden] { display: none; }
+
+/* Poly Synth (PolySynthModule.js): one numbered cell per voice, lit while it holds a note */
+.poly-voices {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.poly-voice {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 0;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  color: var(--muted-text);
+  transition: background 0.05s, color 0.05s;
+}
+.poly-voice.on {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+.poly-voice.off { opacity: 0.3; }

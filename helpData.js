@@ -158,6 +158,10 @@ window.helpData = {
         summary: "An oscillator that glides between a row of different waves, so the tone can change and move while it plays.",
         controls: ["The display: the table's 8 waves stacked from front to back; the bright wave is the one playing now, at its place in the stack.", "Table: Basic (sine, triangle, saw, square), Vocal (vowels A E I O U), Digital (a bright band that climbs), Organ (drawbar settings), PWM (a pulse that gets thinner), Draw (your own wave).", "Position: where in the table you are; in between two waves you hear a smooth blend.", "Warp: bends each wave (squeezes its first half), for brighter, more nasal colors.", "Frequency: the pitch, 20 to 2000 Hz; set aside while a cable is in PITCH. Octave and Tune shift the pitch (also a note from PITCH).", "POS Depth: how far a cable in POS moves Position.", "Unison Voices: up to 7 copies of the sound played together. Unison Detune: how far apart they are tuned (in cents); together they give a wide, thick sound.", "Draw: pick Draw in Table and draw one cycle of a wave on the display with the mouse or pencil. Position 0% plays a sine, 100% your wave, and in between a blend."],
         tips: ["Drop an LFO OUT cable on the Position slider: the tone keeps moving through the waves.", "Envelope ENV OUT into POS: every note travels through the table, like a filter sweep but different.", "High notes stay clean: higher notes use waves with fewer harmonics."] },
+      { type: "polysynth", group: "sources", name: "Poly Synth", preset: "demo-polysynth",
+        summary: "A complete synth that plays chords: up to 8 notes at once, each with its own oscillators, filter and envelope. Plug the Keyboard NOTES output into its NOTES input.",
+        controls: ["The numbered cells: one per voice; a cell lights while its voice plays a note. Dimmed cells are switched off by Voices.", "Voices: how many notes can sound at once (1 to 8). When you play more, the oldest note is cut.", "Waveform: Sawtooth (bright), Square (hollow), Triangle (soft), Sine (pure).", "Detune: each voice has two oscillators; Detune tunes them apart (in cents) for a wider, richer sound.", "Cutoff: how bright the sound is (the low-pass filter). Resonance: a ringing peak at the cutoff.", "Filter Env: how far each note opens the filter at its start, then it settles with the volume envelope.", "Attack, Decay, Sustain, Release: the shape of every note, like the Envelope module.", "Level: the overall volume."],
+        tips: ["Hold several keys on the Keyboard (on the iPad with several fingers) to hear a chord.", "Long Attack and Release with a low Cutoff give soft pads; short Decay with Sustain 0 gives plucked notes.", "Drop an LFO OUT cable on the Cutoff slider to make all the voices move together."] },
       { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
         summary: "Records the sound coming in (or a loaded file) and replays it as a cloud of tiny overlapping grains.",
         controls: ["Source: Live Input (records IN L / IN R) or Audio File (Load File).", "Position: where in the recording grains are taken from.", "Size: grain length. Density: grains per second.", "Pitch: grain speed (2 = one octave up). Spray: randomness. Reverse: chance a grain plays backwards.", "CV 1 / CV 2 Target: which setting each CV input moves."],
@@ -418,6 +422,10 @@ window.helpData = {
         summary: "אוסילטור שעובר בהדרגה בין שורה של צורות גל שונות, כך שהצליל יכול להשתנות ולזוז תוך כדי נגינה.",
         controls: ["המסך: 8 הגלים של הטבלה בערימה מקדימה לאחור; הגל הבהיר הוא זה שמתנגן עכשיו, במקום שלו בערימה.", "Table: Basic (סינוס, משולש, מסור, ריבוע), Vocal (תנועות A E I O U), Digital (פס בהיר שמטפס), Organ (הגדרות של עוגב), PWM (פולס שהולך ונעשה דק), Draw (גל שאתם מציירים).", "Position: איפה בטבלה נמצאים; בין שני גלים שומעים מעבר חלק.", "Warp: מעקם כל גל (מכווץ את החצי הראשון שלו), לצבעים בהירים ואפיים יותר.", "Frequency: גובה הצליל, 20 עד 2000 הרץ; לא פעיל כשיש כבל ב-PITCH. Octave ו-Tune מזיזים את הגובה (גם של תו שמגיע מ-PITCH).", "POS Depth: כמה כבל ב-POS מזיז את Position.", "Unison Voices: עד 7 עותקים של הצליל שמתנגנים יחד. Unison Detune: כמה הם מכוונים זה מזה (בסנטים); יחד הם נותנים צליל רחב ושמן.", "Draw: בוחרים Draw ב-Table ומציירים על המסך מחזור אחד של גל, בעכבר או בעט. Position על 0% מנגן סינוס, על 100% את הגל שלכם, ובאמצע שילוב."],
         tips: ["הפילו כבל מ-LFO OUT על הסליידר Position: הצליל נע כל הזמן בין הגלים.", "ENV OUT של Envelope אל POS: כל תו עובר דרך הטבלה, קצת כמו פתיחת פילטר אבל אחרת.", "תווים גבוהים נשארים נקיים: לתווים גבוהים יש גלים עם פחות הרמוניות."] },
+      { type: "polysynth", group: "sources", name: "Poly Synth", preset: "demo-polysynth",
+        summary: "סינתיסייזר שלם שמנגן אקורדים: עד 8 תווים בבת אחת, לכל אחד אוסילטורים, פילטר ומעטפת משלו. מחברים את היציאה NOTES של המקלדת לכניסה NOTES שלו.",
+        controls: ["המשבצות הממוספרות: אחת לכל קול; משבצת נדלקת כשהקול שלה מנגן תו. משבצות עמומות כבויות לפי Voices.", "Voices: כמה תווים יכולים להישמע יחד (1 עד 8). כשמנגנים יותר, התו הוותיק ביותר נקטע.", "Waveform: Sawtooth (בהיר), Square (חלול), Triangle (רך), Sine (נקי).", "Detune: לכל קול יש שני אוסילטורים; Detune מרחיק ביניהם בכיוון (בסנטים) לצליל רחב ועשיר יותר.", "Cutoff: כמה הצליל בהיר (פילטר Low-pass). Resonance: שיא מצלצל בנקודת החיתוך.", "Filter Env: כמה כל תו פותח את הפילטר בתחילתו, ואז הוא נרגע יחד עם מעטפת העוצמה.", "Attack, Decay, Sustain, Release: הצורה של כל תו, כמו במודול Envelope.", "Level: העוצמה הכוללת."],
+        tips: ["החזיקו כמה קלידים במקלדת (באייפד עם כמה אצבעות) כדי לשמוע אקורד.", "Attack ו-Release ארוכים עם Cutoff נמוך נותנים פד רך; Decay קצר עם Sustain 0 נותן צליל פריטה.", "הפילו כבל מ-LFO OUT על הסליידר Cutoff כדי שכל הקולות יזוזו יחד."] },
       { type: "granular", group: "sources", name: "Granular Cloud", preset: "demo-granular",
         summary: "מקליט את הצליל שנכנס (או קובץ שנטען) ומשמיע אותו כענן של גרגרים קטנטנים.",
         controls: ["Source: Live Input (מקליט מ-IN L / IN R) או Audio File (Load File).", "Position: מאיפה בהקלטה לוקחים גרגרים.", "Size: אורך גרגר. Density: גרגרים בשנייה.", "Pitch: מהירות הגרגר (2 = אוקטבה למעלה). Spray: אקראיות. Reverse: הסיכוי שגרגר יתנגן הפוך.", "CV 1 / CV 2 Target: איזו הגדרה כל כניסת CV מזיזה."],
@@ -562,6 +570,9 @@ window.helpData = {
       "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
       "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
       "wavetable:out:out": { text: "הצליל של אוסילטור הוויב-טייבל.", where: "Filter, VCA, Mixer, Output, Oscilloscope" },
+      "polysynth:in:notes": { text: "כל הקלידים שמחזיקים במקלדת, כל אחד מנוגן בקול משלו. הכבל הזה מעביר תווים, לא צליל.", where: "NOTES של המקלדת" },
+      "polysynth:out:out": { text: "כל הקולות מעורבבים יחד.", where: "Output, IN L של Reverb, Stereo Delay, Mixer, Degrader" },
+      "keyboard:out:notes": { text: "כל הקלידים שמחזיקים, לא רק האחרון, כדי שאפשר יהיה לנגן אקורדים. מעביר תווים, לא צליל.", where: "NOTES של Poly Synth" },
       "envelope:in:gate": { text: "מתחיל את המעטפת כשתו מתחיל ומשחרר אותה כשהתו נגמר.", where: "GATE של המקלדת, הסיקוונסר או המצלמה" },
       "envelope:out:env": { text: "הצורה של Attack / Decay / Sustain / Release.", where: "CV של VCA (עוצמת התו), CUT MOD של פילטר (בהירות התו)" },
       "lfo:in:rate": { text: "מאיץ ומאט את ה-LFO.", where: "LFO אחר, X / Y של המצלמה, ENV OUT" },
@@ -693,6 +704,21 @@ window.presetData = {
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-polysynth": {
+    modules: [
+      { id: "kb1", type: "keyboard", x: 40, y: 80, state: {} },
+      { id: "poly1", type: "polysynth", x: 700, y: 40, state: { voices: 8, wave: "sawtooth", detune: 10, cutoff: 40, reso: 3, filterEnv: 45, attack: 15, decay: 600, sustain: 55, release: 900, level: 70 } },
+      { id: "rev1", type: "reverb", x: 1060, y: 40, state: {} },
+      { id: "out1", type: "output", x: 1440, y: 40, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 1060, y: 460, state: {} }
+    ],
+    connections: [
+      { fromNode: "kb1", fromPortInfo: { name: "notes" }, toNode: "poly1", toPortInfo: { id: "notes" } },
+      { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-wavetable": {

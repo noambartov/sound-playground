@@ -29,6 +29,7 @@
     // Controllers
     'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN (shaped notes), or VCA CV (simple on/off notes)', match: ['envelope:in:gate', 'vca:in:cv'] },
+    'keyboard:out:notes': { name: 'NOTES', signal: 'Gate', text: 'Every key you hold, not just the last one, so chords can be played. Carries notes, not sound.', to: 'Poly Synth NOTES', match: ['polysynth:in:notes'] },
     'keyboard:out:bend': { name: 'BEND', signal: 'CV', text: 'The pitch bend wheel.', to: 'Oscillator FM IN, Filter CUT MOD', match: ['oscillator:in:fm', 'filter:in:cutoff'] },
 
     'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
@@ -89,6 +90,7 @@
     'keyboard:out:freq': 'Osc PITCH',
     'keyboard:out:gate': 'Env GATE / VCA CV',
     'keyboard:out:bend': 'Osc FM',
+    'keyboard:out:notes': 'Poly Synth NOTES',
     'sequencer:out:pitch': 'Osc PITCH',
     'sequencer:out:gate': 'Env GATE / VCA CV',
     'sequencer:out:clock': 'Delay CLOCK',

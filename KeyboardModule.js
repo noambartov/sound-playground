@@ -20,6 +20,9 @@ class KeyboardModule {
     this.bendNode.offset.setValueAtTime(0, this.audioCtx.currentTime); // ערך בין 1- ל- 1+
     this.bendNode.start();
 
+    // NOTES output: every held key as note-on / note-off messages, for the Poly Synth (PolySynthModule.js)
+    this.noteBus = new PolyNoteBus();
+
     // מיפוי מקשי מקלדת המחשב לחצי טונים (0 עד 24)
     this.keyMap = {
       'z': 0,  's': 1,  'x': 2,  'd': 3,  'c': 4,  'v': 5,  'g': 6,  'b': 7,  'h': 8,  'n': 9,  'j': 10, 'm': 11,
@@ -35,7 +38,7 @@ class KeyboardModule {
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
     this.handleMIDIMessage = this.handleMIDIMessage.bind(this);
-    this.isMouseDown = false;
+    this.pointerKeys = new Map(); // pointerId -> key index under that finger / mouse / pencil
 
     this.initMIDI();
   }
@@ -194,7 +197,7 @@ class KeyboardModule {
           </div>
 
           <!-- Keys Container -->
-          <div id="keys_container_${this.id}" style="position: relative; flex: 1; display: flex; height: 100%;">
+          <div id="keys_container_${this.id}" style="position: relative; flex: 1; display: flex; height: 100%; touch-action: none;">
             ${this.renderKeys()}
           </div>
         </div>
@@ -212,6 +215,10 @@ class KeyboardModule {
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="cv" data-port-name="gate" data-node-id="${this.id}" title="Gate Trigger (0V / 1V)"></div>
             <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">GATE <small style="color:#888;">(Envelope)</small></span>
+          </div>
+          <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
+            <div class="port port-out" data-port-type="gate" data-port-name="notes" data-node-id="${this.id}" title="All held notes (Poly Synth)"></div>
+            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">NOTES <small style="color:#888;">(Poly Synth)</small></span>
           </div>
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="cv" data-port-name="bend" data-node-id="${this.id}" title="Pitch Bend CV (-1..+1)"></div>
@@ -287,34 +294,40 @@ class KeyboardModule {
 
     const keysContainer = card.querySelector(`#keys_container_${this.id}`);
     if (keysContainer) {
-      keysContainer.addEventListener('mousedown', (e) => {
+      // Pointer events: each finger (or the mouse / pencil) holds its own key, so chords can be
+      // played on the iPad; sliding a finger moves its note to the key under it
+      const keyAt = (e) => {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const keyEl = el && el.closest('.key');
+        return keyEl && keysContainer.contains(keyEl) ? parseInt(keyEl.dataset.keyIdx, 10) : null;
+      };
+      keysContainer.addEventListener('pointerdown', (e) => {
         const keyEl = e.target.closest('.key');
-        if (keyEl) {
-          this.isMouseDown = true;
-          const keyIdx = parseInt(keyEl.dataset.keyIdx);
-          this.pressKey(keyIdx, 'mouse');
-        }
+        if (!keyEl) return;
+        e.preventDefault();
+        const keyIdx = parseInt(keyEl.dataset.keyIdx, 10);
+        this.pointerKeys.set(e.pointerId, keyIdx);
+        this.pressKey(keyIdx, `ptr_${e.pointerId}`);
       });
-
-      keysContainer.addEventListener('mouseover', (e) => {
-        if (this.isMouseDown) {
-          const keyEl = e.target.closest('.key');
-          if (keyEl) {
-            const keyIdx = parseInt(keyEl.dataset.keyIdx);
-            this.pressKey(keyIdx, 'mouse');
-          }
-        }
-      });
-
-      keysContainer.addEventListener('mouseup', () => {
-        this.isMouseDown = false;
-        this.releaseAllMouseKeys();
-      });
-
-      keysContainer.addEventListener('mouseleave', () => {
-        this.isMouseDown = false;
-        this.releaseAllMouseKeys();
-      });
+      this.handlePointerMove = (e) => {
+        if (!this.pointerKeys.has(e.pointerId)) return;
+        const prev = this.pointerKeys.get(e.pointerId);
+        const keyIdx = keyAt(e);
+        if (keyIdx === prev) return;
+        const sourceId = `ptr_${e.pointerId}`;
+        if (prev !== null) this.releaseKey(prev, sourceId);
+        if (keyIdx !== null) this.pressKey(keyIdx, sourceId);
+        this.pointerKeys.set(e.pointerId, keyIdx);
+      };
+      this.handlePointerUp = (e) => {
+        if (!this.pointerKeys.has(e.pointerId)) return;
+        const prev = this.pointerKeys.get(e.pointerId);
+        this.pointerKeys.delete(e.pointerId);
+        if (prev !== null) this.releaseKey(prev, `ptr_${e.pointerId}`);
+      };
+      window.addEventListener('pointermove', this.handlePointerMove);
+      window.addEventListener('pointerup', this.handlePointerUp);
+      window.addEventListener('pointercancel', this.handlePointerUp);
     }
 
     const bendWheel = card.querySelector(`#bend_wheel_${this.id}`);
@@ -380,28 +393,11 @@ class KeyboardModule {
     this.updateOutput();
   }
 
-  releaseAllMouseKeys() {
-    this.activeKeyOrder = this.activeKeyOrder.filter(k => k.sourceId !== 'mouse');
-    
-    const card = document.getElementById(`module_card_${this.id}`);
-    if (card) {
-      const allKeys = card.querySelectorAll('.key');
-      allKeys.forEach(k => {
-        const keyIdx = parseInt(k.dataset.keyIdx);
-        const stillPressedByKb = this.activeKeyOrder.some(item => item.keyIdx === keyIdx);
-        if (!stillPressedByKb) {
-          this.updateKeyVisual(keyIdx, false);
-        }
-      });
-    }
-
-    this.updateOutput();
-  }
-
   updateOutput() {
     const card = document.getElementById(`module_card_${this.id}`);
     const noteDisplay = card ? card.querySelector(`#note_display_${this.id}`) : null;
     const now = this.audioCtx.currentTime;
+    this.noteBus.update(this.activeKeyOrder);
 
     if (this.activeKeyOrder.length > 0) {
       const topNote = this.activeKeyOrder[this.activeKeyOrder.length - 1];
@@ -445,12 +441,19 @@ class KeyboardModule {
     if (portName === 'freq') return this.freqNode;
     if (portName === 'gate') return this.gateNode;
     if (portName === 'bend') return this.bendNode;
+    if (portName === 'notes') return this.noteBus;
     return this.freqNode;
   }
 
   cleanup() {
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+    if (this.handlePointerMove) {
+      window.removeEventListener('pointermove', this.handlePointerMove);
+      window.removeEventListener('pointerup', this.handlePointerUp);
+      window.removeEventListener('pointercancel', this.handlePointerUp);
+    }
+    this.noteBus.disconnect();
 
     if (this.selectedMidiInput) {
       this.selectedMidiInput.onmidimessage = null;

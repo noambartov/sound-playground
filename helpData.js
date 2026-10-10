@@ -198,6 +198,10 @@ window.helpData = {
         summary: "Puts the sound in a room, from a small space to a huge hall.",
         controls: ["Radius: room size. Decay: how long the tail lasts.", "Damping: darker or brighter tail. Warp: a little movement in the tail.", "Mix: how much reverb against the dry sound."],
         tips: ["Short notes with a long Decay sound much bigger than a steady tone."] },
+      { type: "delay", group: "processors", name: "Stereo Delay", preset: "demo-delay",
+        summary: "Echoes the sound, with separate left and right sides, reverse repeats, ping-pong and tempo sync.",
+        controls: ["The display: every repeat is a triangle (leaning left when reversed); a pulse runs across on each hit and lights the repeats. Drag a dot: left / right sets Time, up / down sets Feedback.", "Columns Left, Both and Right: Both moves the two sides together, Left and Right move one side.", "Time: how long until the echo. Feedback: how many repeats. Tone: darker or brighter repeats. Level: how loud the repeats are. Mix: dry sound against echo.", "Reverse: the repeats play backwards.", "Ping-Pong: the echo bounces between left and right.", "Sync: with a cable in CLOCK, each side's Time follows the tempo; pick a Division (1/8, 1/8 dotted, 1/4...)."],
+        tips: ["Drum Machine CLOCK into CLOCK, Sync On, Left 1/8 dotted and Right 1/4: a classic rhythmic echo.", "Reverse with a long Time on short notes gives a swelling, backwards sound."] },
       { type: "degrader", group: "processors", name: "Degrader", preset: "demo-degrader",
         summary: "A one-knob lo-fi effect: turning Degrade ages the sound from clean, through warm tape and lo-fi, to fully wrecked.",
         controls: ["Degrade 0%: clean, the sound passes through untouched.", "Up to 30% (Tape): soft saturation, and the highs soften a little.", "30% to 60% (Lo-Fi): fewer bits (16 down to 8), a lower sample rate (down to 8 kHz) for a rough digital sound, and a slight tape wobble in pitch.", "60% to 100% (Wrecked): only 3 to 4 bits, a very low sample rate that rings metallic, rising hiss and record crackle, and the highs almost closed."],
@@ -446,6 +450,10 @@ window.helpData = {
         summary: "שם את הצליל בתוך חדר, מחלל קטן ועד אולם ענק.",
         controls: ["Radius: גודל החדר. Decay: כמה זמן הזנב נמשך.", "Damping: זנב כהה או בהיר. Warp: קצת תנועה בזנב.", "Mix: כמה ריוורב לעומת הצליל היבש."],
         tips: ["תווים קצרים עם Decay ארוך נשמעים הרבה יותר גדולים מצליל קבוע."] },
+      { type: "delay", group: "processors", name: "Stereo Delay", preset: "demo-delay",
+        summary: "מהדהד את הצליל, עם צד שמאל וימין נפרדים, חזרות הפוכות, Ping-Pong וסנכרון לקצב.",
+        controls: ["המסך: כל חזרה היא משולש (נוטה שמאלה כשהיא הפוכה); בכל מכה עובר פולס על המסך ומדליק את החזרות. גוררים נקודה: ימינה ושמאלה משנה Time, למעלה ולמטה משנה Feedback.", "העמודות Left, Both ו-Right: Both מזיז את שני הצדדים יחד, Left ו-Right מזיזים צד אחד.", "Time: כמה זמן עד ההד. Feedback: כמה חזרות. Tone: חזרות כהות או בהירות. Level: עוצמת החזרות. Mix: הצליל המקורי מול ההד.", "Reverse: החזרות מתנגנות הפוך.", "Ping-Pong: ההד קופץ בין שמאל לימין.", "Sync: כשיש כבל ב-CLOCK, ה-Time של כל צד הולך לפי הקצב; בוחרים Division (1/8, 1/8 מנוקדת, 1/4...)."],
+        tips: ["CLOCK של מכונת התופים אל CLOCK, Sync On, שמאל 1/8 מנוקדת וימין 1/4: הד קצבי קלאסי.", "Reverse עם Time ארוך על צלילים קצרים נותן צליל הפוך שמתנפח."] },
       { type: "degrader", group: "processors", name: "Degrader", preset: "demo-degrader",
         summary: "אפקט לו-פיי עם כפתור אחד: סיבוב של Degrade \"מזקין\" את הצליל, מנקי, דרך חום של טייפ ולו-פיי, ועד הרס מלא.",
         controls: ["Degrade על 0%: נקי, הצליל עובר בלי שינוי.", "עד 30% (Tape): עיוות רך (סטורציה), והגבהים מתעמעמים מעט.", "30% עד 60% (Lo-Fi): פחות ביטים (מ-16 ל-8), קצב דגימה נמוך יותר (עד 8 kHz) לצליל דיגיטלי ומחוספס, ורעד קל בגובה הצליל כמו בקלטת.", "60% עד 100% (Wrecked): רק 3 עד 4 ביטים, קצב דגימה נמוך מאוד שמצלצל מתכתי, רעש רקע ופצפוצי תקליט שעולים, והגבהים כמעט סגורים."],
@@ -559,6 +567,13 @@ window.helpData = {
       "drums:out:cym_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת המצילה (Cymbal) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
       "drums:out:main_l": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד שמאל.", where: "IN של Output, Mixer, IN L של Reverb, Recorder" },
       "drums:out:main_r": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד ימין.", where: "IN של Output, Mixer, IN R של Reverb" },
+      "drums:out:clock": { text: "פולס בכל תו שש-עשרית בזמן הנגינה (בלי Swing), כדי שמודולים אחרים ילכו לפי הקצב.", where: "CLOCK של Stereo Delay (עם Sync דלוק)" },
+      "sequencer:out:clock": { text: "פולס בכל צעד (שש-עשרית) בזמן הנגינה, פעיל או לא, כדי שמודולים אחרים ילכו לפי הקצב.", where: "CLOCK של Stereo Delay (עם Sync דלוק)" },
+      "delay:in:in_l": { text: "הצליל להדהוד, צד שמאל. אם IN R ריק, הוא נכנס לשני הצדדים.", where: "Oscillator, Filter, VCA, MAIN L של מכונת התופים, Mixer" },
+      "delay:in:in_r": { text: "הצליל להדהוד, צד ימין (לא חובה).", where: "MAIN R של מכונת התופים, OUT R של Mixer או Granular" },
+      "delay:in:clock": { text: "פולס בכל שש-עשרית. כש-Sync דלוק, ה-Time של כל צד הולך לפי הקצב והחלוקה שלו.", where: "CLOCK של מכונת התופים או של הסיקוונסר" },
+      "delay:out:out_l": { text: "צד שמאל: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN L של Reverb, Mixer, Recorder" },
+      "delay:out:out_r": { text: "צד ימין: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN R של Reverb, Mixer" },
       "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
       "recorder:out:out": { text: "מעביר את הצליל הלאה בלי שינוי.", where: "Output" }
     }
@@ -808,6 +823,24 @@ window.presetData = {
       { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-delay": {
+    modules: [
+      { id: "dm1", type: "drums", x: 40, y: 80, state: { tempo: 96, bars: 1, rows: [
+        { sound: "kick808", steps: "2000000000200000" },
+        { sound: "rim", steps: "0000100000001000" },
+        { sound: "hat808c", steps: "0000000000000000" },
+        { sound: "cowbell", steps: "0000000100000000" }
+      ] } },
+      { id: "dl1", type: "delay", x: 860, y: 80, state: { L: { fb: 45, tone: 55, level: 100, mix: 45, rev: false, div: "3" }, R: { fb: 45, tone: 55, level: 100, mix: 45, rev: false, div: "4" }, pingpong: false, sync: true } },
+      { id: "out1", type: "output", x: 1380, y: 80, state: {} }
+    ],
+    connections: [
+      { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "dl1", toPortInfo: { id: "in_l" } },
+      { fromNode: "dm1", fromPortInfo: { id: "clock" }, toNode: "dl1", toPortInfo: { id: "clock" } },
+      { fromNode: "dl1", fromPortInfo: { id: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "dl1", fromPortInfo: { id: "out_r" }, toNode: "out1", toPortInfo: { type: "in" } }
     ]
   },
   "demo-drums": {

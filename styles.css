@@ -200,6 +200,48 @@ body {
   display: none;
 }
 
+/* Search box: while searching, matches show even in closed categories */
+.sidebar-search {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--btn-bg);
+  color: var(--text-color);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.sidebar-search:focus {
+  border-color: var(--primary-color);
+}
+
+.sidebar-search::placeholder {
+  color: var(--muted-text);
+}
+
+.sidebar.searching .sidebar-group.collapsed > .add-module-btn {
+  display: block;
+}
+
+.sidebar.searching .sidebar-group > .add-module-btn.search-hidden,
+.sidebar.searching .sidebar-group.search-empty {
+  display: none;
+}
+
+.sidebar-no-results {
+  font-size: 12px;
+  color: var(--muted-text);
+  margin: 0;
+  padding-left: 2px;
+}
+
+.sidebar-no-results[hidden] {
+  display: none;
+}
+
 .add-module-btn {
   background: var(--btn-bg);
   color: var(--text-color);

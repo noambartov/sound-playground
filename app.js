@@ -1811,9 +1811,43 @@ if (!window.SoundSandboxApp) {
         const title = e.target.closest('.sidebar-group-title');
         if (title && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(title); }
       });
+      // Search box: while it has text, every matching module button is shown (also inside closed
+      // categories), the rest are hidden; Enter adds the first match, Escape clears the box.
+      const search = sidebar.querySelector('#sidebar-search');
+      const noResults = sidebar.querySelector('.sidebar-no-results');
+      const filter = () => {
+        const q = search ? search.value.trim().toLowerCase() : '';
+        sidebar.classList.toggle('searching', !!q);
+        let any = false;
+        sidebar.querySelectorAll('.sidebar-group').forEach(g => {
+          const groupHit = !!q && name(g).toLowerCase().includes(q);
+          let hits = 0;
+          g.querySelectorAll('.add-module-btn').forEach(btn => {
+            const text = `${btn.textContent} ${btn.dataset.type || ''}`.toLowerCase();
+            const hit = !q || groupHit || text.includes(q);
+            btn.classList.toggle('search-hidden', !hit);
+            if (hit) hits++;
+          });
+          g.classList.toggle('search-empty', !!q && hits === 0);
+          if (hits) any = true;
+        });
+        if (noResults) noResults.hidden = !q || any;
+      };
+      if (search) {
+        search.addEventListener('input', filter);
+        search.addEventListener('keydown', (e) => {
+          e.stopPropagation(); // typing must not play the Keyboard module or trigger app shortcuts
+          if (e.key === 'Escape') { search.value = ''; filter(); search.blur(); }
+          if (e.key === 'Enter') {
+            const first = sidebar.querySelector('.sidebar-group:not(.search-empty) .add-module-btn:not(.search-hidden)');
+            if (first && search.value.trim()) first.click();
+          }
+        });
+        search.addEventListener('keyup', (e) => e.stopPropagation());
+      }
       sync();
       if (typeof MutationObserver !== 'undefined') {
-        new MutationObserver(sync).observe(sidebar, { childList: true, subtree: true });
+        new MutationObserver(() => { sync(); filter(); }).observe(sidebar, { childList: true, subtree: true });
       }
     }
 

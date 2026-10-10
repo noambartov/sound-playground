@@ -15,7 +15,7 @@
 
 ## 2. אוסילטור
 - **Wavetables מורכבים יותר** - גלים מורכבים ומעבר רציף ביניהם (Morph / Position). `הושלם` (2026-10-10) - מודול Wavetable Osc: חמש טבלאות (Basic, Vocal, Digital, Organ, PWM), Position, Warp, כניסות PITCH, FM ו-POS ותצוגת גלים בערימה.
-  - שלב שני: Unison (כמה קולות מעט מכוונים זה מזה) וציור גל משלך בעט.
+  - שלב שני: Unison (כמה קולות מעט מכוונים זה מזה) וציור גל משלך בעט. `הושלם` (2026-10-10)
   - השראה: Vital (חינמי), Serum, Mutable Instruments Plaits.
   - טכנית: `PeriodicWave` לגלים מותאמים, ומעבר רציף בעזרת crossfade בין שני גלים או AudioWorklet.
   - אפשרות: מודול נפרד "Wavetable Osc" כדי לא להעמיס על האוסילטור הקיים.

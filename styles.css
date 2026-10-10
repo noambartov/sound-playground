@@ -1495,3 +1495,14 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   border-color: var(--primary-color);
   color: #ffffff;
 }
+.wt-display.wt-drawing {
+  cursor: crosshair;
+  touch-action: none;
+  margin-bottom: 4px;
+}
+.wt-hint {
+  font-size: 11px;
+  color: var(--muted-text);
+  margin-bottom: 10px;
+}
+.wt-hint[hidden] { display: none; }

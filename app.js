@@ -353,8 +353,9 @@ if (!window.SoundSandboxApp) {
     }
 
     // Zoom and pan so every module is visible inside the free part of the screen
-    fitToModules() {
-      const cards = Object.values(this.modules).map(m => m.card).filter(Boolean);
+    // Zooms and pans so the modules fit the free screen area (only the given module ids, when passed)
+    fitToModules(onlyIds = null) {
+      const cards = Object.values(this.modules).filter(m => !onlyIds || onlyIds.includes(m.id)).map(m => m.card).filter(Boolean);
       if (!cards.length) return;
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
       cards.forEach(c => {
@@ -705,21 +706,46 @@ if (!window.SoundSandboxApp) {
       e.target.value = '';
     }
 
-    loadPatchData(patch) {
+    // Replaces the workspace with a patch (Load button). With { add: true } (presets from the manual)
+    // the patch is added next to what is already on the canvas instead: its modules get fresh ids and
+    // are shifted to the right of the existing modules. Returns the ids of the modules it created.
+    loadPatchData(patch, opts = {}) {
       console.log("[SoundSandboxApp] Loading patch data...", patch);
-      this.clearWorkspace();
+      const add = !!opts.add && Object.keys(this.modules).length > 0;
+      if (!add) this.clearWorkspace();
 
-      if (patch.theme && patch.theme !== this.theme) {
+      if (!add && patch.theme && patch.theme !== this.theme) {
         this.toggleTheme();
       }
 
+      const idMap = {};
+      let dx = 0, dy = 0;
+      if (add && Array.isArray(patch.modules) && patch.modules.length) {
+        const cards = Object.values(this.modules).map(m => m.card).filter(Boolean);
+        const maxX = Math.max(...cards.map(c => c.offsetLeft + c.offsetWidth));
+        const minY = Math.min(...cards.map(c => c.offsetTop));
+        const pMinX = Math.min(...patch.modules.map(m => m.x || 0));
+        const pMinY = Math.min(...patch.modules.map(m => m.y || 0));
+        dx = maxX + 120 - pMinX;
+        dy = minY - pMinY;
+      }
+
+      const newIds = [];
       if (Array.isArray(patch.modules)) {
         patch.modules.forEach(m => {
           let modState = m.state || {};
           if (m.type === 'output') {
             modState = { ...modState, masterVolume: 0, volume: 0, gain: 0 };
           }
-          this.createModule(m.type, m.id, m.x, m.y, modState);
+          let id = m.id;
+          if (add) {
+            id = `${m.type}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+            idMap[m.id] = id;
+          }
+          const x = m.x == null ? m.x : m.x + dx;
+          const y = m.y == null ? m.y : m.y + dy;
+          const mod = this.createModule(m.type, id, x, y, modState);
+          newIds.push(mod && mod.id ? mod.id : id);
         });
       }
 
@@ -733,6 +759,17 @@ if (!window.SoundSandboxApp) {
                 toNode: conn.toNode || conn.toModuleId,
                 toPortInfo: conn.toPortInfo || { id: conn.toPortId, type: conn.toPortId, name: conn.toPortId, channel: conn.channel }
               };
+              if (add) {
+                const oldTo = normalizedConn.toNode;
+                normalizedConn.fromNode = idMap[normalizedConn.fromNode] || normalizedConn.fromNode;
+                normalizedConn.toNode = idMap[oldTo] || oldTo;
+                // A slider cable (modulation.js) names the slider by an id that ends with the module id
+                const info = normalizedConn.toPortInfo;
+                if (info && typeof info.knob === 'string' && idMap[oldTo] && info.knob.endsWith(`_${oldTo}`)) {
+                  const knob = info.knob.slice(0, -oldTo.length) + idMap[oldTo];
+                  normalizedConn.toPortInfo = { ...info, knob, id: `knob:${knob}` };
+                }
+              }
 
               const exists = this.connections.some(c => 
                 c.fromNode === normalizedConn.fromNode && 
@@ -749,7 +786,7 @@ if (!window.SoundSandboxApp) {
           }
 
           Object.values(this.modules).forEach(m => {
-            if (m.type === 'output' && m.instance) {
+            if (m.type === 'output' && m.instance && newIds.includes(m.id)) {
               if (typeof m.instance.setVolume === 'function') m.instance.setVolume(0);
               if (typeof m.instance.setMasterVolume === 'function') m.instance.setMasterVolume(0);
               const slider = m.card.querySelector('input[type="range"]');
@@ -761,14 +798,15 @@ if (!window.SoundSandboxApp) {
 
           this.updatePortConnectedClasses();
           this.resizeCanvas();
-          this.fitToModules();
+          this.fitToModules(add ? newIds : null);
           this.render();
           this.scheduleHistoryCapture();
-          this.showNotification('Patch loaded. Volume starts at 0: raise Master Volume on the Output module to hear it.');
+          this.showNotification((add ? 'Patch added next to your modules. ' : 'Patch loaded. ') + 'Volume starts at 0: raise Master Volume on the Output module to hear it.');
         });
       });
 
       this.closeModal();
+      return newIds;
     }
 
     closeModal() {

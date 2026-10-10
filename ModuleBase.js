@@ -48,7 +48,7 @@ class ModuleBase {
     const add = (dir, p) => {
       const key = `${def.type}:${dir}:${p.id}`;
       if (p.guide) {
-        pg.GUIDE[key] = Object.assign({ name: p.label, signal: ModuleBase.signalName(p.signal) }, p.guide);
+        pg.GUIDE[key] = Object.assign({ name: p.label, title: p.title, signal: ModuleBase.signalName(p.signal) }, p.guide);
       }
       if (p.chip) pg.CHIPS[key] = p.chip;
     };

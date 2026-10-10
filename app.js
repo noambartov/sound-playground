@@ -635,7 +635,8 @@ if (!window.SoundSandboxApp) {
       this.drawConnections();
     }
 
-    exportPatch() {
+    // The current workspace as a patch object (the same format Save writes and Load reads).
+    getPatchObject() {
       const buildPatch = () => ({
         version: '1.0',
         timestamp: new Date().toISOString(),
@@ -653,8 +654,11 @@ if (!window.SoundSandboxApp) {
         connections: this.connections
       });
       // Modulated sliders are saved at the value the user set, not a passing modulated value
-      const patch = this.knobMod ? this.knobMod.withBaseValues(buildPatch) : buildPatch();
+      return this.knobMod ? this.knobMod.withBaseValues(buildPatch) : buildPatch();
+    }
 
+    exportPatch() {
+      const patch = this.getPatchObject();
       const json = JSON.stringify(patch, null, 2);
       const filename = `synth_patch_${Date.now()}.json`;
       const blob = new Blob([json], { type: 'application/json' });

@@ -147,6 +147,20 @@ window.helpData = {
             <li><strong>Save</strong> / <strong>Load</strong> a patch file (on iPad, Save opens the share sheet: choose Save to Files).</li>
           </ul>
         </div>
+        <div class="help-card">
+          <h4>Finding modules</h4>
+          <ul class="help-list">
+            <li>Type in <strong>Search modules</strong> at the top of the side menu: matching modules appear even inside closed categories.</li>
+            <li><kbd>Enter</kbd> adds the first match, <kbd>Esc</kbd> clears the search.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>Install as an app</h4>
+          <ul class="help-list">
+            <li>iPad: in Safari tap Share, then <strong>Add to Home Screen</strong>. The site opens full screen from its own icon and works offline.</li>
+            <li>When a new version is published, a notice says <strong>A new version is available.</strong> Tap <strong>Refresh</strong> to get it; your patch stays.</li>
+          </ul>
+        </div>
       `
     },
     modules: [
@@ -409,6 +423,20 @@ window.helpData = {
             <li><strong>Move</strong>: גוררים כדי להזיז את הסרגל. גוררים את הכותרת <strong>Modules</strong> כדי להזיז את התפריט הצדדי. לחיצה כפולה מחזירה למקום.</li>
             <li><strong>Theme</strong> בהיר או כהה. <strong>Play Mode</strong> מסתיר את הכבלים ונועל את המודולים להופעה.</li>
             <li><strong>Save</strong> / <strong>Load</strong> שמירה וטעינה של קובץ פאץ' (באייפד, Save פותח את חלון השיתוף: בוחרים Save to Files).</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>חיפוש מודולים</h4>
+          <ul class="help-list">
+            <li>מקלידים בתיבה <strong>Search modules</strong> בראש התפריט הצדדי: המודולים המתאימים מופיעים גם מתוך קטגוריות סגורות.</li>
+            <li><kbd>Enter</kbd> מוסיף את התוצאה הראשונה, <kbd>Esc</kbd> מנקה את החיפוש.</li>
+          </ul>
+        </div>
+        <div class="help-card">
+          <h4>התקנה כאפליקציה</h4>
+          <ul class="help-list">
+            <li>אייפד: בספארי לוחצים על שיתוף ואז <strong>Add to Home Screen</strong> (הוספה למסך הבית). האתר נפתח במסך מלא מהאייקון שלו ועובד גם בלי אינטרנט.</li>
+            <li>כשיוצאת גרסה חדשה מופיעה הודעה <strong>A new version is available.</strong> לוחצים <strong>Refresh</strong> כדי לקבל אותה; הפאץ' נשמר.</li>
           </ul>
         </div>
       `

@@ -11,13 +11,15 @@
   <meta http-equiv="Expires" content="0">
 
   <title>Sound Playground - Modular Synthesizer</title>
-  <link rel="stylesheet" href="styles.css?v=3.6">
+  <link rel="stylesheet" href="styles.css?v=3.7">
 </head>
 <body class="light-theme">
 
   <!-- Floating Sidebar Menu -->
   <aside class="sidebar" role="navigation" aria-label="Module Library">
     <h3>Modules</h3>
+    <input type="search" id="sidebar-search" class="sidebar-search" placeholder="Search modules" aria-label="Search modules" autocomplete="off" spellcheck="false">
+    <p class="sidebar-no-results" hidden>No modules found</p>
 
     <div class="sidebar-group">
       <span class="sidebar-group-title">Sound Sources</span>
@@ -150,7 +152,7 @@
 
   <!-- Main Application -->
   <script src="modulation.js?v=2"></script>
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 
 </body>
 </html>

@@ -231,6 +231,7 @@ class KeyboardModule {
     const now = this.audioCtx.currentTime;
     this.bendNode.offset.cancelScheduledValues(now);
     this.bendNode.offset.setTargetAtTime(clamped, now, 0.005);
+    this.noteBus.bend(clamped);
 
     const card = document.getElementById(`module_card_${this.id}`);
     if (card) {
@@ -490,7 +491,7 @@ class KeyboardModule {
     const card = document.getElementById(`module_card_${this.id}`);
     const noteDisplay = card ? card.querySelector(`#note_display_${this.id}`) : null;
     const now = this.audioCtx.currentTime;
-    this.noteBus.update(this.activeKeyOrder);
+    this.noteBus.update(this.activeKeyOrder, this.slide && this.gateOpen);
 
     if (this.activeKeyOrder.length > 0) {
       const topNote = this.activeKeyOrder[this.activeKeyOrder.length - 1];

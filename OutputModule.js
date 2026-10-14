@@ -15,7 +15,9 @@ class OutputModule {
 
         this.volumeGain = this.ctx.createGain();
         this.volume = 0.8; // intended volume; gain.value lags behind while the audio engine ramps
-        this.volumeGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+        // Start silent and rise to the volume, so a new patch or preset starts without a click
+        this.volumeGain.gain.setValueAtTime(0, this.ctx.currentTime);
+        this.volumeGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.015);
 
         this.thruGain = this.ctx.createGain();
 

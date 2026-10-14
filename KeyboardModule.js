@@ -41,9 +41,9 @@ class KeyboardModule {
     this.pointerKeys = new Map(); // pointerId -> key index under that finger / mouse / pencil
 
     // Hold: lifted keys keep sounding until pressed again (or Hold is switched off).
-    // Slide: the FREQ output glides from note to note while a key is still held.
+    // Slide: glide time in ms (0 = off); every new note glides from the last one (FREQ and NOTES).
     this.hold = false;
-    this.slide = false;
+    this.glideMs = 0;
     this.consumedSources = new Set(); // presses that only un-held a key: their release does nothing
 
     this.initMIDI();
@@ -69,7 +69,7 @@ class KeyboardModule {
     if (!select) return;
 
     const currentVal = select.value;
-    select.innerHTML = '<option value="">-- Select MIDI Input --</option>';
+    select.innerHTML = '<option value="">None</option>';
 
     if (this.midiAccess) {
       const inputs = this.midiAccess.inputs.values();
@@ -197,8 +197,8 @@ class KeyboardModule {
     this.refreshToggles();
   }
 
-  setSlide(on) {
-    this.slide = !!on;
+  setGlide(ms) {
+    this.glideMs = Math.max(0, Math.min(1000, Math.round(Number(ms) || 0)));
     this.refreshToggles();
   }
 
@@ -206,13 +206,15 @@ class KeyboardModule {
     const card = document.getElementById(`module_card_${this.id}`);
     if (!card) return;
     const holdBtn = card.querySelector(`#hold_btn_${this.id}`);
-    const slideBtn = card.querySelector(`#slide_btn_${this.id}`);
+    const slider = card.querySelector(`#slide_${this.id}`);
+    const slideVal = card.querySelector(`#slide_val_${this.id}`);
     if (holdBtn) { holdBtn.textContent = `Hold: ${this.hold ? 'On' : 'Off'}`; holdBtn.classList.toggle('active', this.hold); }
-    if (slideBtn) { slideBtn.textContent = `Slide: ${this.slide ? 'On' : 'Off'}`; slideBtn.classList.toggle('active', this.slide); }
+    if (slider && Number(slider.value) !== this.glideMs) slider.value = this.glideMs;
+    if (slideVal) slideVal.textContent = this.glideMs > 0 ? `${this.glideMs}ms` : 'Off';
   }
 
   getState() {
-    return { octave: this.baseOctave, hold: this.hold, slide: this.slide };
+    return { octave: this.baseOctave, hold: this.hold, glide: this.glideMs };
   }
 
   setState(state) {
@@ -223,7 +225,8 @@ class KeyboardModule {
       if (octVal) octVal.textContent = `Oct C${this.baseOctave}`;
     }
     if (state.hold !== undefined) this.setHold(state.hold);
-    if (state.slide !== undefined) this.setSlide(state.slide);
+    if (state.glide !== undefined) this.setGlide(state.glide);
+    else if (state.slide !== undefined) this.setGlide(state.slide ? 150 : 0);   // older patches: Slide On / Off
   }
 
   setPitchBendValue(val) {
@@ -260,7 +263,7 @@ class KeyboardModule {
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="kb-label">MIDI In:</span>
             <select id="midi_input_select_${this.id}" class="kb-select">
-              <option value="">-- Select MIDI Input --</option>
+              <option value="">None</option>
             </select>
           </div>
 
@@ -272,7 +275,10 @@ class KeyboardModule {
 
           <div style="display: flex; align-items: center; gap: 6px;">
             <button id="hold_btn_${this.id}" class="action-btn module-toggle kb-toggle" title="Lifted keys keep playing; press a key again to stop it">Hold: Off</button>
-            <button id="slide_btn_${this.id}" class="action-btn module-toggle kb-toggle" title="FREQ glides between notes played legato">Slide: Off</button>
+            <label class="kb-glide" title="Each new note glides from the last one (0 = off)">Slide
+              <input type="range" id="slide_${this.id}" min="0" max="1000" step="10" value="0">
+              <span class="kb-glide-val" id="slide_val_${this.id}">Off</span>
+            </label>
           </div>
 
           <div class="kb-note" id="note_display_${this.id}">--</div>
@@ -386,8 +392,8 @@ class KeyboardModule {
 
     const holdBtn = card.querySelector(`#hold_btn_${this.id}`);
     if (holdBtn) holdBtn.addEventListener('click', () => this.setHold(!this.hold));
-    const slideBtn = card.querySelector(`#slide_btn_${this.id}`);
-    if (slideBtn) slideBtn.addEventListener('click', () => this.setSlide(!this.slide));
+    const slider = card.querySelector(`#slide_${this.id}`);
+    if (slider) slider.addEventListener('input', () => this.setGlide(slider.value));
     this.refreshToggles();
 
     const keysContainer = card.querySelector(`#keys_container_${this.id}`);
@@ -497,13 +503,14 @@ class KeyboardModule {
     const card = document.getElementById(`module_card_${this.id}`);
     const noteDisplay = card ? card.querySelector(`#note_display_${this.id}`) : null;
     const now = this.audioCtx.currentTime;
-    this.noteBus.update(this.activeKeyOrder, this.slide && this.gateOpen);
+    const glideSec = this.glideMs / 1000;
+    this.noteBus.update(this.activeKeyOrder, glideSec);
 
     if (this.activeKeyOrder.length > 0) {
       const topNote = this.activeKeyOrder[this.activeKeyOrder.length - 1];
       
-      // Slide: glide only when moving from a sounding note (legato); a fresh note starts in tune
-      const glide = this.slide && this.gateOpen ? 0.06 : 0.003;
+      // Slide: every new note glides from the last one (95% of the way after the Slide time)
+      const glide = glideSec > 0 && this.noteFreq ? glideSec / 3 : 0.003;
       this.freqNode.offset.cancelScheduledValues(now);
       this.noteFreq = topNote.freq;
       this.freqNode.offset.setTargetAtTime(topNote.freq * Math.pow(2, (this.bendValue || 0) / 6), now, glide);

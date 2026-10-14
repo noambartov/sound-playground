@@ -1537,7 +1537,7 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
   padding: 6px 8px;
   background: var(--subtle-bg);
@@ -1552,7 +1552,7 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   border-radius: 4px;
   font-size: 0.75rem;
   padding: 2px 4px;
-  width: 125px;
+  width: 92px;
 }
 .kb-oct-btn {
   background: var(--btn-bg);
@@ -1573,7 +1573,7 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-variant-numeric: tabular-nums;
 }
 .action-btn.kb-toggle {
-  width: 72px;
+  width: 68px;
   flex: none;
   padding: 4px 6px;
   font-size: 0.75rem;
@@ -1632,3 +1632,18 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   box-shadow: inset 0 -2px 0 #0284c7;
 }
 .keyboard-wrapper .black-key.pressed { background: linear-gradient(#38bdf8, #0369a1); }
+.kb-glide {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kb-glide input { width: 60px; margin: 0; }
+.kb-glide-val {
+  width: 40px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-text);
+}

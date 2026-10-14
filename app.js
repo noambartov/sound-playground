@@ -396,7 +396,7 @@ if (!window.SoundSandboxApp) {
       if (this.clearBtn) {
         this.clearBtn.addEventListener('click', () => {
           if (confirm('Clear the whole workspace?')) {
-            this.clearWorkspace();
+            this.withAudioFade(() => this.clearWorkspace());
           }
         });
       }
@@ -622,6 +622,16 @@ if (!window.SoundSandboxApp) {
       if (this.redoBtn) this.redoBtn.disabled = this.redoStack.length === 0;
     }
 
+    // Clearing or replacing the canvas cuts every sounding module at once, which clicks:
+    // run it behind a short master fade (audioEngine.fadeAround) when something is on the canvas.
+    withAudioFade(fn) {
+      if (Object.keys(this.modules).length && window.audioEngine && typeof window.audioEngine.fadeAround === 'function') {
+        window.audioEngine.fadeAround(fn);
+      } else {
+        fn();
+      }
+    }
+
     clearWorkspace() {
       this.connections.forEach(conn => this.disconnectAudio(conn));
       Object.keys(this.modules).forEach(id => this.deleteNode(id));
@@ -700,7 +710,7 @@ if (!window.SoundSandboxApp) {
         try {
           const patch = JSON.parse(event.target.result);
           if (patch && typeof patch === 'object') {
-            this.loadPatchData(patch);
+            this.withAudioFade(() => this.loadPatchData(patch));
           }
         } catch (err) {
           alert('Could not load this file. Make sure it is a valid patch (JSON) file.');

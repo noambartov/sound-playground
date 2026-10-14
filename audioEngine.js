@@ -149,7 +149,31 @@ class AudioEngine {
 
         // חיבור השרשרת ל-destination הסופי
         this.dcBlocker.connect(this.masterLimiter);
-        this.masterLimiter.connect(this.ctx.destination);
+
+        // 3. Master fade: a short fade out before the canvas is cleared or replaced, so cutting
+        // the sounding modules does not click (see fadeAround).
+        this.masterFade = this.ctx.createGain();
+        this.masterLimiter.connect(this.masterFade);
+        this.masterFade.connect(this.ctx.destination);
+    }
+
+    // Runs fn (which tears down / rebuilds modules) behind a short master fade:
+    // fade out over 30 ms, run fn, then fade back in over 40 ms. Runs fn at once when no sound plays.
+    fadeAround(fn) {
+        const ctx = this.ctx, g = this.masterFade && this.masterFade.gain;
+        if (!g || ctx.state !== 'running') { fn(); return; }
+        const now = ctx.currentTime;
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(g.value, now);
+        g.linearRampToValueAtTime(0, now + 0.03);
+        setTimeout(() => {
+            try { fn(); } finally {
+                const t = ctx.currentTime;
+                g.cancelScheduledValues(t);
+                g.setValueAtTime(0, t);
+                g.linearRampToValueAtTime(1, t + 0.04);
+            }
+        }, 45);
     }
 
     getMasterInput() {

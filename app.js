@@ -1433,7 +1433,7 @@ if (!window.SoundSandboxApp) {
         if (!zoomed && (window.scrollX || window.scrollY)) window.scrollTo(0, 0);
       };
       const forceReset = () => {
-        if (vv.scale <= 1.01) return;
+        if (Math.abs(vv.scale - 1) <= 0.01) return;
         meta.setAttribute('content', 'width=device-width, initial-scale=1.01, maximum-scale=1.0');
         setTimeout(() => { meta.setAttribute('content', lockedContent); window.scrollTo(0, 0); sync(); }, 50);
       };
@@ -1442,6 +1442,37 @@ if (!window.SoundSandboxApp) {
       window.addEventListener('pageshow', forceReset);
       forceReset();
       sync();
+      this.repairViewOnReturn(meta, lockedContent, forceReset);
+    }
+
+    // iPad app: after switching away and back, the page could come back drawn at a wrong size
+    // (only the top-left part of the screen, modules invisible) until the app was closed.
+    // On return: re-apply the viewport, re-measure the cable canvas and force a full repaint.
+    repairViewOnReturn(meta, lockedContent, forceReset) {
+      const repair = () => {
+        if (document.visibilityState === 'hidden') return;
+        meta.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
+        requestAnimationFrame(() => {
+          meta.setAttribute('content', lockedContent);
+          forceReset();
+          this.resizeCanvas();
+          const root = document.documentElement;
+          root.style.opacity = '0.999';
+          void root.offsetHeight;
+          requestAnimationFrame(() => { root.style.opacity = ''; this.drawConnections(); });
+        });
+      };
+      const onReturn = () => {
+        if (document.visibilityState === 'hidden') return;
+        [0, 300, 1000].forEach(ms => setTimeout(repair, ms));
+      };
+      document.addEventListener('visibilitychange', onReturn);
+      window.addEventListener('pageshow', (e) => { if (e.persisted) onReturn(); });
+      window.addEventListener('orientationchange', onReturn);
+      // The canvas follows its container's real size, not only window 'resize' events.
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => this.resizeCanvas()).observe(this.canvasContainer);
+      }
     }
 
     updateSelectionUI() {

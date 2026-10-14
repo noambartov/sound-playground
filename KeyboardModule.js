@@ -248,19 +248,19 @@ class KeyboardModule {
       <div class="node-body" style="min-width: 580px; padding: 12px;">
         
         <!-- Controls Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #222; padding: 6px 10px; border-radius: 4px;">
+        <div class="kb-bar">
           
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 0.75rem; color: #aaa;">MIDI In:</span>
-            <select id="midi_input_select_${this.id}" style="background: #111; color: #fff; border: 1px solid #444; border-radius: 3px; font-size: 0.75rem; padding: 2px 4px; max-width: 170px;">
+            <span class="kb-label">MIDI In:</span>
+            <select id="midi_input_select_${this.id}" class="kb-select">
               <option value="">-- Select MIDI Input --</option>
             </select>
           </div>
 
           <div style="display: flex; align-items: center; gap: 6px;">
-            <button id="oct_down_${this.id}" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 0.8rem;">-</button>
-            <span style="font-size: 0.8rem; color: #eee; font-weight: bold; min-width: 65px; text-align: center;" id="oct_val_${this.id}">Oct C${this.baseOctave}</span>
-            <button id="oct_up_${this.id}" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 2px 8px; cursor: pointer; font-size: 0.8rem;">+</button>
+            <button id="oct_down_${this.id}" class="kb-oct-btn">-</button>
+            <span class="kb-oct-val" id="oct_val_${this.id}">Oct C${this.baseOctave}</span>
+            <button id="oct_up_${this.id}" class="kb-oct-btn">+</button>
           </div>
 
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -268,19 +268,17 @@ class KeyboardModule {
             <button id="slide_btn_${this.id}" class="action-btn module-toggle kb-toggle" title="FREQ glides between notes played legato">Slide: Off</button>
           </div>
 
-          <div style="font-size: 0.9rem; color: #4caf50; font-weight: bold; font-family: monospace;" id="note_display_${this.id}">
-            --
-          </div>
+          <div class="kb-note" id="note_display_${this.id}">--</div>
         </div>
 
         <!-- Visual Keyboard Wrapper -->
-        <div class="keyboard-wrapper" style="display: flex; height: 130px; background: #111; padding: 8px; border-radius: 6px; border: 1px solid #333; user-select: none;">
+        <div class="keyboard-wrapper">
           
           <!-- Pitch Bend Wheel -->
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 40px; margin-right: 10px; border-right: 1px solid #333; padding-right: 8px;">
-            <span style="font-size: 0.65rem; color: #888; margin-bottom: 4px; font-weight: bold;">PITCH</span>
+          <div class="kb-bend">
+            <span class="kb-bend-label">PITCH</span>
             <input type="range" id="bend_wheel_${this.id}" min="-1" max="1" step="0.01" value="0" style="writing-mode: bt-lr; appearance: slider-vertical; width: 16px; height: 90px; cursor: pointer;">
-            <span style="font-size: 0.6rem; color: #666; margin-top: 2px;">BEND</span>
+            <span class="kb-bend-label">BEND</span>
           </div>
 
           <!-- Keys Container -->
@@ -294,22 +292,22 @@ class KeyboardModule {
         </div>
 
         <!-- Output CV Ports with Destination Labels -->
-        <div class="ports-container" style="margin-top: 12px; display: flex; justify-content: space-around; background: #1a1a1a; padding: 6px; border-radius: 4px;">
+        <div class="ports-container" style="margin-top: 12px; display: flex; justify-content: space-around; background: var(--subtle-bg); border: 1px solid var(--panel-border); padding: 6px; border-radius: var(--radius-sm);">
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="cv" data-port-name="freq" data-node-id="${this.id}" title="Pitch CV (Hz)"></div>
-            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">FREQ <small style="color:#888;">(Oscillator)</small></span>
+            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">FREQ <small style="color: var(--muted-text);">(Oscillator)</small></span>
           </div>
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="cv" data-port-name="gate" data-node-id="${this.id}" title="Gate Trigger (0V / 1V)"></div>
-            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">GATE <small style="color:#888;">(Envelope)</small></span>
+            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">GATE <small style="color: var(--muted-text);">(Envelope)</small></span>
           </div>
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="gate" data-port-name="notes" data-node-id="${this.id}" title="All held notes (Poly Synth)"></div>
-            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">NOTES <small style="color:#888;">(Poly Synth)</small></span>
+            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">NOTES <small style="color: var(--muted-text);">(Poly Synth)</small></span>
           </div>
           <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
             <div class="port port-out" data-port-type="cv" data-port-name="bend" data-node-id="${this.id}" title="Pitch Bend CV (-1..+1)"></div>
-            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: #ddd;">BEND <small style="color:#888;">(Pitch Shift)</small></span>
+            <span class="port-label" style="font-size: 0.75rem; font-weight: bold; color: var(--text-color);">BEND <small style="color: var(--muted-text);">(Pitch Shift)</small></span>
           </div>
         </div>
 
@@ -327,7 +325,7 @@ class KeyboardModule {
     
     whiteKeyIndices.forEach((keyIdx) => {
       html += `
-        <div class="key white-key" data-key-idx="${keyIdx}" style="flex: 1; background: #e0e0e0; border: 1px solid #222; border-radius: 0 0 4px 4px; cursor: pointer; box-sizing: border-box; transition: background 0.05s;"></div>
+        <div class="key white-key" data-key-idx="${keyIdx}"></div>
       `;
     });
 
@@ -339,7 +337,7 @@ class KeyboardModule {
       const leftPercent = (afterWhiteIdx + 1) * whiteWidthPercent - (whiteWidthPercent * 0.32);
       
       html += `
-        <div class="key black-key" data-key-idx="${blackIdx}" style="position: absolute; left: ${leftPercent}%; width: ${whiteWidthPercent * 0.64}%; height: 60%; background: #222; border-radius: 0 0 3px 3px; z-index: 2; cursor: pointer; border: 1px solid #000; box-shadow: 2px 2px 4px rgba(0,0,0,0.4); transition: background 0.05s;"></div>
+        <div class="key black-key" data-key-idx="${blackIdx}" style="left: ${leftPercent}%; width: ${whiteWidthPercent * 0.64}%;"></div>
       `;
     });
 
@@ -528,12 +526,7 @@ class KeyboardModule {
     const keyEl = card.querySelector(`.key[data-key-idx="${keyIdx}"]`);
     if (!keyEl) return;
 
-    const isWhite = keyEl.classList.contains('white-key');
-    if (isPressed) {
-      keyEl.style.background = isWhite ? '#4caf50' : '#2e7d32';
-    } else {
-      keyEl.style.background = isWhite ? '#e0e0e0' : '#222';
-    }
+    keyEl.classList.toggle('pressed', isPressed);
   }
 
   getCVOutput(portName) {

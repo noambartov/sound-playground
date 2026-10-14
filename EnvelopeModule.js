@@ -139,37 +139,52 @@ class EnvelopeModule {
     }
 
     // --- ADSR Trigger Logic ---
+    // The envelope is a chain of straight lines; this.points ([time, value] corners) remembers it,
+    // so a new gate starts exactly from where the envelope is now. (cancelAndHoldAtTime followed by
+    // a ramp jumps in Chrome when a note is played again during the release: a click.)
+    valueAt(t) {
+        const pts = this.points || [[0, 0]];
+        if (t <= pts[0][0]) return pts[0][1];
+        for (let i = 1; i < pts.length; i++) {
+            const [t1, v1] = pts[i];
+            if (t <= t1) {
+                const [t0, v0] = pts[i - 1];
+                return t1 > t0 ? v0 + (v1 - v0) * (t - t0) / (t1 - t0) : v1;
+            }
+        }
+        return pts[pts.length - 1][1];
+    }
+
+    startFromNow(now) {
+        const param = this.envNode.offset;
+        const v = this.valueAt(now);
+        param.cancelScheduledValues(now);
+        param.setValueAtTime(v, now);
+        this.points = [[now, v]];
+    }
+
+    rampTo(value, time) {
+        this.envNode.offset.linearRampToValueAtTime(value, time);
+        this.points.push([time, value]);
+    }
+
     triggerAttack() {
         const now = this.ctx.currentTime;
-        const param = this.envNode.offset;
-
-        if (param.cancelAndHoldAtTime) {
-            param.cancelAndHoldAtTime(now);
-        } else {
-            param.cancelScheduledValues(now);
-            param.setValueAtTime(param.value, now);
-        }
+        this.startFromNow(now);
 
         const attackTime = Math.max(0.003, this.attack);
         const decayTime = Math.max(0.003, this.decay);
 
-        param.linearRampToValueAtTime(1.0, now + attackTime);
-        param.linearRampToValueAtTime(this.sustain, now + attackTime + decayTime);
+        this.rampTo(1.0, now + attackTime);
+        this.rampTo(this.sustain, now + attackTime + decayTime);
     }
 
     triggerRelease() {
         const now = this.ctx.currentTime;
-        const param = this.envNode.offset;
-
-        if (param.cancelAndHoldAtTime) {
-            param.cancelAndHoldAtTime(now);
-        } else {
-            param.cancelScheduledValues(now);
-            param.setValueAtTime(param.value, now);
-        }
+        this.startFromNow(now);
 
         const releaseTime = Math.max(0.003, this.release);
-        param.linearRampToValueAtTime(0.0, now + releaseTime);
+        this.rampTo(0.0, now + releaseTime);
     }
 
     // --- Control Setters ---

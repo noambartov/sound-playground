@@ -219,15 +219,13 @@ class PolySynthModule extends ModuleBase {
     return wave;
   }
 
-  // Stops a parameter's scheduled moves and holds it where it is now
-  static hold(param, t) {
-    if (typeof param.cancelAndHoldAtTime === 'function') {
-      param.cancelAndHoldAtTime(t);
-    } else {
-      const v = param.value;
-      param.cancelScheduledValues(t);
-      param.setValueAtTime(v, t);
-    }
+  // Envelopes use only setTargetAtTime (it always starts from where the value is right now) and
+  // cancelScheduledValues, never cancelAndHoldAtTime + linear ramps: in Chrome a ramp scheduled after
+  // cancelAndHoldAtTime during a release jumps (a loud click on every note played while an earlier
+  // note still rings out), and cancelling a running ramp jumps back to its start value.
+  static moveTo(param, value, t, tc) {
+    param.cancelScheduledValues(t);
+    param.setTargetAtTime(value, t, tc);
   }
 
   build() {
@@ -321,12 +319,8 @@ class PolySynthModule extends ModuleBase {
           return;
         }
         if (t < v.started + this.params.attack / 1000) return;
-        PolySynthModule.hold(v.filter.frequency, t);
-        v.filter.frequency.setTargetAtTime(this.cutoffSustain(), t, 0.03);
-        if (id === 'sustain') {
-          PolySynthModule.hold(v.amp.gain, t);
-          v.amp.gain.setTargetAtTime(this.params.sustain / 100, t, 0.03);
-        }
+        PolySynthModule.moveTo(v.filter.frequency, this.cutoffSustain(), t, 0.03);
+        if (id === 'sustain') PolySynthModule.moveTo(v.amp.gain, this.params.sustain / 100, t, 0.03);
       });
     } else if (id === 'voices') {
       // Voices beyond the new count let go of their notes
@@ -441,7 +435,10 @@ class PolySynthModule extends ModuleBase {
     const a = p.attack / 1000;
     const d = p.decay / 1000;
     const s = p.sustain / 100;
-    const stolen = v.gate && v.note !== note;
+    // Still sounding (held, or ringing out its release) with another note: it is faded out first
+    const stolen = v.note !== null && v.note !== note && (v.gate || t < v.freeAt);
+    // Silent until now: the filter can start from Cutoff directly
+    const silent = !v.gate && t >= v.freeAt;
 
     v.note = note;
     v.freq = freq;
@@ -450,19 +447,21 @@ class PolySynthModule extends ModuleBase {
     v.order = ++this.order;
     v.freeAt = Infinity;
 
-    // A voice taken from another note gets a very short fade first, so it does not click
-    const start = stolen ? t + 0.006 : t;
-    PolySynthModule.hold(v.amp.gain, t);
-    if (stolen) v.amp.gain.linearRampToValueAtTime(0, start);
+    // A voice taken from another note gets a very short fade first (to under 2% in 8 ms), so the
+    // pitch change is not heard as a click. Attack: up from wherever the volume is now (95% at the
+    // end of Attack), then Decay towards Sustain.
+    const start = stolen ? t + 0.008 : t;
+    const amp = v.amp.gain;
+    amp.cancelScheduledValues(t);
+    if (stolen) amp.setTargetAtTime(0, t, 0.002);
     v.osc1s.concat(v.osc2s).forEach(o => o.frequency.setValueAtTime(freq, start));
-
-    v.amp.gain.linearRampToValueAtTime(1, start + a);
-    v.amp.gain.setTargetAtTime(s, start + a, Math.max(0.005, d / 4));
+    amp.setTargetAtTime(1, start, Math.max(0.001, a / 3));
+    amp.setTargetAtTime(s, start + a, Math.max(0.005, d / 4));
 
     const f = v.filter.frequency;
-    PolySynthModule.hold(f, t);
-    f.setValueAtTime(this.cutoffBase(), start);
-    f.exponentialRampToValueAtTime(this.cutoffPeak(), start + a);
+    f.cancelScheduledValues(t);
+    if (silent || stolen) f.setValueAtTime(this.cutoffBase(), start);
+    f.setTargetAtTime(this.cutoffPeak(), start, Math.max(0.001, a / 3));
     f.setTargetAtTime(this.cutoffSustain(), start + a, Math.max(0.005, d / 4));
 
     this.updateVoiceDisplay();
@@ -487,10 +486,8 @@ class PolySynthModule extends ModuleBase {
     v.gate = false;
     v.order = ++this.order;
     v.freeAt = t + r;
-    PolySynthModule.hold(v.amp.gain, t);
-    v.amp.gain.setTargetAtTime(0, t, r / 4);
-    PolySynthModule.hold(v.filter.frequency, t);
-    v.filter.frequency.setTargetAtTime(this.cutoffBase(), t, r / 4);
+    PolySynthModule.moveTo(v.amp.gain, 0, t, r / 4);
+    PolySynthModule.moveTo(v.filter.frequency, this.cutoffBase(), t, r / 4);
   }
 
   // Lights the voices that are holding a note; voices above the Voices count are dimmed

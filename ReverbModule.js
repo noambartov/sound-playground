@@ -10,14 +10,12 @@ class ReverbModule {
     this.rightIn.channelCount = 1;
     this.rightIn.channelCountMode = 'explicit';
 
-    // Two convolvers (A / B): a new room is built in the silent one and crossfaded in,
-    // so moving Radius or Decay never cuts the sound (swapping a convolver's buffer resets it)
-    this.convolvers = [this.audioCtx.createConvolver(), this.audioCtx.createConvolver()];
-    this.convFades = [this.audioCtx.createGain(), this.audioCtx.createGain()];
-    this.convFades[1].gain.value = 0;
-    this.activeConv = 0;
-    this.fadeEnd = 0;
-    this.irTimer = null;
+    // The room itself is an AudioWorklet (REVERB_WORKLET below): 8 feedback delay lines whose
+    // lengths (Radius) and feedback (Decay) glide smoothly, so both sliders move like any other.
+    // Until the worklet is loaded the wet path is silent.
+    this.room = null;
+    this.roomIn = this.audioCtx.createGain();
+    this.roomOut = this.audioCtx.createGain();
     this.dampingFilter = this.audioCtx.createBiquadFilter();
     this.dampingFilter.type = 'lowpass';
 
@@ -45,12 +43,9 @@ class ReverbModule {
     this.leftIn.connect(this.dampingFilter);
     this.rightIn.connect(this.dampingFilter);
     this.dampingFilter.connect(this.saturator);
-    for (let i = 0; i < 2; i++) {
-      this.saturator.connect(this.convolvers[i]);
-      this.convolvers[i].connect(this.convFades[i]);
-      this.convFades[i].connect(this.wetGainL);
-      this.convFades[i].connect(this.wetGainR);
-    }
+    this.saturator.connect(this.roomIn);
+    this.roomOut.connect(this.wetGainL);
+    this.roomOut.connect(this.wetGainR);
 
     this.wetGainL.connect(this.leftOut);
     this.wetGainR.connect(this.rightOut);
@@ -58,7 +53,43 @@ class ReverbModule {
     this.updateGains();
     this.updateFilter();
     this.updateWarp();
-    this.convolvers[0].buffer = this.generateSphereImpulse();
+
+    ReverbModule.loadWorklet(this.audioCtx).then(() => {
+      if (this.destroyed) return;
+      this.room = new AudioWorkletNode(this.audioCtx, 'reverb-room', {
+        numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2],
+        channelCount: 1, channelCountMode: 'explicit',
+        parameterData: { radius: this.radius, decay: this.decay }
+      });
+      this.roomIn.connect(this.room);
+      this.room.connect(this.roomOut);
+    }).catch(err => console.warn('Reverb: AudioWorklet unavailable, reverb is silent.', err));
+  }
+
+  static loadWorklet(ctx) {
+    if (!ctx.audioWorklet) return Promise.reject(new Error('AudioWorklet not supported'));
+    if (!ReverbModule.workletReady || ReverbModule.workletCtx !== ctx) {
+      ReverbModule.workletCtx = ctx;
+      const url = URL.createObjectURL(new Blob([REVERB_WORKLET], { type: 'application/javascript' }));
+      ReverbModule.workletReady = ctx.audioWorklet.addModule(url).finally(() => URL.revokeObjectURL(url));
+    }
+    return ReverbModule.workletReady;
+  }
+
+  // Radius / Decay: the worklet glides to the new value by itself
+  updateRoom() {
+    if (!this.room) return;
+    const t = this.audioCtx.currentTime;
+    this.room.parameters.get('radius').setValueAtTime(this.radius, t);
+    this.room.parameters.get('decay').setValueAtTime(this.decay, t);
+  }
+
+  cleanup() {
+    this.destroyed = true;
+    if (this.room) {
+      this.room.port.postMessage('stop');
+      try { this.room.disconnect(); } catch (e) {}
+    }
   }
 
   getState() {
@@ -88,53 +119,6 @@ class ReverbModule {
         }
       });
     }
-  }
-
-  generateSphereImpulse() {
-    const sampleRate = this.audioCtx.sampleRate;
-    const length = Math.floor(sampleRate * Math.max(0.1, this.decay));
-    const impulse = this.audioCtx.createBuffer(2, length, sampleRate);
-    const leftBuffer = impulse.getChannelData(0);
-    const rightBuffer = impulse.getChannelData(1);
-
-    const sizeRatio = this.radius / 50; 
-    const decayFactor = 3.5 / (this.decay * sampleRate);
-
-    for (let i = 0; i < length; i++) {
-      let envelope = Math.exp(-i * decayFactor);
-      let sphericalMod = Math.sin(i / (sampleRate * 0.001 * sizeRatio + 1));
-      
-      let noiseL = (Math.random() * 2 - 1) * envelope;
-      let noiseR = (Math.random() * 2 - 1) * envelope;
-
-      leftBuffer[i] = noiseL * (0.8 + 0.2 * sphericalMod);
-      rightBuffer[i] = noiseR * (0.8 - 0.2 * sphericalMod);
-    }
-
-    return impulse;
-  }
-
-  // Radius / Decay changed: build the new room in the silent convolver and crossfade to it.
-  // While a crossfade is still running, the latest setting waits and is applied right after it.
-  rebuildImpulse() {
-    const ctx = this.audioCtx;
-    const t = ctx.currentTime;
-    if (ctx.state === 'running' && t < this.fadeEnd) {
-      if (!this.irTimer) {
-        this.irTimer = setTimeout(() => { this.irTimer = null; this.rebuildImpulse(); }, (this.fadeEnd - t) * 1000 + 10);
-      }
-      return;
-    }
-    const fade = ReverbModule.CROSSFADE;
-    const next = 1 - this.activeConv;
-    this.convolvers[next].buffer = this.generateSphereImpulse();
-    [[this.convFades[next], 1], [this.convFades[this.activeConv], 0]].forEach(([g, to]) => {
-      g.gain.cancelScheduledValues(t);
-      g.gain.setValueAtTime(1 - to, t);
-      g.gain.linearRampToValueAtTime(to, t + fade);
-    });
-    this.activeConv = next;
-    this.fadeEnd = t + fade;
   }
 
   updateGains() {
@@ -248,11 +232,11 @@ class ReverbModule {
     if (param === 'radius') {
       mod.radius = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}m`;
-      mod.rebuildImpulse();
+      mod.updateRoom();
     } else if (param === 'decay') {
       mod.decay = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}s`;
-      mod.rebuildImpulse();
+      mod.updateRoom();
     } else if (param === 'damping') {
       mod.damping = numVal;
       if (valDisplay) valDisplay.textContent = `${numVal}Hz`;
@@ -269,4 +253,97 @@ class ReverbModule {
   }
 }
 
-ReverbModule.CROSSFADE = 0.25;   // seconds from the old room to the new one
+// The room (runs on the audio thread). Mono in, stereo out.
+// Input diffusion: 4 allpass filters in a row. Then 8 delay lines (prime-ish lengths times a
+// size factor from Radius) mixed back into each other through a Householder matrix
+// (y = x - 2/8 * sum), each with a gentle one-pole low-pass in its loop. Feedback per line
+// g = 10^(-3 * length / (Decay * sampleRate)), so the tail falls 60 dB in Decay seconds.
+// Line lengths glide (time constant ~40 ms, read with linear interpolation), so moving Radius
+// sounds like a smooth sweep instead of a jump; Decay is applied every block. The output is
+// scaled by 0.29 * sqrt(1 - mean feedback^2) so a longer Decay is not much louder.
+const REVERB_WORKLET = `
+const LINE_MS = [29.7, 37.1, 41.1, 43.7, 53.3, 59.9, 67.7, 73.1];
+const AP_MS = [4.8, 3.6, 12.7, 9.3];
+const AP_G = 0.7;
+const sizeOf = r => 0.25 + (Math.max(1, Math.min(50, r)) / 50) * 1.75;
+
+class ReverbRoom extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name: 'radius', defaultValue: 15, minValue: 1, maxValue: 50, automationRate: 'k-rate' },
+      { name: 'decay', defaultValue: 3.5, minValue: 0.2, maxValue: 12, automationRate: 'k-rate' }
+    ];
+  }
+  constructor(opts) {
+    super();
+    const sr = sampleRate;
+    this.alive = true;
+    this.port.onmessage = e => { if (e.data === 'stop') this.alive = false; };
+    const maxLen = Math.ceil(0.075 * 2 * sr) + 4;
+    this.lines = LINE_MS.map(ms => ({ buf: new Float32Array(maxLen), pos: 0, base: ms / 1000 * sr, len: 0, lp: 0, g: 0 }));
+    this.aps = AP_MS.map(ms => ({ buf: new Float32Array(Math.ceil(ms / 1000 * sr)), pos: 0 }));
+    const p = (opts && opts.parameterData) || {};
+    this.size = sizeOf(p.radius !== undefined ? p.radius : 15);
+    this.lines.forEach(l => { l.len = l.base * this.size; });
+    this.slew = 1 - Math.exp(-1 / (0.04 * sr));
+    this.maxLen = maxLen;
+  }
+  process(inputs, outputs, params) {
+    if (!this.alive) return false;
+    const input = inputs[0] && inputs[0][0];
+    const outL = outputs[0][0], outR = outputs[0][1];
+    const n = outL.length;
+    const targetSize = sizeOf(params.radius[0]);
+    const decaySamples = params.decay[0] * sampleRate;
+    const lines = this.lines, aps = this.aps, maxLen = this.maxLen, slew = this.slew;
+    let gm = 0;
+    for (const l of lines) { l.g = Math.pow(10, -3 * l.len / decaySamples); gm += l.g / 8; }
+    // Longer tails hold more energy: scale the output so the level stays about the same
+    const outGain = 0.29 * Math.sqrt(1 - gm * gm);
+    const g0 = this.outGain === undefined ? outGain : this.outGain;
+    const taps = new Float32Array(8);
+    for (let i = 0; i < n; i++) {
+      // input diffusion
+      let x = input ? input[i] : 0;
+      for (const a of aps) {
+        const d = a.buf[a.pos];
+        const y = d - AP_G * x;
+        a.buf[a.pos] = x + AP_G * y;
+        a.pos = (a.pos + 1) % a.buf.length;
+        x = y;
+      }
+      this.size += (targetSize - this.size) * slew;
+      // read every line (fractional, linear interpolation)
+      let sum = 0;
+      for (let k = 0; k < 8; k++) {
+        const l = lines[k];
+        l.len = l.base * this.size;
+        let rp = l.pos - l.len;
+        if (rp < 0) rp += maxLen;
+        const i0 = Math.floor(rp), fr = rp - i0;
+        const i1 = (i0 + 1) % maxLen;
+        let v = l.buf[i0] + (l.buf[i1] - l.buf[i0]) * fr;
+        l.lp += (v - l.lp) * 0.6;   // damping inside the loop
+        v = l.lp * l.g;
+        taps[k] = v;
+        sum += v;
+      }
+      const h = sum * 0.25;
+      let L = 0, R = 0;
+      for (let k = 0; k < 8; k++) {
+        const l = lines[k];
+        const fb = taps[k] - h;
+        l.buf[l.pos] = fb + ((k & 1) ? -x : x);
+        l.pos = (l.pos + 1) % maxLen;
+        if (k & 1) R += taps[k]; else L += taps[k];
+      }
+      const og = g0 + (outGain - g0) * (i / n);
+      outL[i] = L * og;
+      outR[i] = R * og;
+    }
+    this.outGain = outGain;
+    return true;
+  }
+}
+registerProcessor('reverb-room', ReverbRoom);
+`;

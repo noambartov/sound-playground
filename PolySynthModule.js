@@ -7,17 +7,25 @@
 
 // What a NOTES cable carries: not sound but note-on / note-off messages. The Keyboard's NOTES output
 // is a PolyNoteBus; app.js calls bus.connect(sink) / bus.disconnect(sink) like for an audio node,
-// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq) / noteOff(note) / allNotesOff().
+// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq, glide) / noteOff(note) / allNotesOff(),
+// plus bend(amount) for the Keyboard's pitch bend wheel (-1..+1).
 class PolyNoteBus {
   constructor() {
     this.sinks = new Set();
     this.held = new Map();   // note number -> Hz, the keys held right now
+    this.bendValue = 0;
   }
 
   connect(target) {
     if (!target || typeof target.noteOn !== 'function') return;
     this.sinks.add(target);
-    this.held.forEach((freq, note) => target.noteOn(note, freq));
+    if (typeof target.bend === 'function') target.bend(this.bendValue);
+    this.held.forEach((freq, note) => target.noteOn(note, freq, false));
+  }
+
+  bend(amount) {
+    this.bendValue = amount;
+    this.sinks.forEach(s => { if (typeof s.bend === 'function') s.bend(amount); });
   }
 
   disconnect(target) {
@@ -28,15 +36,16 @@ class PolyNoteBus {
     });
   }
 
-  // Called with the full list of held keys; sends only what changed
-  update(notes) {
+  // Called with the full list of held keys; sends only what changed.
+  // glide: the Keyboard's Slide is on and a note was already sounding (new notes glide in)
+  update(notes, glide = false) {
     const next = new Map();
     notes.forEach(n => next.set(n.midiNote, n.freq));
     this.held.forEach((freq, note) => {
       if (!next.has(note)) this.sinks.forEach(s => s.noteOff(note));
     });
     next.forEach((freq, note) => {
-      if (this.held.get(note) !== freq) this.sinks.forEach(s => s.noteOn(note, freq));
+      if (this.held.get(note) !== freq) this.sinks.forEach(s => s.noteOn(note, freq, glide));
     });
     this.held = next;
   }
@@ -245,6 +254,9 @@ class PolySynthModule extends ModuleBase {
     this.waveKey = null;
     this.pendingWave = null;
     this.waveTimer = null;
+    // Pitch bend from the Keyboard (NOTES cable): cents added to every oscillator's detune
+    this.bendNode = this.makeConstant(0);
+    this.lastFreq = null;   // Hz of the last note played, where a Slide glide starts
     for (let i = 0; i < POLY_MAX_VOICES; i++) {
       const mix = this.own(ctx.createGain());
       mix.gain.value = 0.5;
@@ -255,6 +267,8 @@ class PolySynthModule extends ModuleBase {
         const o2 = this.own(ctx.createOscillator());
         o1.connect(gain);
         o2.connect(gain);
+        this.bendNode.connect(o1.detune);
+        this.bendNode.connect(o2.detune);
         gain.connect(mix);
         return { osc1: o1, osc2: o2, gain };
       });
@@ -276,9 +290,10 @@ class PolySynthModule extends ModuleBase {
     const self = this;
     this.inputNodes = {
       notes: {
-        noteOn(note, freq) { self.noteOn(note, freq); },
+        noteOn(note, freq, glide) { self.noteOn(note, freq, glide); },
         noteOff(note) { self.noteOff(note); },
-        allNotesOff() { self.allNotesOff(); }
+        allNotesOff() { self.allNotesOff(); },
+        bend(amount) { self.setBend(amount); }
       }
     };
   }
@@ -425,7 +440,15 @@ class PolySynthModule extends ModuleBase {
       || pool.slice().sort((a, b) => a.order - b.order)[0];
   }
 
-  noteOn(note, freq) {
+  // Pitch bend: -1..+1 is -2..+2 semitones
+  setBend(amount) {
+    if (this.destroyed) return;
+    const t = this.audioCtx.currentTime;
+    this.bendNode.offset.cancelScheduledValues(t);
+    this.bendNode.offset.setTargetAtTime(Math.max(-1, Math.min(1, amount)) * 200, t, 0.005);
+  }
+
+  noteOn(note, freq, glide = false) {
     if (this.destroyed) return;
     const ctx = this.audioCtx;
     const t = ctx.currentTime;
@@ -454,7 +477,14 @@ class PolySynthModule extends ModuleBase {
     const amp = v.amp.gain;
     amp.cancelScheduledValues(t);
     if (stolen) amp.setTargetAtTime(0, t, 0.002);
-    v.osc1s.concat(v.osc2s).forEach(o => o.frequency.setValueAtTime(freq, start));
+    // Slide: the new note glides in from the last note played (same 0.06 s as the Keyboard's FREQ)
+    const from = glide && this.lastFreq ? this.lastFreq : null;
+    v.osc1s.concat(v.osc2s).forEach(o => {
+      o.frequency.cancelScheduledValues(t);
+      o.frequency.setValueAtTime(from || freq, start);
+      if (from) o.frequency.setTargetAtTime(freq, start, 0.06);
+    });
+    this.lastFreq = freq;
     amp.setTargetAtTime(1, start, Math.max(0.001, a / 3));
     amp.setTargetAtTime(s, start + a, Math.max(0.005, d / 4));
 
@@ -476,6 +506,7 @@ class PolySynthModule extends ModuleBase {
 
   allNotesOff() {
     if (this.destroyed) return;
+    this.setBend(0);
     const t = this.audioCtx.currentTime;
     this.voices.forEach(v => { if (v.gate) this.releaseVoice(v, t); });
     this.updateVoiceDisplay();

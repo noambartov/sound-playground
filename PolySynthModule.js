@@ -7,7 +7,7 @@
 
 // What a NOTES cable carries: not sound but note-on / note-off messages. The Keyboard's NOTES output
 // is a PolyNoteBus; app.js calls bus.connect(sink) / bus.disconnect(sink) like for an audio node,
-// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq, glide) / noteOff(note) / allNotesOff(),
+// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq, glide) / noteOff(note) / allNotesOff() (glide: seconds, 0 = none),
 // plus bend(amount) for the Keyboard's pitch bend wheel (-1..+1).
 class PolyNoteBus {
   constructor() {
@@ -20,7 +20,7 @@ class PolyNoteBus {
     if (!target || typeof target.noteOn !== 'function') return;
     this.sinks.add(target);
     if (typeof target.bend === 'function') target.bend(this.bendValue);
-    this.held.forEach((freq, note) => target.noteOn(note, freq, false));
+    this.held.forEach((freq, note) => target.noteOn(note, freq, 0));
   }
 
   bend(amount) {
@@ -37,8 +37,8 @@ class PolyNoteBus {
   }
 
   // Called with the full list of held keys; sends only what changed.
-  // glide: the Keyboard's Slide is on and a note was already sounding (new notes glide in)
-  update(notes, glide = false) {
+  // glide: the Keyboard's Slide time in seconds (new notes glide in from the last note; 0 = off)
+  update(notes, glide = 0) {
     const next = new Map();
     notes.forEach(n => next.set(n.midiNote, n.freq));
     this.held.forEach((freq, note) => {
@@ -448,7 +448,7 @@ class PolySynthModule extends ModuleBase {
     this.bendNode.offset.setTargetAtTime(Math.max(-1, Math.min(1, amount)) * 200, t, 0.005);
   }
 
-  noteOn(note, freq, glide = false) {
+  noteOn(note, freq, glide = 0) {
     if (this.destroyed) return;
     const ctx = this.audioCtx;
     const t = ctx.currentTime;
@@ -477,12 +477,13 @@ class PolySynthModule extends ModuleBase {
     const amp = v.amp.gain;
     amp.cancelScheduledValues(t);
     if (stolen) amp.setTargetAtTime(0, t, 0.002);
-    // Slide: the new note glides in from the last note played (same 0.06 s as the Keyboard's FREQ)
-    const from = glide && this.lastFreq ? this.lastFreq : null;
+    // Slide: the new note glides in from the last note played (95% of the way after glide seconds)
+    const glideSec = glide === true ? 0.15 : Number(glide) || 0;
+    const from = glideSec > 0 && this.lastFreq ? this.lastFreq : null;
     v.osc1s.concat(v.osc2s).forEach(o => {
       o.frequency.cancelScheduledValues(t);
       o.frequency.setValueAtTime(from || freq, start);
-      if (from) o.frequency.setTargetAtTime(freq, start, 0.06);
+      if (from) o.frequency.setTargetAtTime(freq, start, glideSec / 3);
     });
     this.lastFreq = freq;
     amp.setTargetAtTime(1, start, Math.max(0.001, a / 3));

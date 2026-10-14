@@ -232,6 +232,12 @@ class KeyboardModule {
     this.bendNode.offset.cancelScheduledValues(now);
     this.bendNode.offset.setTargetAtTime(clamped, now, 0.005);
     this.noteBus.bend(clamped);
+    // FREQ carries the bend too (up to 2 semitones), so a patch with only FREQ -> Oscillator PITCH bends
+    this.bendValue = clamped;
+    if (this.noteFreq) {
+      this.freqNode.offset.cancelScheduledValues(now);
+      this.freqNode.offset.setTargetAtTime(this.noteFreq * Math.pow(2, clamped / 6), now, 0.005);
+    }
 
     const card = document.getElementById(`module_card_${this.id}`);
     if (card) {
@@ -499,7 +505,8 @@ class KeyboardModule {
       // Slide: glide only when moving from a sounding note (legato); a fresh note starts in tune
       const glide = this.slide && this.gateOpen ? 0.06 : 0.003;
       this.freqNode.offset.cancelScheduledValues(now);
-      this.freqNode.offset.setTargetAtTime(topNote.freq, now, glide);
+      this.noteFreq = topNote.freq;
+      this.freqNode.offset.setTargetAtTime(topNote.freq * Math.pow(2, (this.bendValue || 0) / 6), now, glide);
       this.gateOpen = true;
 
       this.gateNode.offset.cancelScheduledValues(now);

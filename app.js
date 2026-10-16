@@ -1906,6 +1906,15 @@ if (!window.SoundSandboxApp) {
         { el: document.querySelector('.toolbar'), handle: document.querySelector('.toolbar .panel-drag-handle'), key: 'sp_panel_toolbar' }
       ];
 
+      // Phone-sized screen (iPhone portrait or landscape); same query as the phone block in styles.css.
+      const isPhone = () => window.matchMedia('(max-width: 700px), (max-height: 500px)').matches;
+      const sidebarEl = document.querySelector('.sidebar');
+      if (sidebarEl) {
+        let closed = true;
+        try { closed = localStorage.getItem('sp_sidebar_phone_closed') !== '0'; } catch (e) {}
+        sidebarEl.classList.toggle('phone-collapsed', closed);
+      }
+
       panels.forEach(({ el, handle, key }) => {
         if (!el || !handle) return;
         handle.classList.add('panel-drag-handle');
@@ -1935,19 +1944,31 @@ if (!window.SoundSandboxApp) {
           if (e.button !== 0) return;
           e.preventDefault();
           e.stopPropagation();
+          const startX = e.clientX, startY = e.clientY;
+          let moved = false;
           const rect = el.getBoundingClientRect();
           const offsetX = e.clientX - rect.left;
           const offsetY = e.clientY - rect.top;
           el.classList.add('panel-dragging');
 
           const onMove = (moveEvent) => {
+            if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < 6) return;
+            moved = true;
             placeAt(moveEvent.clientX - offsetX, moveEvent.clientY - offsetY);
           };
           const onUp = () => {
             el.classList.remove('panel-dragging');
-            try {
-              localStorage.setItem(key, JSON.stringify({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
-            } catch (err) {}
+            // Phone: a tap (no drag) on the "Modules" title opens or closes the module menu.
+            if (!moved) {
+              if (el.classList.contains('sidebar') && isPhone()) {
+                const closed = el.classList.toggle('phone-collapsed');
+                try { localStorage.setItem('sp_sidebar_phone_closed', closed ? '1' : '0'); } catch (err) {}
+              }
+            } else {
+              try {
+                localStorage.setItem(key, JSON.stringify({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
+              } catch (err) {}
+            }
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', onUp);
             window.removeEventListener('pointercancel', onUp);

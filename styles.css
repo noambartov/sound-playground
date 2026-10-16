@@ -1151,6 +1151,12 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-weight: 700;
 }
 
+.osc-flip {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
 .module-toggle-row {
   display: flex;
   gap: 8px;

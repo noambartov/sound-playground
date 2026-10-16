@@ -114,20 +114,34 @@ class OscillatorModule {
     return curve;
   }
 
-  // Maps the browser's rising sawtooth (x = -1..1 over one cycle) to a saw that rises for
-  // `rise` of the cycle and falls for the rest; `flip` turns it upside down.
-  makeSawCurve(rise, flip) {
-    const samples = 1024;
-    const curve = new Float32Array(samples);
+  // Band-limited saw that rises for `rise` of the cycle and falls for the rest (`flip` turns
+  // it upside down), built from its Fourier series as a PeriodicWave. Shaping the browser's
+  // sawtooth with a WaveShaper instead leaves a spike at every cycle (the band-limited jump
+  // passes through the middle values), heard as clicks.
+  makeSawWave(rise, flip) {
+    const key = `${rise.toFixed(2)}|${flip ? 1 : 0}`;
+    const cache = OscillatorModule.sawWaves.get(this.ctx) || new Map();
+    OscillatorModule.sawWaves.set(this.ctx, cache);
+    if (cache.has(key)) return cache.get(key);
+    const N = OscillatorModule.SAW_HARMONICS;
+    const real = new Float32Array(N + 1);
+    const imag = new Float32Array(N + 1);
     const sign = flip ? -1 : 1;
-    for (let i = 0; i < samples; i++) {
-      const p = i / (samples - 1);
-      let y;
-      if (p <= rise && rise > 0) y = -1 + 2 * p / rise;
-      else y = 1 - 2 * (p - rise) / (1 - rise);
-      curve[i] = sign * y;
+    for (let n = 1; n <= N; n++) {
+      if (rise >= 1 || rise <= 0) {
+        // Plain ramp (rising, or falling at 0): sine terms -2/(pi n) or +2/(pi n)
+        imag[n] = sign * (rise >= 1 ? -2 : 2) / (Math.PI * n);
+      } else {
+        const A = 2 / (rise * (1 - rise));
+        const th = 2 * Math.PI * n * rise;
+        const k = 2 * A / (4 * Math.PI * Math.PI * n * n);
+        real[n] = sign * -k * (1 - Math.cos(th));
+        imag[n] = sign * k * Math.sin(th);
+      }
     }
-    return curve;
+    const wave = this.ctx.createPeriodicWave(real, imag);
+    cache.set(key, wave);
+    return wave;
   }
 
   // The plain browser sawtooth is used untouched while the shape is the classic one.
@@ -196,10 +210,8 @@ class OscillatorModule {
       this.oscNode.connect(this.shaperNode);
       this.shaperNode.connect(this.outputGain);
     } else if (this.currentType === 'sawtooth' && this.sawIsShaped()) {
-      this.oscNode.type = 'sawtooth';
-      this.shaperNode.curve = this.makeSawCurve(this.sawRise, this.sawFlip);
-      this.oscNode.connect(this.shaperNode);
-      this.shaperNode.connect(this.outputGain);
+      this.oscNode.setPeriodicWave(this.makeSawWave(this.sawRise, this.sawFlip));
+      this.oscNode.connect(this.outputGain);
     } else {
       this.oscNode.type = this.currentType;
       this.oscNode.connect(this.outputGain);
@@ -321,6 +333,9 @@ OscillatorModule.freqToSlider = (freq) => {
   const f = Math.min(hi, Math.max(lo, parseFloat(freq)));
   return Math.pow(Math.log(f / lo) / Math.log(hi / lo), 1 / k);
 };
+
+OscillatorModule.SAW_HARMONICS = 1024;
+OscillatorModule.sawWaves = new WeakMap(); // AudioContext -> Map(key -> PeriodicWave)
 
 // Slope readout: how much of the cycle rises and how much falls.
 OscillatorModule.riseLabel = (rise) => {

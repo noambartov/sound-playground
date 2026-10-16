@@ -1359,16 +1359,6 @@ if (!window.SoundSandboxApp) {
           this.updateSelectionUI();
         }
 
-        // Phone: one finger on the empty workspace moves the view (no selection box).
-        if (e.pointerType === 'touch' && this.isPhone()) {
-          isPanning = true;
-          startMouseX = e.clientX;
-          startMouseY = e.clientY;
-          startPanX = this.panX;
-          startPanY = this.panY;
-          return;
-        }
-
         isSelecting = true;
         startWorldX = (clickX - this.panX) / this.scale;
         startWorldY = (clickY - this.panY) / this.scale;

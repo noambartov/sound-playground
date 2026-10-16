@@ -166,7 +166,7 @@ window.helpData = {
     modules: [
       { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
         summary: "Makes a steady tone. The starting point of most sounds.",
-        controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure).", "Frequency: the pitch, 20 to 4000 Hz. The middle of the slider is 200 Hz, so the low range gets more room. Greyed out while a cable is in PITCH.", "Pulse Width: only for Square; changes the tone from hollow to thin."],
+        controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure).", "Frequency: the pitch, 20 to 4000 Hz. The middle of the slider is 200 Hz, so the low range gets more room. Greyed out while a cable is in PITCH.", "Pulse Width: only for Square; changes the tone from hollow to thin.", "Slope: only for Sawtooth; how much of each cycle the wave climbs from the bottom to the peak, and how much it falls back. Rise 100% is the classic saw (slow climb, sudden drop), 50% is a triangle, 0% is a saw that drops slowly and jumps up.", "Flip: only for Sawtooth; turns the wave upside down."],
         tips: ["Plug Keyboard FREQ into PITCH to play notes in tune.", "A slow LFO into FM IN gives vibrato."] },
       { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
         summary: "An oscillator that glides between a row of different waves, so the tone can change and move while it plays.",
@@ -444,7 +444,7 @@ window.helpData = {
     modules: [
       { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
         summary: "מייצר צליל קבוע. נקודת ההתחלה של רוב הצלילים.",
-        controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אמצע הסליידר הוא 200 הרץ, כך שלצלילים הנמוכים יש יותר מקום. אפור כשיש כבל ב-PITCH.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק."],
+        controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אמצע הסליידר הוא 200 הרץ, כך שלצלילים הנמוכים יש יותר מקום. אפור כשיש כבל ב-PITCH.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק.", "Slope: רק ל-Sawtooth; כמה מכל מחזור הגל מטפס מהתחתית לפסגה, וכמה הוא יורד בחזרה. Rise 100% הוא המסור הקלאסי (עלייה איטית, נפילה פתאומית), 50% הוא משולש, 0% הוא מסור שיורד לאט וקופץ למעלה.", "Flip: רק ל-Sawtooth; הופך את הגל (פסגה לתחתית)."],
         tips: ["FREQ של המקלדת אל PITCH: מנגנים תווים מכוונים.", "LFO איטי אל FM IN נותן ויברטו."] },
       { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
         summary: "אוסילטור שעובר בהדרגה בין שורה של צורות גל שונות, כך שהצליל יכול להשתנות ולזוז תוך כדי נגינה.",

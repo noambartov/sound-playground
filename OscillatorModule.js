@@ -6,6 +6,10 @@ class OscillatorModule {
     this.currentType = 'square';
     this.currentFreq = 220;
     this.pulseWidth = 0.5;
+    // Sawtooth shape: sawRise = share of the cycle spent rising from the bottom to the peak
+    // (1 = classic saw, 0.5 = triangle, 0 = falling ramp); sawFlip turns the wave upside down.
+    this.sawRise = 1;
+    this.sawFlip = false;
     this.card = null;
 
     this.oscNode = this.ctx.createOscillator();
@@ -35,7 +39,9 @@ class OscillatorModule {
     return {
       waveform: this.currentType,
       frequency: this.currentFreq,
-      pulseWidth: this.pulseWidth
+      pulseWidth: this.pulseWidth,
+      sawRise: this.sawRise,
+      sawFlip: this.sawFlip
     };
   }
 
@@ -44,6 +50,8 @@ class OscillatorModule {
     if (state.waveform !== undefined) this.setType(state.waveform);
     if (state.frequency !== undefined) this.setFrequency(state.frequency);
     if (state.pulseWidth !== undefined) this.setPulseWidth(state.pulseWidth);
+    if (state.sawRise !== undefined) this.setSawRise(state.sawRise);
+    if (state.sawFlip !== undefined) this.setSawFlip(state.sawFlip);
 
     if (this.card) {
       const typeSelect = this.card.querySelector(`#osc_type_${this.id}`);
@@ -59,6 +67,10 @@ class OscillatorModule {
 
       const pwLabel = this.card.querySelector(`#pw_val_${this.id}`);
       if (pwLabel) pwLabel.innerText = `${Math.round(this.pulseWidth * 100)}%`;
+
+      const riseSlider = this.card.querySelector(`#osc_rise_${this.id}`);
+      if (riseSlider) riseSlider.value = this.sawRise;
+      this.updateSawUI();
     }
   }
 
@@ -102,6 +114,49 @@ class OscillatorModule {
     return curve;
   }
 
+  // Maps the browser's rising sawtooth (x = -1..1 over one cycle) to a saw that rises for
+  // `rise` of the cycle and falls for the rest; `flip` turns it upside down.
+  makeSawCurve(rise, flip) {
+    const samples = 1024;
+    const curve = new Float32Array(samples);
+    const sign = flip ? -1 : 1;
+    for (let i = 0; i < samples; i++) {
+      const p = i / (samples - 1);
+      let y;
+      if (p <= rise && rise > 0) y = -1 + 2 * p / rise;
+      else y = 1 - 2 * (p - rise) / (1 - rise);
+      curve[i] = sign * y;
+    }
+    return curve;
+  }
+
+  // The plain browser sawtooth is used untouched while the shape is the classic one.
+  sawIsShaped() {
+    return this.sawRise < 0.999 || this.sawFlip;
+  }
+
+  setSawRise(val) {
+    this.sawRise = Math.min(1, Math.max(0, parseFloat(val)));
+    if (this.currentType === 'sawtooth') this.updateWaveformRouting();
+  }
+
+  setSawFlip(on) {
+    this.sawFlip = !!on;
+    if (this.currentType === 'sawtooth') this.updateWaveformRouting();
+    this.updateSawUI();
+  }
+
+  updateSawUI() {
+    if (!this.card) return;
+    const label = this.card.querySelector(`#rise_val_${this.id}`);
+    if (label) label.innerText = OscillatorModule.riseLabel(this.sawRise);
+    const btn = this.card.querySelector(`#osc_flip_${this.id}`);
+    if (btn) {
+      btn.textContent = `Flip: ${this.sawFlip ? 'On' : 'Off'}`;
+      btn.classList.toggle('active', this.sawFlip);
+    }
+  }
+
   setType(type) {
     this.currentType = type;
     this.updateWaveformRouting();
@@ -111,6 +166,9 @@ class OscillatorModule {
       if (pwmContainer) {
         pwmContainer.style.display = (type === 'square') ? 'flex' : 'none';
       }
+      const sawContainer = this.card.querySelector(`#saw_container_${this.id}`);
+      if (sawContainer) sawContainer.style.display = (type === 'sawtooth') ? 'flex' : 'none';
+      if (window.synthApp && typeof synthApp.updateCables === 'function') synthApp.updateCables();
     }
   }
 
@@ -135,6 +193,11 @@ class OscillatorModule {
     if (this.currentType === 'square') {
       this.oscNode.type = 'sawtooth';
       this.shaperNode.curve = this.makePulseCurve(this.pulseWidth);
+      this.oscNode.connect(this.shaperNode);
+      this.shaperNode.connect(this.outputGain);
+    } else if (this.currentType === 'sawtooth' && this.sawIsShaped()) {
+      this.oscNode.type = 'sawtooth';
+      this.shaperNode.curve = this.makeSawCurve(this.sawRise, this.sawFlip);
       this.oscNode.connect(this.shaperNode);
       this.shaperNode.connect(this.outputGain);
     } else {
@@ -168,6 +231,12 @@ class OscillatorModule {
         <div class="control-group" id="pwm_container_${this.id}" style="display: ${this.currentType === 'square' ? 'flex' : 'none'};">
           <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Pulse Width: <span id="pw_val_${this.id}">${Math.round(this.pulseWidth * 100)}%</span></label>
           <input type="range" id="osc_pw_${this.id}" min="0.05" max="0.95" step="0.01" value="${this.pulseWidth}">
+        </div>
+
+        <div class="control-group" id="saw_container_${this.id}" style="display: ${this.currentType === 'sawtooth' ? 'flex' : 'none'};">
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Slope: <span id="rise_val_${this.id}">${OscillatorModule.riseLabel(this.sawRise)}</span></label>
+          <input type="range" id="osc_rise_${this.id}" min="0" max="1" step="0.01" value="${this.sawRise}">
+          <button id="osc_flip_${this.id}" class="action-btn module-toggle osc-flip${this.sawFlip ? ' active' : ''}" title="Turn the wave upside down">Flip: ${this.sawFlip ? 'On' : 'Off'}</button>
         </div>
 
         <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #3f3f46;">
@@ -214,6 +283,17 @@ class OscillatorModule {
         if (pwLabel) pwLabel.innerText = `${Math.round(e.target.value * 100)}%`;
       });
     }
+
+    const riseSlider = card.querySelector(`#osc_rise_${this.id}`);
+    if (riseSlider) {
+      riseSlider.addEventListener('input', (e) => {
+        this.setSawRise(e.target.value);
+        this.updateSawUI();
+      });
+    }
+
+    const flipBtn = card.querySelector(`#osc_flip_${this.id}`);
+    if (flipBtn) flipBtn.addEventListener('click', () => this.setSawFlip(!this.sawFlip));
   }
 
   cleanup() {
@@ -240,4 +320,10 @@ OscillatorModule.freqToSlider = (freq) => {
   const { FREQ_MIN: lo, FREQ_MAX: hi, FREQ_CURVE: k } = OscillatorModule;
   const f = Math.min(hi, Math.max(lo, parseFloat(freq)));
   return Math.pow(Math.log(f / lo) / Math.log(hi / lo), 1 / k);
+};
+
+// Slope readout: how much of the cycle rises and how much falls.
+OscillatorModule.riseLabel = (rise) => {
+  const up = Math.round(rise * 100);
+  return `Rise ${up}% / Fall ${100 - up}%`;
 };

@@ -52,13 +52,35 @@ class AudioEngine {
 
     // iPad: after switching apps or changing headphones the sound output can come back late
     // (up to a second) until the page is reloaded. On the first tap after such a change the
-    // output is stopped and started again, which rebuilds it.
+    // output is stopped and started again, which rebuilds it. Stopping it while it sounds would
+    // click, so the master fades out first (15 ms), the restart follows 30 ms later and the sound
+    // fades back in. If Safari refuses the resume outside the tap, the next tap's wake() starts it
+    // and the fade-in follows from 'statechange' (needsFadeIn).
     restartOutputIfStale() {
         if (!this.outputStale || !this.ctx || document.visibilityState !== 'visible') return;
         this.outputStale = false;
         if (this.ctx.state !== 'running') return; // wake() starts it fresh anyway
-        this.ctx.suspend().catch(() => {});
-        this.ctx.resume().catch(() => {});
+        if (!this.masterFade) {
+            this.ctx.suspend().catch(() => {});
+            this.ctx.resume().catch(() => {});
+            return;
+        }
+        this.fadeOut(0.015);
+        this.needsFadeIn = true;
+        setTimeout(() => {
+            this.ctx.suspend().catch(() => {})
+                .then(() => this.ctx.resume()).catch(() => {})
+                .then(() => this.fadeInIfNeeded());
+        }, 30);
+    }
+
+    fadeInIfNeeded() {
+        if (!this.needsFadeIn || !this.ctx || this.ctx.state !== 'running' || !this.masterFade) return;
+        this.needsFadeIn = false;
+        const g = this.masterFade.gain, t = this.ctx.currentTime;
+        g.cancelScheduledValues(t);
+        g.setValueAtTime(0, t);
+        g.linearRampToValueAtTime(1, t + 0.08);
     }
 
     // If the speaker / headphones now run at another sample rate than the sound engine,
@@ -120,7 +142,7 @@ class AudioEngine {
             // only appears after an interruption, never on the first visit.
             this.hasPlayed = this.ctx.state === 'running';
             this.ctx.addEventListener('statechange', () => {
-                if (this.ctx.state === 'running') this.hasPlayed = true;
+                if (this.ctx.state === 'running') { this.hasPlayed = true; this.fadeInIfNeeded(); }
                 if (this.ctx.state === 'interrupted') this.outputStale = true;
             });
             this.setupMasterProtection();

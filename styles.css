@@ -1151,6 +1151,12 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-weight: 700;
 }
 
+.osc-flip {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
 .module-toggle-row {
   display: flex;
   gap: 8px;
@@ -1713,3 +1719,52 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 }
 .empty-canvas-hint p { margin: 0 0 8px; }
 .empty-canvas-hint[hidden] { display: none; }
+/* ==========================================================================
+   PHONE (iPhone portrait or landscape). Same query as isPhone() in app.js
+   initDraggablePanels. iPad and desktop never match it.
+   ========================================================================== */
+@media (max-width: 700px), (max-height: 500px) {
+  /* Toolbar: one strip across the top that fits the screen; swipe it sideways for more buttons. */
+  .toolbar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    max-width: calc(100vw - 16px);
+    padding: 6px 8px;
+    gap: 6px;
+    overflow-x: auto;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+  .toolbar > *,
+  .toolbar .tool-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .toolbar .zoom-controls { gap: 4px; }
+
+  /* Module menu: narrower, sits below the toolbar. Tap "Modules" to open or close it, drag it to move it. */
+  .sidebar {
+    top: 64px;
+    left: 8px;
+    width: 160px;
+    padding: 10px;
+    gap: 8px;
+    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
+  }
+  .sidebar h3 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 2px 0;
+  }
+  .sidebar h3::after {
+    content: "Hide";
+    font-size: 10px;
+    color: var(--primary-color);
+  }
+  .sidebar.phone-collapsed h3::after { content: "Show"; }
+  .sidebar.phone-collapsed > :not(h3) { display: none !important; }
+}

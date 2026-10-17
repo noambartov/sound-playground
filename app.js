@@ -352,6 +352,17 @@ if (!window.SoundSandboxApp) {
       return { x, y };
     }
 
+    // Phone-sized screen (iPhone portrait or landscape); same query as the PHONE block in styles.css.
+    // iPad and desktop never match it.
+    isPhone() {
+      return window.matchMedia('(max-width: 700px), (max-height: 500px)').matches;
+    }
+
+    // Smallest zoom: phones may zoom further out, their screen is small.
+    minZoom() {
+      return this.isPhone() ? 0.25 : 0.4;
+    }
+
     // Zoom and pan so every module is visible inside the free part of the screen
     // Zooms and pans so the modules fit the free screen area (only the given module ids, when passed)
     fitToModules(onlyIds = null) {
@@ -367,7 +378,7 @@ if (!window.SoundSandboxApp) {
       const free = this.getFreeViewRect();
       const fw = free.right - free.left, fh = free.bottom - free.top;
       const bw = maxX - minX, bh = maxY - minY;
-      this.scale = Math.min(1, Math.max(0.4, Math.min(fw / bw, fh / bh)));
+      this.scale = Math.min(1, Math.max(this.minZoom(), Math.min(fw / bw, fh / bh)));
       this.panX = free.left + (fw - bw * this.scale) / 2 - minX * this.scale;
       this.panY = free.top + (fh - bh * this.scale) / 2 - minY * this.scale;
       this.applyViewportTransform();
@@ -832,7 +843,7 @@ if (!window.SoundSandboxApp) {
     }
 
     updateZoom(delta) {
-      this.scale = Math.min(Math.max(this.scale + delta, 0.4), 2.2);
+      this.scale = Math.min(Math.max(this.scale + delta, this.minZoom()), 2.2);
       this.applyViewportTransform();
     }
 
@@ -1267,6 +1278,24 @@ if (!window.SoundSandboxApp) {
       }, { passive: false });
       this.resetPageZoom();
 
+      // Phone: modules cover most of the small screen, so two fingers pinch-zoom wherever they land,
+      // on a module too. The second finger never reaches the module; a module drag by the first finger stops.
+      this.canvasContainer.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch' || !this.isPhone()) return;
+        touchPoints.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (touchPoints.size < 2) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isSelecting = false;
+        isPanning = false;
+        this.selectionBox.style.display = 'none';
+        this.isPinching = true;
+        if (touchPoints.size === 2) {
+          const info = getPinchInfo();
+          pinch = { ...info, scale: this.scale, panX: this.panX, panY: this.panY };
+        }
+      }, true);
+
       this.canvasContainer.addEventListener('pointerdown', (e) => {
         this.ensureAudioContextRunning();
 
@@ -1346,7 +1375,7 @@ if (!window.SoundSandboxApp) {
           touchPoints.set(e.pointerId, { x: e.clientX, y: e.clientY });
           if (pinch && touchPoints.size === 2) {
             const info = getPinchInfo();
-            const newScale = Math.min(Math.max(pinch.scale * info.dist / pinch.dist, 0.4), 2.2);
+            const newScale = Math.min(Math.max(pinch.scale * info.dist / pinch.dist, this.minZoom()), 2.2);
             // Keep the workspace point that was under the fingers under the fingers.
             this.panX = info.midX - (pinch.midX - pinch.panX) * newScale / pinch.scale;
             this.panY = info.midY - (pinch.midY - pinch.panY) * newScale / pinch.scale;
@@ -1408,6 +1437,7 @@ if (!window.SoundSandboxApp) {
         if (e && touchPoints.has(e.pointerId)) {
           touchPoints.delete(e.pointerId);
           if (touchPoints.size < 2) pinch = null;
+          if (touchPoints.size === 0) this.isPinching = false;
         }
         if (isPanning) {
           isPanning = false;
@@ -1574,6 +1604,7 @@ if (!window.SoundSandboxApp) {
 
         const onPointerMove = (moveEvent) => {
           if (!isDragging || this.isPresentationMode) return;
+          if (this.isPinching) return;
           const dx = (moveEvent.clientX - startMouseX) / this.scale;
           const dy = (moveEvent.clientY - startMouseY) / this.scale;
 
@@ -1906,6 +1937,14 @@ if (!window.SoundSandboxApp) {
         { el: document.querySelector('.toolbar'), handle: document.querySelector('.toolbar .panel-drag-handle'), key: 'sp_panel_toolbar' }
       ];
 
+      const isPhone = () => this.isPhone();
+      const sidebarEl = document.querySelector('.sidebar');
+      if (sidebarEl) {
+        let closed = true;
+        try { closed = localStorage.getItem('sp_sidebar_phone_closed') !== '0'; } catch (e) {}
+        sidebarEl.classList.toggle('phone-collapsed', closed);
+      }
+
       panels.forEach(({ el, handle, key }) => {
         if (!el || !handle) return;
         handle.classList.add('panel-drag-handle');
@@ -1935,19 +1974,31 @@ if (!window.SoundSandboxApp) {
           if (e.button !== 0) return;
           e.preventDefault();
           e.stopPropagation();
+          const startX = e.clientX, startY = e.clientY;
+          let moved = false;
           const rect = el.getBoundingClientRect();
           const offsetX = e.clientX - rect.left;
           const offsetY = e.clientY - rect.top;
           el.classList.add('panel-dragging');
 
           const onMove = (moveEvent) => {
+            if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < 6) return;
+            moved = true;
             placeAt(moveEvent.clientX - offsetX, moveEvent.clientY - offsetY);
           };
           const onUp = () => {
             el.classList.remove('panel-dragging');
-            try {
-              localStorage.setItem(key, JSON.stringify({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
-            } catch (err) {}
+            // Phone: a tap (no drag) on the "Modules" title opens or closes the module menu.
+            if (!moved) {
+              if (el.classList.contains('sidebar') && isPhone()) {
+                const closed = el.classList.toggle('phone-collapsed');
+                try { localStorage.setItem('sp_sidebar_phone_closed', closed ? '1' : '0'); } catch (err) {}
+              }
+            } else {
+              try {
+                localStorage.setItem(key, JSON.stringify({ left: parseFloat(el.style.left), top: parseFloat(el.style.top) }));
+              } catch (err) {}
+            }
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', onUp);
             window.removeEventListener('pointercancel', onUp);

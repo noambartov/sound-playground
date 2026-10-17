@@ -179,7 +179,7 @@ class GranularModule {
 
             <div id="file_controls_${this.id}" style="display: ${this.sourceMode === 'file' ? 'block' : 'none'};">
               <button id="btn_upload_${this.id}" class="add-module-btn" style="font-size: 10px; padding: 3px 8px;">Load File</button>
-              <input type="file" id="file_input_${this.id}" accept="audio/*" style="display:none;">
+              <input type="file" id="file_input_${this.id}" accept="${GranularModule.FILE_ACCEPT}" style="display:none;">
             </div>
           </div>
 
@@ -301,13 +301,8 @@ class GranularModule {
       fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          this.audioCtx.decodeAudioData(evt.target.result, (decoded) => {
-            this.setBuffer(decoded);
-          });
-        };
-        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+        this.loadFile(file);
       });
     }
 
@@ -376,6 +371,108 @@ class GranularModule {
     }
 
     this.drawWaveform();
+  }
+
+  async loadFile(file) {
+    const notify = (msg) => {
+      if (window.synthApp && typeof window.synthApp.showNotification === 'function') window.synthApp.showNotification(msg);
+    };
+    let data;
+    try {
+      data = await file.arrayBuffer();
+    } catch (err) {
+      notify(`Could not read ${file.name}.`);
+      return;
+    }
+    let decoded = null;
+    try {
+      decoded = await this.audioCtx.decodeAudioData(data.slice(0));
+    } catch (err) {
+      decoded = GranularModule.decodePcm(data, this.audioCtx);
+    }
+    if (!decoded) {
+      notify(`${file.name} could not be opened. Try MP3, WAV, M4A, AAC, OGG, FLAC or AIFF.`);
+      return;
+    }
+    this.setBuffer(decoded);
+  }
+
+  // Fallback for uncompressed WAV / AIFF / AIFF-C that the browser cannot decode itself
+  // (e.g. AIFF in Chrome and Firefox). Returns an AudioBuffer or null.
+  static decodePcm(data, ctx) {
+    try {
+      const v = new DataView(data);
+      const tag = (o) => String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3));
+      const head = tag(0), form = tag(8);
+      let channels, rate, bits, offset, frames, little, isFloat = false;
+      if (head === 'RIFF' && form === 'WAVE') {
+        little = true;
+        for (let o = 12; o + 8 <= v.byteLength;) {
+          const id = tag(o), size = v.getUint32(o + 4, true);
+          if (id === 'fmt ') {
+            const fmt = v.getUint16(o + 8, true);
+            channels = v.getUint16(o + 10, true);
+            rate = v.getUint32(o + 12, true);
+            bits = v.getUint16(o + 22, true);
+            isFloat = fmt === 3 || (fmt === 0xFFFE && v.getUint16(o + 32, true) === 3);
+          } else if (id === 'data') {
+            offset = o + 8;
+            frames = Math.floor(Math.min(size, v.byteLength - offset) / (channels * bits / 8));
+            break;
+          }
+          o += 8 + size + (size & 1);
+        }
+      } else if (head === 'FORM' && (form === 'AIFF' || form === 'AIFC')) {
+        little = false;
+        for (let o = 12; o + 8 <= v.byteLength;) {
+          const id = tag(o), size = v.getUint32(o + 4, false);
+          if (id === 'COMM') {
+            channels = v.getUint16(o + 8, false);
+            frames = v.getUint32(o + 10, false);
+            bits = v.getUint16(o + 14, false);
+            const exp = (v.getUint16(o + 16, false) & 0x7FFF) - 16383;
+            rate = Math.round(v.getUint32(o + 18, false) * Math.pow(2, exp - 31));
+            if (form === 'AIFC') {
+              const comp = tag(o + 26);
+              if (comp === 'sowt') little = true;
+              else if (comp === 'fl32' || comp === 'FL32') isFloat = true;
+              else if (comp !== 'NONE') return null;
+            }
+          } else if (id === 'SSND') {
+            offset = o + 16 + v.getUint32(o + 8, false);
+          }
+          o += 8 + size + (size & 1);
+        }
+        if (offset !== undefined && frames) frames = Math.min(frames, Math.floor((v.byteLength - offset) / (channels * bits / 8)));
+      } else {
+        return null;
+      }
+      if (!channels || !rate || !frames || offset === undefined || ![8, 16, 24, 32].includes(bits)) return null;
+      const bytes = bits / 8;
+      const buf = ctx.createBuffer(channels, frames, rate);
+      const outs = [];
+      for (let c = 0; c < channels; c++) outs.push(buf.getChannelData(c));
+      const wav8 = head === 'RIFF';
+      for (let f = 0; f < frames; f++) {
+        for (let c = 0; c < channels; c++) {
+          const p = offset + (f * channels + c) * bytes;
+          let s;
+          if (isFloat && bits === 32) s = v.getFloat32(p, little);
+          else if (bits === 8) s = wav8 ? (v.getUint8(p) - 128) / 128 : v.getInt8(p) / 128;
+          else if (bits === 16) s = v.getInt16(p, little) / 32768;
+          else if (bits === 24) {
+            const b0 = v.getUint8(p), b1 = v.getUint8(p + 1), b2 = v.getUint8(p + 2);
+            let n = little ? (b0 | (b1 << 8) | (b2 << 16)) : ((b0 << 16) | (b1 << 8) | b2);
+            if (n & 0x800000) n -= 0x1000000;
+            s = n / 8388608;
+          } else s = v.getInt32(p, little) / 2147483648;
+          outs[c][f] = s;
+        }
+      }
+      return buf;
+    } catch (err) {
+      return null;
+    }
   }
 
   setBuffer(buffer) {
@@ -555,3 +652,11 @@ class GranularModule {
     if (this.recTimer) clearInterval(this.recTimer);
   }
 }
+// File picker filter: every common audio type by MIME and extension (iPad / iPhone
+// file pickers grey out files that only match a bare "audio/*").
+GranularModule.FILE_ACCEPT = [
+  'audio/*',
+  '.mp3', '.wav', '.wave', '.m4a', '.aac', '.mp4', '.ogg', '.oga', '.opus', '.flac', '.aif', '.aiff', '.aifc', '.caf', '.webm', '.weba',
+  'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a', 'audio/aac', 'audio/ogg', 'audio/opus',
+  'audio/flac', 'audio/x-flac', 'audio/aiff', 'audio/x-aiff', 'audio/x-caf', 'audio/webm'
+].join(',');

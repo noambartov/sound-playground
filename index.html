@@ -11,6 +11,8 @@
   <meta http-equiv="Expires" content="0">
 
   <title>Sound Playground - Modular Synthesizer</title>
+  <meta name="author" content="noam bartov">
+  <meta name="copyright" content="&copy; 2026 noam bartov. All rights reserved.">
 
   <!-- Installable app (PWA): home-screen icon, full screen, offline (sw.js, pwa.js) -->
   <link rel="manifest" href="manifest.webmanifest">
@@ -21,7 +23,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.28">
+  <link rel="stylesheet" href="styles.css?v=3.30">
 </head>
 <body class="light-theme">
 
@@ -142,6 +144,8 @@
       <!-- Tab Content Area (Populated dynamically by help.js) -->
       <div id="help-tab-content" class="help-content-area modal-body"></div>
 
+      <p class="help-copyright" dir="ltr">&copy; 2026 noam bartov. All rights reserved.</p>
+
     </div>
   </div>
 
@@ -150,7 +154,7 @@
   <script src="touchSliders.js?v=1"></script>
 
   <!-- Modules Scripts -->
-  <script src="helpData.js?v=28"></script>
+  <script src="helpData.js?v=29"></script>
   <script src="portGuide.js?v=10"></script>
   <script src="help.js?v=12"></script>
   <script src="OscilloscopeModule.js?v=3"></script>
@@ -174,6 +178,7 @@
   <script src="StereoDelayModule.js?v=4"></script>
   <script src="DegraderModule.js?v=1"></script>
   <script src="CompressorModule.js?v=1"></script>
+  <script src="EqModule.js?v=1"></script>
   <script src="MetronomeModule.js?v=1"></script>
   <script src="WavetableModule.js?v=2"></script>
   <script src="PolySynthModule.js?v=6"></script>

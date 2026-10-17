@@ -430,6 +430,8 @@ body.cables-behind #connections-canvas {
 /* ==========================================================================
    5. MODULE CARDS & UI COMPONENTS
    ========================================================================== */
+.module-card.arranging { transition: left 0.4s ease, top 0.4s ease; }
+
 .module-card {
   position: absolute;
   min-width: 220px;

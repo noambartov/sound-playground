@@ -370,9 +370,9 @@ if (!window.SoundSandboxApp) {
       return window.matchMedia('(max-width: 700px), (max-height: 500px)').matches;
     }
 
-    // Smallest zoom: phones may zoom further out, their screen is small.
+    // Smallest zoom, the same on phone, iPad and desktop: 10% shows even a very large patch.
     minZoom() {
-      return this.isPhone() ? 0.25 : 0.4;
+      return 0.1;
     }
 
     // Zoom and pan so every module is visible inside the free part of the screen
@@ -396,6 +396,148 @@ if (!window.SoundSandboxApp) {
       this.applyViewportTransform();
     }
 
+    // Arrange: lays every module out in columns that follow the signal, left to right.
+    // Column = the longest cable path that reaches the module (controllers and LFOs first,
+    // Output and Recorder last); modules with no cables go to their menu category's column.
+    // Inside a column modules are ordered next to the modules they are cabled to, which keeps
+    // cables short and uncrossed; a column taller than the screen's shape wraps into a second one.
+    arrangeModules() {
+      const entries = Object.values(this.modules).filter(m => m.card);
+      if (!entries.length) return;
+      const ids = entries.map(m => m.id);
+      const byId = {};
+      entries.forEach(m => { byId[m.id] = m; });
+      const succ = {}, pred = {};
+      ids.forEach(id => { succ[id] = new Set(); pred[id] = new Set(); });
+      this.connections.forEach(c => {
+        if (!byId[c.fromNode] || !byId[c.toNode] || c.fromNode === c.toNode) return;
+        succ[c.fromNode].add(c.toNode);
+        pred[c.toNode].add(c.fromNode);
+      });
+
+      // Menu category decides the column of a module without cables
+      const categoryRank = (type) => {
+        const btn = document.querySelector(`.add-module-btn[data-type="${type}"]`);
+        const title = btn && btn.closest('.sidebar-group') ? (btn.closest('.sidebar-group').querySelector('.sidebar-group-title') || {}).textContent || '' : '';
+        if (/controller|modulation/i.test(title)) return 0;
+        if (/source/i.test(title)) return 1;
+        if (/output|monitor/i.test(title)) return 3;
+        return 2;
+      };
+      const isFinal = (m) => m.type === 'output' || m.type === 'recorder';
+
+      // Feedback loops: drop the cables that point back up the chain (depth-first search)
+      const byPos = ids.slice().sort((a, b) => byId[a].card.offsetLeft - byId[b].card.offsetLeft || byId[a].card.offsetTop - byId[b].card.offsetTop);
+      const state = {}, order = [], fwd = {};
+      ids.forEach(id => { fwd[id] = []; });
+      const visit = (id) => {
+        state[id] = 1;
+        succ[id].forEach(t => {
+          if (state[t] === 1) return;
+          fwd[id].push(t);
+          if (!state[t]) visit(t);
+        });
+        state[id] = 2;
+        order.push(id);
+      };
+      byPos.filter(id => !pred[id].size).forEach(id => { if (!state[id]) visit(id); });
+      byPos.forEach(id => { if (!state[id]) visit(id); });
+      order.reverse();
+
+      // Longest path from the start of the chain
+      const rank = {};
+      const fwdPred = {};
+      ids.forEach(id => { rank[id] = 0; fwdPred[id] = []; });
+      order.forEach(id => fwd[id].forEach(t => {
+        rank[t] = Math.max(rank[t], rank[id] + 1);
+        fwdPred[t].push(id);
+      }));
+      // A module that only sends (LFO, keyboard) sits just left of the first module it feeds
+      order.slice().reverse().forEach(id => {
+        if (!fwdPred[id].length && fwd[id].length) rank[id] = Math.min(...fwd[id].map(t => rank[t])) - 1;
+      });
+      const linked = ids.filter(id => succ[id].size || pred[id].size);
+      let lo = Math.min(0, ...linked.map(id => rank[id]));
+      linked.forEach(id => { rank[id] -= lo; });
+      let maxRank = Math.max(0, ...linked.filter(id => !isFinal(byId[id])).map(id => rank[id]));
+      const loose = ids.filter(id => !succ[id].size && !pred[id].size);
+      if (!linked.length) maxRank = 2;
+      loose.forEach(id => {
+        const r = categoryRank(byId[id].type);
+        rank[id] = r === 3 ? maxRank + 1 : Math.round(r * maxRank / 2);
+      });
+      ids.forEach(id => { if (isFinal(byId[id])) rank[id] = maxRank + 1; });
+
+      // Columns, ordered by where the cabled neighbours sit (a few back-and-forth passes)
+      const used = [...new Set(ids.map(id => rank[id]))].sort((a, b) => a - b);
+      let cols = used.map(r => ids.filter(id => rank[id] === r)
+        .sort((a, b) => byId[a].card.offsetTop - byId[b].card.offsetTop));
+      const pos = {};
+      const index = () => cols.forEach(col => col.forEach((id, i) => { pos[id] = col.length > 1 ? i / (col.length - 1) : 0.5; }));
+      const sortBy = (col, nb) => {
+        const key = {};
+        col.forEach(id => {
+          const n = [...nb[id]].filter(o => rank[o] !== rank[id]);
+          key[id] = n.length ? n.reduce((s, o) => s + pos[o], 0) / n.length : pos[id] + (loose.includes(id) ? 10 : 0);
+        });
+        col.sort((a, b) => key[a] - key[b]);
+      };
+      index();
+      for (let pass = 0; pass < 6; pass++) {
+        if (pass % 2 === 0) cols.forEach(col => { sortBy(col, pred); index(); });
+        else cols.slice().reverse().forEach(col => { sortBy(col, succ); index(); });
+      }
+
+      // Wrap tall columns so the whole patch keeps roughly the shape of the free screen
+      const gapX = 60, gapY = 24;
+      const size = id => ({ w: byId[id].card.offsetWidth, h: byId[id].card.offsetHeight });
+      const free = this.getFreeViewRect();
+      const aspect = Math.max(0.3, (free.bottom - free.top) / Math.max(1, free.right - free.left));
+      const area = ids.reduce((s, id) => s + (size(id).w + gapX) * (size(id).h + gapY), 0);
+      const targetH = Math.max(...ids.map(id => size(id).h), Math.sqrt(area * aspect));
+      const stacks = [];
+      cols.forEach(col => {
+        let cur = [], h = 0;
+        col.forEach(id => {
+          const ch = size(id).h;
+          if (cur.length && h + ch > targetH) { stacks.push(cur); cur = []; h = 0; }
+          cur.push(id); h += ch + gapY;
+        });
+        if (cur.length) stacks.push(cur);
+      });
+
+      // Place the stacks from the patch's current top-left corner, each one centred vertically
+      const originX = Math.min(...ids.map(id => byId[id].card.offsetLeft));
+      const originY = Math.min(...ids.map(id => byId[id].card.offsetTop));
+      const stackH = stacks.map(s => s.reduce((t, id) => t + size(id).h, 0) + gapY * (s.length - 1));
+      const fullH = Math.max(...stackH);
+      const targets = {};
+      let x = originX;
+      stacks.forEach((s, i) => {
+        let y = originY + (fullH - stackH[i]) / 2;
+        s.forEach(id => { targets[id] = { x, y: Math.round(y) }; y += size(id).h + gapY; });
+        x += Math.max(...s.map(id => size(id).w)) + gapX;
+      });
+
+      // Fit the view to the new layout, then let the cards glide there from where they were,
+      // redrawing the cables while they move
+      const from = {};
+      const place = (m, p) => { m.card.style.left = `${p.x}px`; m.card.style.top = `${p.y}px`; };
+      entries.forEach(m => { from[m.id] = { x: parseFloat(m.card.style.left || 0), y: parseFloat(m.card.style.top || 0) }; place(m, targets[m.id]); });
+      this.fitToModules();
+      entries.forEach(m => place(m, from[m.id]));
+      void this.modulesLayer?.offsetHeight;
+      entries.forEach(m => { void m.card.offsetLeft; m.card.classList.add('arranging'); place(m, targets[m.id]); });
+      const until = performance.now() + 450;
+      const step = () => {
+        this.drawConnections();
+        if (performance.now() < until) requestAnimationFrame(step);
+        else entries.forEach(m => m.card.classList.remove('arranging'));
+      };
+      requestAnimationFrame(step);
+      this.scheduleHistoryCapture();
+    }
+
     bindEvents() {
       document.addEventListener('click', (e) => {
         const btn = e.target.closest('.add-module-btn');
@@ -409,6 +551,8 @@ if (!window.SoundSandboxApp) {
       if (this.presentationBtn) this.presentationBtn.addEventListener('click', () => this.togglePresentationMode());
       if (this.tooltipsBtn) this.tooltipsBtn.addEventListener('click', () => this.toggleTooltips());
       if (this.cableLayerBtn) this.cableLayerBtn.addEventListener('click', () => this.toggleCableLayer());
+      const arrangeBtn = document.getElementById('arrange-btn');
+      if (arrangeBtn) arrangeBtn.addEventListener('click', () => this.arrangeModules());
       if (this.saveBtn) this.saveBtn.addEventListener('click', () => this.exportPatch());
 
       if (this.loadBtn && this.importFileInput) {

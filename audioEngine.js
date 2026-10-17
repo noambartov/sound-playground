@@ -33,7 +33,8 @@ class AudioEngine {
             }, 700);
         };
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') this.outputStale = true;
+            if (document.visibilityState === 'hidden') { this.outputStale = true; this.sleepInBackground(); }
+            else this.cancelBackgroundSleep();
         });
         document.addEventListener('visibilitychange', onReturn);
         window.addEventListener('pageshow', onReturn);
@@ -72,6 +73,43 @@ class AudioEngine {
                 .then(() => this.ctx.resume()).catch(() => {})
                 .then(() => this.fadeInIfNeeded());
         }, 30);
+    }
+
+    // iPad / iPhone: because the engine plays as a music app ('playback', see getContext), the
+    // system keeps it sounding after the app is swiped away or closed (with throttled timers, so
+    // sequencers drift slower) and shows a lock-screen player. On touch devices the sound is
+    // therefore faded out (15 ms) and the engine paused as soon as the page is hidden; the session
+    // type goes back to 'auto' so the lock-screen player disappears. On return, wake() (page visible
+    // or the next tap) restarts it and statechange fades it back in. Desktop keeps playing in a
+    // background tab as before.
+    isTouchDevice() {
+        try { return window.matchMedia('(hover: none) and (pointer: coarse)').matches; } catch (e) { return false; }
+    }
+
+    sleepInBackground() {
+        if (!this.ctx || this.ctx.state !== 'running' || !this.isTouchDevice()) return;
+        this.fadeOut(0.015);
+        this.needsFadeIn = true;
+        clearTimeout(this.sleepTimer);
+        this.sleepTimer = setTimeout(() => {
+            this.sleepTimer = null;
+            if (document.visibilityState !== 'hidden') return;
+            this.ctx.suspend().catch(() => {});
+            try { if (navigator.audioSession) { navigator.audioSession.type = 'auto'; this.sessionReleased = true; } } catch (e) {}
+        }, 40);
+    }
+
+    cancelBackgroundSleep() {
+        if (this.sessionReleased) {
+            this.sessionReleased = false;
+            try { navigator.audioSession.type = 'playback'; } catch (e) {}
+        }
+        if (this.sleepTimer) {
+            // Back before the pause happened: just fade the sound up again
+            clearTimeout(this.sleepTimer);
+            this.sleepTimer = null;
+            this.fadeInIfNeeded();
+        }
     }
 
     fadeInIfNeeded() {

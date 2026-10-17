@@ -37,6 +37,10 @@ class ReverbModule {
 
     this.leftIn.connect(this.dryGainL);
     this.rightIn.connect(this.dryGainR);
+    // With nothing in IN R, the IN L sound is the dry sound on both sides (a mono source stays centered)
+    this.inRCables = 0;
+    this.leftIn.connect(this.dryGainR);
+    this.monoDryR = true;
     this.dryGainL.connect(this.leftOut);
     this.dryGainR.connect(this.rightOut);
 
@@ -44,8 +48,11 @@ class ReverbModule {
     this.rightIn.connect(this.dampingFilter);
     this.dampingFilter.connect(this.saturator);
     this.saturator.connect(this.roomIn);
-    this.roomOut.connect(this.wetGainL);
-    this.roomOut.connect(this.wetGainR);
+    // The room is stereo: its left channel goes to OUT L and its right channel to OUT R
+    this.roomSplit = this.audioCtx.createChannelSplitter(2);
+    this.roomOut.connect(this.roomSplit);
+    this.roomSplit.connect(this.wetGainL, 0);
+    this.roomSplit.connect(this.wetGainR, 1);
 
     this.wetGainL.connect(this.leftOut);
     this.wetGainR.connect(this.rightOut);
@@ -159,6 +166,17 @@ class ReverbModule {
   getAudioOutput(portType) {
     if (portType === 'out_r') return this.rightOut;
     return this.leftOut;
+  }
+
+  // app.js tells us when a cable is plugged into or pulled out of an input
+  onInputConnected(key, connected) {
+    if (key !== 'in_r') return;
+    this.inRCables = Math.max(0, this.inRCables + (connected ? 1 : -1));
+    const mono = this.inRCables === 0;
+    if (mono === this.monoDryR) return;
+    this.monoDryR = mono;
+    if (mono) this.leftIn.connect(this.dryGainR);
+    else { try { this.leftIn.disconnect(this.dryGainR); } catch (e) {} }
   }
 
   renderHTML() {

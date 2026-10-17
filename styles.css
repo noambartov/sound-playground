@@ -1860,6 +1860,14 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--notice-btn-text);
 }
 .preset-tips .preset-tips-next[hidden] { display: none; }
+.preset-tips-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.preset-tips .preset-tips-action {
+  background: var(--notice-btn-bg);
+  border-color: var(--notice-border);
+  color: var(--notice-btn-text);
+  font-weight: 700;
+}
+.preset-tips .preset-tips-action[hidden] { display: none; }
 @media (max-width: 700px) {
   .preset-tips { left: 16px; right: 16px; width: auto; }
 }
@@ -1869,7 +1877,7 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 }
 
 /* iPad portrait and other narrow non-phone screens: the toolbar is wider than the screen.
-   It folds its View and File groups (below) and, as a last resort, wraps onto a second row, because anything sticking out past the screen edge
+   As a last resort it wraps onto a second row, because anything sticking out past the screen edge
    makes iPad Safari shrink the whole page (the dotted canvas then ends before the screen does).
    Same query as "not isPhone()", so the phone layout is untouched. */
 @media (min-width: 701px) and (min-height: 501px) {
@@ -1883,38 +1891,28 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   .sidebar { top: 84px; }
 }
 
-/* Toolbar groups (View: Theme, Play Mode, Cables; File: Save, Load, Clear).
-   Everywhere the wrappers are invisible, so the toolbar looks as before... */
-.tb-group,
-.tb-group-items { display: contents; }
-.tb-group-toggle { display: none; }
-
-/* ...except on narrow non-phone screens (iPad portrait), where each group folds into one
-   button and the toolbar stays a single row. The open group drops down under its button. */
-@media (min-width: 701px) and (min-height: 501px) and (max-width: 1069px) {
-  .tb-group { display: block; position: relative; }
-  .tb-group-toggle { display: inline-block; }
-  .tb-group.open .tb-group-toggle { border-color: var(--primary-color); color: var(--primary-color); }
-  .tb-group-items {
-    display: none;
-    position: absolute;
-    top: calc(100% + 14px);
-    left: 0;
-    z-index: 110;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-    min-width: 130px;
-    padding: 8px;
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-  }
-  .tb-group[data-group="file"] .tb-group-items { left: auto; right: 0; }
-  .tb-group.open .tb-group-items { display: flex; }
-  .tb-group-items .tool-btn { white-space: nowrap; text-align: left; }
+/* Toolbar groups (View: Theme, Play Mode, Cables; File: Save, Load, Clear), on every screen:
+   each group is one button that opens a small menu. The menu is position: fixed and placed under
+   its button by app.js initToolbarGroups(), so the phone's sideways-scrolling toolbar cannot clip it. */
+.tb-group { display: block; flex-shrink: 0; }
+.tb-group.open .tb-group-toggle { border-color: var(--primary-color); color: var(--primary-color); }
+.tb-group-items {
+  display: none;
+  position: fixed;
+  z-index: 110;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 130px;
+  padding: 8px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  touch-action: manipulation;
 }
+.tb-group.open .tb-group-items { display: flex; }
+.tb-group-items .tool-btn { white-space: nowrap; text-align: left; }
 
 /* Ring around what the current tip talks about (presetTips.js) */
 .tip-ring {

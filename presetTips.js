@@ -10,8 +10,12 @@
 
   const LANG_KEY = 'sp_intro_lang';
   const UI = {
-    en: { count: (i, n) => `Tip ${i} of ${n}`, next: 'Next tip', lang: 'עברית', close: 'Close tips' },
-    he: { count: (i, n) => `טיפ ${i} מתוך ${n}`, next: 'לטיפ הבא', lang: 'English', close: 'סגירת הטיפים' }
+    en: { count: (i, n) => `Tip ${i} of ${n}`, next: 'Next tip', lang: 'עברית', close: 'Close tips',
+      nextLesson: (n, title) => `That's the lesson. Next up, lesson ${n}: ${title}.`, loadNext: n => `Start lesson ${n}`,
+      allDone: 'You finished all six lessons. Open the guide and try the Recipes, from Beginner up.', openGuide: 'Open the guide' },
+    he: { count: (i, n) => `טיפ ${i} מתוך ${n}`, next: 'לטיפ הבא', lang: 'English', close: 'סגירת הטיפים',
+      nextLesson: (n, title) => `סיימתם את השיעור. הבא בתור, שיעור ${n}: ${title}.`, loadNext: n => `לשיעור ${n}`,
+      allDone: 'סיימתם את כל ששת השיעורים. פתחו את ספר העזרה ונסו את המתכונים, מהקלים לקשים.', openGuide: 'פתיחת ספר העזרה' }
   };
 
   // target: a CSS selector on the page, or 'module|Label' (the control labelled Label on the first module of that type),
@@ -72,9 +76,24 @@
       if (recipe && recipe.steps && recipe.steps.length) own = recipe.steps;
       else if (mod) own = [...(mod.controls || []), ...(mod.tips || [])];
     }
+    // A Learn-tab lesson ends with a tip that leads to the next lesson (help.js window.helpBook.loadLesson),
+    // or after the last lesson to the guide
+    const lessons = data.lessons || [];
+    const li = lessons.findIndex(l => l.preset === key);
+    const lessonEnd = [];
+    if (li >= 0) {
+      const ui = UI[lang];
+      const next = lessons[li + 1];
+      lessonEnd.push(next
+        ? { text: ui.nextLesson(li + 2, next.title), target: null,
+            action: { label: ui.loadNext(li + 2), run: () => window.helpBook && window.helpBook.loadLesson(next.preset) } }
+        : { text: ui.allDone, target: '#help-btn',
+            action: { label: ui.openGuide, run: () => { const b = document.getElementById('help-btn'); if (b) b.click(); } } });
+    }
     const kind = isTouch() ? 'touch' : 'mouse';
     return [
       ...own.map((text, i) => ({ text, target: targets[i] || null })),
+      ...lessonEnd,
       ...CANVAS_TIPS.map(t => ({ text: t[kind][lang], target: t.target }))
     ];
   }
@@ -147,6 +166,11 @@
     panel.querySelector('.preset-tips-count').textContent = ui.count(index + 1, tips.length);
     panel.querySelector('.preset-tips-text').textContent = tips[index].text;
     pointAt(tips[index].target);
+    const action = tips[index].action;
+    const actionBtn = panel.querySelector('.preset-tips-action');
+    actionBtn.hidden = !action;
+    actionBtn.textContent = action ? action.label : '';
+    actionBtn.onclick = action ? action.run : null;
     panel.querySelector('.preset-tips-next').textContent = ui.next;
     panel.querySelector('.preset-tips-next').hidden = tips.length < 2;
     panel.querySelector('.preset-tips-lang').textContent = ui.lang;
@@ -177,7 +201,10 @@
         <button type="button" class="preset-tips-close">&times;</button>
       </div>
       <p class="preset-tips-text"></p>
-      <button type="button" class="tool-btn preset-tips-next"></button>`;
+      <div class="preset-tips-buttons">
+        <button type="button" class="tool-btn preset-tips-action" hidden></button>
+        <button type="button" class="tool-btn preset-tips-next"></button>
+      </div>`;
     panel.querySelector('.preset-tips-next').addEventListener('click', () => { index++; render(); });
     panel.querySelector('.preset-tips-lang').addEventListener('click', () => setLang(getLang() === 'he' ? 'en' : 'he'));
     panel.querySelector('.preset-tips-close').addEventListener('click', hide);

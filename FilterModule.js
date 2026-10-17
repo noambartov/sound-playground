@@ -166,7 +166,7 @@ class FilterModule {
                 </div>
 
                 <div class="control-group">
-                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Cutoff: <span id="cutoff_val_${this.id}">${displayFreq >= 1000 ? (displayFreq/1000).toFixed(1)+'k' : displayFreq}</span> Hz</label>
+                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Cutoff: <span><span id="cutoff_val_${this.id}">${displayFreq >= 1000 ? (displayFreq/1000).toFixed(1)+'k' : displayFreq}</span> Hz</span></label>
                     <input type="range" min="0" max="1" step="0.001" value="${currentSliderVal}" 
                         oninput="synthApp.getModule('${this.id}').setCutoffFromSlider(this.value)">
                 </div>

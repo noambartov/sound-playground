@@ -1,11 +1,13 @@
-// help.js - the manual ("book"): six tabs built from helpData.js, jack tables from portGuide.js.
-// Tabs: Start here, Modules (list + detail panel), Recipes (presets), Signals, Troubleshooting, Shortcuts.
+// help.js - the manual ("book"): five tabs built from helpData.js, jack tables from portGuide.js.
+// Tabs: Learn (intro + graded lessons + good to know), Recipes (presets by level), Modules (list + detail panel),
+// Troubleshooting, Shortcuts.
 // The search box filters cards across all tabs. English by default; Hebrew is optional (RTL).
 (function () {
   let currentLang = 'en';
   let activeTab = 'start';
   let activeModule = null;
   let query = '';
+  const DONE_KEY = 'sp_lessons_done';
 
   const GROUP_ORDER = ['sources', 'controllers', 'processors', 'modulation', 'output'];
   // Sidebar group title -> manual group, for modules that have no manual entry yet
@@ -107,6 +109,27 @@
       }
       #help-modal .book-recipe .preset-btn { margin-top: 10px; }
       #help-modal .book-result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted-text); margin-bottom: 4px; }
+
+      /* Learn tab: numbered lessons */
+      #help-modal .book-lessons-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+      #help-modal .book-lessons-head h3 { margin: 0; font-size: 18px; }
+      #help-modal .book-progress { font-size: 13px; color: var(--muted-text); }
+      #help-modal .book-lesson { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+      #help-modal .book-lesson-num {
+        width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 14px; border: 1px solid var(--panel-border); background: var(--panel-bg); color: var(--text-color);
+      }
+      #help-modal .book-lesson.is-done .book-lesson-num { border-color: var(--primary-color); color: var(--primary-color); }
+      #help-modal .book-lesson-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+      #help-modal .book-lesson-title h4 { margin: 0; }
+      #help-modal .book-chip {
+        display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+        border: 1px solid var(--panel-border); color: var(--muted-text); background: var(--panel-bg);
+      }
+      #help-modal .book-lesson .preset-btn { margin-top: 10px; }
+      #help-modal .book-recipe-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+      #help-modal .book-recipe-head h4 { margin: 0; }
+      #help-modal .book-section-title { margin: 8px 0 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-text); }
 
       @media (max-width: 720px) {
         #help-modal .modal-content { padding: 14px; height: 92vh; max-height: 92vh; }
@@ -213,9 +236,52 @@
     </div>`;
   }
 
+  function lessonsDone() {
+    try { return JSON.parse(localStorage.getItem(DONE_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  function markLessonDone(key) {
+    const done = lessonsDone();
+    if (done.includes(key)) return;
+    done.push(key);
+    try { localStorage.setItem(DONE_KEY, JSON.stringify(done)); } catch (e) {}
+  }
+
+  function lessonCardHTML(ls, i, ui, done) {
+    const isDone = done.includes(ls.preset);
+    return `<div class="help-card book-lesson${isDone ? ' is-done' : ''}">
+      <div class="book-lesson-num">${i + 1}</div>
+      <div>
+        <div class="book-lesson-title"><h4>${esc(ui.lesson)} ${i + 1}: ${esc(ls.title)}</h4>${isDone ? `<span class="book-chip">${esc(ui.done)}</span>` : ''}</div>
+        <p>${esc(ls.learn)}</p>
+        <div class="book-sub">${esc(ui.tryThis)}</div>
+        <ol class="help-list">${(ls.steps || []).map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+        ${hasPreset(ls.preset) ? `<button class="preset-btn" data-preset="${esc(ls.preset)}" data-lesson="1">${esc(ui.loadLesson)}</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Learn tab: what a modular synth is, the numbered lessons, then the reference cards (sections.start)
+  function learnTabHTML(data) {
+    const ui = data.ui;
+    const lessons = data.lessons || [];
+    const done = lessonsDone();
+    const count = lessons.filter(ls => done.includes(ls.preset)).length;
+    return `<div class="book-stack">
+      ${data.sections.intro || ''}
+      <div class="book-lessons-head"><h3>${esc(ui.lessonsTitle)}</h3><span class="book-progress">${esc(ui.progress(count, lessons.length))}</span></div>
+      <p style="margin:0; color: var(--muted-text); line-height: 1.5;">${esc(ui.lessonsIntro)}</p>
+      ${lessons.map((ls, i) => lessonCardHTML(ls, i, ui, done)).join('')}
+      <div class="help-card"><h4>${esc(ui.whatNext)}</h4><p>${esc(ui.whatNextText)}</p></div>
+      <div class="book-section-title">${esc(ui.goodToKnow)}</div>
+      ${data.sections.start || ''}
+    </div>`;
+  }
+
   function recipeCardHTML(r, ui) {
+    const level = (ui.levels || [])[r.level] || '';
     return `<div class="help-card book-recipe">
-      <h4>${esc(r.title)}</h4>
+      <div class="book-recipe-head"><h4>${esc(r.title)}</h4>${level ? `<span class="book-chip">${esc(level)}</span>` : ''}</div>
       <div class="book-sub">${esc(ui.youLearn)}</div>
       <p>${esc(r.learn)}</p>
       <div class="book-sub">${esc(ui.howToPlay)}</div>
@@ -225,7 +291,9 @@
   }
 
   function recipesTabHTML(data) {
-    return `<div class="book-grid">${(data.recipes || []).map(r => recipeCardHTML(r, data.ui)).join('')}</div>`;
+    // Easy to hard; recipes without a level go last, otherwise the written order stays
+    const sorted = (data.recipes || []).map((r, i) => ({ r, i })).sort((a, b) => ((a.r.level || 9) - (b.r.level || 9)) || (a.i - b.i)).map(x => x.r);
+    return `<div class="book-grid">${sorted.map(r => recipeCardHTML(r, data.ui)).join('')}</div>`;
   }
 
   function textOf(html) {
@@ -239,14 +307,20 @@
     const q = query.toLowerCase();
     const ui = data.ui;
     const results = [];
-    ['start', 'basics', 'trouble', 'shortcuts'].forEach(tab => {
+    // The intro cards belong to the Learn tab (key 'start')
+    [['intro', 'start'], ['start', 'start'], ['trouble', 'trouble'], ['shortcuts', 'shortcuts']].forEach(([sec, tab]) => {
       const holder = document.createElement('div');
-      holder.innerHTML = data.sections[tab] || '';
+      holder.innerHTML = data.sections[sec] || '';
       holder.querySelectorAll('.help-card').forEach(card => {
         if ((card.textContent || '').toLowerCase().includes(q)) {
           results.push(`<div><div class="book-result-label">${esc(data.tabs[tab])}</div>${card.outerHTML}</div>`);
         }
       });
+    });
+    const done = lessonsDone();
+    (data.lessons || []).forEach((ls, i) => {
+      const card = lessonCardHTML(ls, i, ui, done);
+      if (textOf(card).includes(q)) results.push(`<div><div class="book-result-label">${esc(data.tabs.start)}</div>${card}</div>`);
     });
     moduleEntries(data).forEach(m => {
       const detail = moduleDetailHTML(m, ui);
@@ -297,6 +371,7 @@
     if (query) html = searchHTML(data);
     else if (activeTab === 'modules') html = modulesTabHTML(data);
     else if (activeTab === 'recipes') html = recipesTabHTML(data);
+    else if (activeTab === 'start') html = learnTabHTML(data);
     else html = `<div class="book-stack">${data.sections[activeTab] || ''}</div>`;
     contentArea.innerHTML = html;
     contentArea.scrollTop = 0;
@@ -311,7 +386,10 @@
 
   function bindContent(container) {
     container.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
-      btn.onclick = () => loadPreset(btn.getAttribute('data-preset'));
+      btn.onclick = () => {
+        if (btn.dataset.lesson) markLessonDone(btn.getAttribute('data-preset'));
+        loadPreset(btn.getAttribute('data-preset'));
+      };
     });
     container.querySelectorAll('.book-mod-btn[data-module]').forEach(btn => {
       btn.onclick = () => {

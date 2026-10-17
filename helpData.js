@@ -1,5 +1,5 @@
 // helpData.js - the manual's content (window.helpData) and the ready-made patches (window.presetData).
-// helpData has one object per language (en, he) with the same shape; help.js builds the six tabs from it.
+// helpData has one object per language (en, he) with the same shape; help.js builds the five tabs from it.
 // Jack explanations are not written here: help.js reads them from portGuide.js (the same source as the
 // jack hints on the cards). Only their Hebrew translations live here, in he.ports.
 window.helpData = {
@@ -7,10 +7,9 @@ window.helpData = {
     title: "Sound Playground Manual",
     searchPlaceholder: "Search modules, jacks, recipes...",
     tabs: {
-      start: "Start here",
-      modules: "Modules",
+      start: "Learn",
       recipes: "Recipes",
-      basics: "Signals",
+      modules: "Modules",
       trouble: "Troubleshooting",
       shortcuts: "Shortcuts"
     },
@@ -27,18 +26,21 @@ window.helpData = {
       youLearn: "What you learn",
       howToPlay: "How to play it",
       noResults: "Nothing found. Try another word.",
+      lesson: "Lesson",
+      lessonsTitle: "Six short lessons",
+      lessonsIntro: "Each lesson adds its patch to the canvas. Raise Master Volume on the Output, then try the steps; the tips panel at the bottom points at each control.",
+      tryThis: "Try this",
+      loadLesson: "Load lesson patch",
+      done: "Done",
+      progress: (d, n) => `${d} of ${n} done`,
+      goodToKnow: "Good to know",
+      whatNext: "What next?",
+      whatNextText: "Try the Recipes, from Beginner up, or open any module in Modules to see every jack and control.",
+      levels: ["", "Beginner", "Intermediate", "Advanced"],
       groups: { sources: "Sound sources", controllers: "Controllers", processors: "Processors and effects", modulation: "Modulation", output: "Output and monitoring" }
     },
     sections: {
       start: `
-        <div class="help-card">
-          <h4>Your first sound in three steps</h4>
-          <ol class="help-list">
-            <li>In the <strong>Modules</strong> menu on the left, add an <strong>Oscillator</strong> and an <strong>Output</strong>.</li>
-            <li>Drag a cable from the Oscillator's <strong>OUT</strong> jack to the Output's <strong>IN</strong> jack.</li>
-            <li>Raise <strong>Master Volume</strong> on the Output. You hear a steady tone; move the Frequency slider to change it.</li>
-          </ol>
-        </div>
         <div class="help-card">
           <h4>Reading the jacks</h4>
           <ul class="help-list">
@@ -61,8 +63,20 @@ window.helpData = {
           <h4>Presets start silent</h4>
           <p>Every patch you load (from <strong>Recipes</strong> or with <strong>Load</strong>) opens with the Output volume at 0, so nothing jumps at you. Raise <strong>Master Volume</strong> on the Output module to hear it.</p>
         </div>
+        <div class="help-card">
+          <h4>Building from scratch</h4>
+          <ol class="help-list">
+            <li>In the <strong>Modules</strong> menu, add an <strong>Oscillator</strong> and an <strong>Output</strong>.</li>
+            <li>Drag a cable from the Oscillator's <strong>OUT</strong> jack to the Output's <strong>IN L</strong> jack.</li>
+            <li>Raise <strong>Master Volume</strong> on the Output.</li>
+          </ol>
+        </div>
+        <div class="help-card">
+          <h4>Seeing the signal</h4>
+          <p>Plug any OUT into an <strong>Oscilloscope</strong> to see it. The oscilloscope has no output, so to hear the same signal too, run a second cable from that OUT to the Output.</p>
+        </div>
       `,
-      basics: `
+      intro: `
         <div class="help-card">
           <h4>What is a modular synthesizer?</h4>
           <p>A normal synthesizer is wired inside. Here you do the wiring: each module does one job, and cables decide where the sound and the control signals go.</p>
@@ -74,19 +88,6 @@ window.helpData = {
             <li><span class="tag tag-cv">CV</span> Control voltage: a slow signal that moves a setting, like pitch, volume or brightness. LFO, Envelope, Keyboard FREQ and Webcam make it.</li>
             <li><span class="tag tag-gate">Gate</span> On or off: "a note is playing now". Keyboard and Sequencer make it; it starts an Envelope or opens a VCA.</li>
           </ul>
-        </div>
-        <div class="help-card">
-          <h4>The classic chain</h4>
-          <ol class="help-list">
-            <li><strong>Notes:</strong> Keyboard FREQ (or Sequencer PITCH CV) to Oscillator PITCH. Keyboard GATE to Envelope GATE IN.</li>
-            <li><strong>Sound:</strong> Oscillator OUT to Filter IN, Filter OUT to VCA IN, VCA OUT to Output IN.</li>
-            <li><strong>Shape:</strong> Envelope ENV OUT to VCA CV, so each note fades in and out. Add a second cable from ENV OUT to Filter CUT MOD to make each note brighter at its start.</li>
-          </ol>
-          <p>The <strong>Classic Mono Synth</strong> recipe is exactly this patch.</p>
-        </div>
-        <div class="help-card">
-          <h4>Seeing the signal</h4>
-          <p>Plug any OUT into an <strong>Oscilloscope</strong> to see it. The oscilloscope has no output, so to hear the same signal too, run a second cable from that OUT to the Output.</p>
         </div>
       `,
       trouble: `
@@ -265,31 +266,56 @@ window.helpData = {
         "Raise Decay on the Envelope for longer notes."
       ]
     },
+    // The Learn tab's graded path (help.js): one card per lesson with a button loading its preset.
+    // steps double as the tips panel text for that preset (see the playTips loop after presetData); targets in playTipTargets.
+    lessons: [
+      { preset: "demo-oscillator", title: "Your first sound",
+        learn: "Every module does one job, and cables carry the sound from an OUT jack to an IN jack. An Oscillator makes a tone; the Output plays it.",
+        steps: ["Raise Master Volume on the Output: you hear a steady tone.", "Move Frequency on the Oscillator to change the pitch.", "Try each Waveform on the Oscillator and hear how the colour of the sound changes.", "Unplug the cable: drag it out of the Output's IN L jack and let go on empty space. Then plug it back in."] },
+      { preset: "demo-keyboard", title: "Playing notes",
+        learn: "The Keyboard sends two control signals: FREQ says which note to play, GATE says when a key is held. The GATE opens a VCA, a volume control, so the tone sounds only while you play.",
+        steps: ["Raise Master Volume on the Output.", "Play the Keyboard: touch or click the keys, or type the letters Z to M.", "Move the octave with - and + on the Keyboard.", "Change the Oscillator Waveform while you play."] },
+      { preset: "classic-mono", title: "Shaping the sound",
+        learn: "A Filter makes the sound darker or brighter. An Envelope draws the shape of every note: how fast it starts (Attack) and how long it fades after you let go (Release). Together they make the classic synth.",
+        steps: ["Raise Master Volume on the Output and play a few notes.", "Lower Cutoff on the Filter for a darker sound.", "Raise Attack on the Envelope: the notes now fade in.", "Raise Release on the Envelope: the notes keep sounding after you let go."] },
+      { preset: "seq-groove", title: "A pattern that plays itself",
+        learn: "A Sequencer plays for you: a row of steps, each with its own note, repeating in a loop. Its PITCH and GATE replace the Keyboard's FREQ and GATE.",
+        steps: ["Raise Master Volume on the Output: the Sequencer is already playing.", "Drag the step sliders on the Sequencer to change the melody, and switch steps On or Off for a new rhythm.", "Change Tempo on the Sequencer.", "Raise Mod Depth on the Filter: every step opens the filter more."] },
+      { preset: "demo-lfo", title: "Movement",
+        learn: "An LFO is a slow wave you do not hear. It moves another setting up and down by itself. Its cable can go into a jack, or be dropped right on any slider.",
+        steps: ["Raise Master Volume on the Output: the sound wobbles by itself.", "Change Rate on the LFO for a slower or faster wobble.", "Try another LFO Waveform; the Oscilloscope draws its shape.", "Drag a new cable from the LFO's OUT and drop it on the Oscillator's Frequency slider."] },
+      { preset: "lesson-space", title: "Space: echo and room",
+        learn: "Effects put the sound in a place. A Delay repeats it as echoes; a Reverb puts it in a room. Stereo effects have two outputs, L and R, cabled to the Output's IN L and IN R.",
+        steps: ["Raise Master Volume on the Output.", "Change Feedback on the Stereo Delay for more or fewer echoes.", "Raise Decay on the Reverb for a longer room.", "Turn Mix on the Reverb down and up to hear the difference."] }
+    ],
     recipes: [
-      { preset: "classic-mono", title: "Classic Mono Synth",
-        learn: "The basic synth: notes, a filter and a volume shape.",
-        steps: ["Raise Master Volume.", "Play the Keyboard (letters Z to M, or click the keys).", "Change Attack and Release on the Envelope, then Cutoff on the Filter."] },
-      { preset: "seq-groove", title: "Sequencer Groove",
-        learn: "A pattern that plays itself, with the Envelope opening the filter on every step.",
-        steps: ["Raise Master Volume (the Sequencer is already running).", "Move the step sliders to change the melody, switch steps ON / OFF.", "Raise Mod Depth or Resonance on the Filter for a sharper sound."] },
-      { preset: "ambient-drone", title: "Ambient Drone",
-        learn: "Granular texture, a slow filter sweep from an LFO and a big reverb.",
-        steps: ["Raise Master Volume.", "Change Pitch and Spray on the Granular Cloud.", "Slow the LFO Rate down even more."] },
-      { preset: "ext-processing", title: "Process Your Voice",
-        learn: "Live sound from your mic through a filter and a reverb.",
-        steps: ["Press Enable Mic and allow the browser.", "Use headphones, then raise Master Volume.", "Sweep the Filter Cutoff while you talk or play."] },
-      { preset: "demo-reverb", title: "Plucks in a Hall",
-        learn: "Short notes from a Sequencer and Envelope, sent into a long reverb.",
-        steps: ["Raise Master Volume.", "Change Decay and Mix on the Reverb."] },
-      { preset: "demo-envelope", title: "Shaping a Note",
+      { preset: "demo-envelope", level: 1, title: "Shaping a Note",
         learn: "What Attack, Decay, Sustain and Release do; the oscilloscope draws the shape.",
         steps: ["Raise Master Volume and hold a key.", "Watch the oscilloscope while you move the four sliders."] },
-      { preset: "demo-lfo", title: "Filter Wobble",
-        learn: "An LFO moving a filter by itself.",
-        steps: ["Raise Master Volume.", "Change the LFO Rate and Waveform."] },
-      { preset: "demo-mixer", title: "Two Oscillators, One Mixer",
+      { preset: "demo-mixer", level: 1, title: "Two Oscillators, One Mixer",
         learn: "Combining sounds and placing them left and right.",
-        steps: ["Raise Master Volume.", "Move VOL and PAN on each channel."] }
+        steps: ["Raise Master Volume.", "Move VOL and PAN on each channel."] },
+      { preset: "demo-drums", level: 1, title: "Your First Beat",
+        learn: "A drum machine: four rows of steps, each a different drum.",
+        steps: ["Raise Master Volume (the Drum Machine is already playing).", "Tap steps to switch them on or off.", "Change Tempo and Swing."] },
+      { preset: "demo-reverb", level: 1, title: "Plucks in a Hall",
+        learn: "Short notes from a Sequencer and Envelope, sent into a long reverb.",
+        steps: ["Raise Master Volume.", "Change Decay and Mix on the Reverb."] },
+      { preset: "demo-polysynth", level: 2, title: "Chords",
+        learn: "A Poly Synth plays several notes at once, so you can play chords.",
+        steps: ["Raise Master Volume.", "Hold several keys on the Keyboard at once.", "Change Attack and Release on the Poly Synth for soft pads or short plucks."] },
+      { preset: "demo-delay", level: 2, title: "Beat with Echo",
+        learn: "A Stereo Delay synced to the Drum Machine's CLOCK, so the echoes land in time.",
+        steps: ["Raise Master Volume (the Drum Machine is already playing).", "Change Feedback and Mix on the Stereo Delay.", "Switch Ping-Pong on to bounce the echoes left and right."] },
+      { preset: "ext-processing", level: 2, title: "Process Your Voice",
+        learn: "Live sound from your mic through a filter and a reverb.",
+        steps: ["Press Enable Mic and allow the browser.", "Use headphones, then raise Master Volume.", "Sweep the Filter Cutoff while you talk or play."] },
+      { preset: "demo-wavetable", level: 3, title: "Moving Wavetable",
+        learn: "A Wavetable Osc whose tone keeps changing, moved by an LFO cable on its Position slider.",
+        steps: ["Raise Master Volume.", "Change Table on the Wavetable Osc.", "Change the LFO Rate to move faster or slower through the waves."] },
+      { preset: "ambient-drone", level: 3, title: "Ambient Drone",
+        learn: "Granular texture, a slow filter sweep from an LFO and a big reverb.",
+        steps: ["Raise Master Volume.", "Change Pitch and Spray on the Granular Cloud.", "Slow the LFO Rate down even more."] }
     ]
   }
 ,
@@ -297,10 +323,9 @@ window.helpData = {
     title: "המדריך של Sound Playground",
     searchPlaceholder: "חיפוש מודול, שקע או מתכון...",
     tabs: {
-      start: "מתחילים כאן",
-      modules: "המודולים",
+      start: "לומדים",
       recipes: "מתכונים",
-      basics: "סוגי אותות",
+      modules: "המודולים",
       trouble: "פתרון תקלות",
       shortcuts: "קיצורים"
     },
@@ -317,18 +342,21 @@ window.helpData = {
       youLearn: "מה לומדים",
       howToPlay: "איך מנגנים",
       noResults: "לא נמצא כלום. נסה מילה אחרת.",
+      lesson: "שיעור",
+      lessonsTitle: "שישה שיעורים קצרים",
+      lessonsIntro: "כל שיעור מוסיף את הפאץ' שלו לקנבס. מרימים את Master Volume ב-Output ומנסים את הצעדים; חלונית הטיפים למטה מסמנת כל כפתור.",
+      tryThis: "נסו",
+      loadLesson: "טענו את פאץ' השיעור",
+      done: "נעשה",
+      progress: (d, n) => `${d} מתוך ${n} נעשו`,
+      goodToKnow: "כדאי לדעת",
+      whatNext: "מה הלאה?",
+      whatNextText: "נסו את המתכונים, מהקלים לקשים, או פתחו כל מודול בלשונית המודולים כדי לראות את כל השקעים והכפתורים שלו.",
+      levels: ["", "מתחילים", "בינוני", "מתקדם"],
       groups: { sources: "מקורות צליל", controllers: "בקרים", processors: "מעבדים ואפקטים", modulation: "אפנון", output: "יציאה וניטור" }
     },
     sections: {
       start: `
-        <div class="help-card">
-          <h4>הצליל הראשון בשלושה צעדים</h4>
-          <ol class="help-list">
-            <li>בתפריט <strong>Modules</strong> משמאל, הוסיפו <strong>Oscillator</strong> ו-<strong>Output</strong>.</li>
-            <li>גררו כבל מהשקע <strong>OUT</strong> של האוסילטור לשקע <strong>IN</strong> של ה-Output.</li>
-            <li>הרימו את <strong>Master Volume</strong> ב-Output. תשמעו צליל קבוע; הזיזו את סליידר ה-Frequency כדי לשנות אותו.</li>
-          </ol>
-        </div>
         <div class="help-card">
           <h4>איך קוראים את השקעים</h4>
           <ul class="help-list">
@@ -351,8 +379,20 @@ window.helpData = {
           <h4>פריסטים נפתחים בשקט</h4>
           <p>כל פאץ' שנטען (מ<strong>מתכונים</strong> או עם <strong>Load</strong>) נפתח כשהווליום של ה-Output על 0, כדי ששום דבר לא יתנפל עליכם. מרימים את <strong>Master Volume</strong> במודול ה-Output כדי לשמוע.</p>
         </div>
+        <div class="help-card">
+          <h4>לבנות מאפס</h4>
+          <ol class="help-list">
+            <li>בתפריט <strong>Modules</strong>, הוסיפו <strong>Oscillator</strong> ו-<strong>Output</strong>.</li>
+            <li>גררו כבל מהשקע <strong>OUT</strong> של האוסילטור לשקע <strong>IN L</strong> של ה-Output.</li>
+            <li>הרימו את <strong>Master Volume</strong> ב-Output.</li>
+          </ol>
+        </div>
+        <div class="help-card">
+          <h4>לראות את האות</h4>
+          <p>חברו כל OUT ל-<strong>Oscilloscope</strong> כדי לראות אותו. לאוסצילוסקופ אין יציאה, אז כדי גם לשמוע את אותו אות, משכו כבל שני מאותו OUT אל ה-Output.</p>
+        </div>
       `,
-      basics: `
+      intro: `
         <div class="help-card">
           <h4>מה זה סינתסייזר מודולרי?</h4>
           <p>בסינתסייזר רגיל החיווט מוכן מראש. כאן אתם מחווטים: כל מודול עושה דבר אחד, והכבלים קובעים לאן הולכים הצליל ואותות השליטה.</p>
@@ -364,19 +404,6 @@ window.helpData = {
             <li><span class="tag tag-cv">CV</span> מתח שליטה: אות איטי שמזיז הגדרה, כמו גובה צליל, עוצמה או בהירות. LFO, Envelope, FREQ של המקלדת ו-Webcam מייצרים אותו.</li>
             <li><span class="tag tag-gate">Gate</span> דולק או כבוי: "עכשיו מנגן תו". המקלדת והסיקוונסר מייצרים אותו; הוא מפעיל Envelope או פותח VCA.</li>
           </ul>
-        </div>
-        <div class="help-card">
-          <h4>השרשרת הקלאסית</h4>
-          <ol class="help-list">
-            <li><strong>תווים:</strong> FREQ של המקלדת (או PITCH CV של הסיקוונסר) אל PITCH של האוסילטור. GATE של המקלדת אל GATE IN של ה-Envelope.</li>
-            <li><strong>צליל:</strong> OUT של האוסילטור אל IN של הפילטר, OUT של הפילטר אל IN של ה-VCA, OUT של ה-VCA אל IN של ה-Output.</li>
-            <li><strong>צורה:</strong> ENV OUT אל CV של ה-VCA, כך שכל תו נכנס ויוצא בהדרגה. כבל נוסף מ-ENV OUT אל CUT MOD של הפילטר יעשה כל תו בהיר יותר בתחילתו.</li>
-          </ol>
-          <p>המתכון <strong>Classic Mono Synth</strong> הוא בדיוק הפאץ' הזה.</p>
-        </div>
-        <div class="help-card">
-          <h4>לראות את האות</h4>
-          <p>חברו כל OUT ל-<strong>Oscilloscope</strong> כדי לראות אותו. לאוסצילוסקופ אין יציאה, אז כדי גם לשמוע את אותו אות, משכו כבל שני מאותו OUT אל ה-Output.</p>
         </div>
       `,
       trouble: `
@@ -554,31 +581,54 @@ window.helpData = {
         "הרם את Decay ב-Envelope בשביל תווים ארוכים יותר."
       ]
     },
+    lessons: [
+      { preset: "demo-oscillator", title: "הצליל הראשון",
+        learn: "כל מודול עושה דבר אחד, והכבלים מעבירים את הצליל משקע OUT לשקע IN. ה-Oscillator מייצר צליל, וה-Output משמיע אותו.",
+        steps: ["הרימו את Master Volume ב-Output: תשמעו צליל קבוע.", "הזיזו את Frequency באוסילטור כדי לשנות את גובה הצליל.", "נסו כל Waveform באוסילטור ושמעו איך צבע הצליל משתנה.", "נתקו את הכבל: גררו אותו החוצה מהשקע IN L של ה-Output ועזבו במקום ריק. אחר כך חברו אותו שוב."] },
+      { preset: "demo-keyboard", title: "לנגן תווים",
+        learn: "המקלדת שולחת שני אותות שליטה: FREQ אומר איזה תו לנגן, ו-GATE אומר מתי קליד לחוץ. ה-GATE פותח VCA, בקרת עוצמה, כך שהצליל נשמע רק כשמנגנים.",
+        steps: ["הרימו את Master Volume ב-Output.", "נגנו במקלדת: נגיעה או לחיצה על הקלידים, או הקלדת האותיות Z עד M.", "הזיזו את האוקטבה עם - ו-+ במקלדת.", "שנו את ה-Waveform באוסילטור בזמן שאתם מנגנים."] },
+      { preset: "classic-mono", title: "לעצב את הצליל",
+        learn: "פילטר עושה את הצליל כהה או בהיר יותר. Envelope משרטט את הצורה של כל תו: כמה מהר הוא מתחיל (Attack) וכמה זמן הוא דועך אחרי שעוזבים (Release). יחד הם הסינתסייזר הקלאסי.",
+        steps: ["הרימו את Master Volume ב-Output ונגנו כמה תווים.", "הורידו את Cutoff בפילטר בשביל צליל כהה יותר.", "הרימו את Attack ב-Envelope: התווים נכנסים עכשיו בהדרגה.", "הרימו את Release ב-Envelope: התווים ממשיכים להישמע אחרי שעוזבים."] },
+      { preset: "seq-groove", title: "מנגינה שמנגנת לבד",
+        learn: "סיקוונסר מנגן בשבילכם: שורת צעדים, לכל אחד תו משלו, שחוזרת בלופ. ה-PITCH וה-GATE שלו מחליפים את FREQ ו-GATE של המקלדת.",
+        steps: ["הרימו את Master Volume ב-Output: הסיקוונסר כבר מנגן.", "גררו את סליידרי הצעדים בסיקוונסר כדי לשנות את המנגינה, והדליקו או כבו צעדים בשביל קצב חדש.", "שנו את Tempo בסיקוונסר.", "הרימו את Mod Depth בפילטר: כל צעד פותח את הפילטר יותר."] },
+      { preset: "demo-lfo", title: "תנועה",
+        learn: "LFO הוא גל איטי שלא שומעים. הוא מזיז הגדרה אחרת למעלה ולמטה לבד. את הכבל שלו אפשר לחבר לשקע, או להפיל ישר על כל סליידר.",
+        steps: ["הרימו את Master Volume ב-Output: הצליל מתנדנד לבד.", "שנו את Rate ב-LFO בשביל תנודה איטית או מהירה יותר.", "נסו Waveform אחר ב-LFO; האוסצילוסקופ משרטט את הצורה.", "גררו כבל חדש מה-OUT של ה-LFO והפילו אותו על סליידר ה-Frequency של האוסילטור."] },
+      { preset: "lesson-space", title: "חלל: הד וחדר",
+        learn: "אפקטים שמים את הצליל במקום. Delay חוזר עליו כהדים; Reverb שם אותו בחדר. לאפקטים בסטריאו יש שתי יציאות, L ו-R, שמחוברות ל-IN L ול-IN R של ה-Output.",
+        steps: ["הרימו את Master Volume ב-Output.", "שנו את Feedback ב-Stereo Delay בשביל יותר או פחות הדים.", "הרימו את Decay ב-Reverb בשביל חדר ארוך יותר.", "הורידו והרימו את Mix ב-Reverb כדי לשמוע את ההבדל."] }
+    ],
     recipes: [
-      { preset: "classic-mono", title: "Classic Mono Synth",
-        learn: "הסינתסייזר הבסיסי: תווים, פילטר וצורת עוצמה.",
-        steps: ["הרימו את Master Volume.", "נגנו במקלדת (האותיות Z עד M, או לחיצה על הקלידים).", "שנו Attack ו-Release ב-Envelope, ואז Cutoff בפילטר."] },
-      { preset: "seq-groove", title: "Sequencer Groove",
-        learn: "תבנית שמנגנת לבד, וה-Envelope פותח את הפילטר בכל צעד.",
-        steps: ["הרימו את Master Volume (הסיקוונסר כבר מנגן).", "הזיזו את סליידרי הצעדים כדי לשנות את המנגינה, הדליקו וכבו צעדים.", "הגבירו Mod Depth או Resonance בפילטר לצליל חד יותר."] },
-      { preset: "ambient-drone", title: "Ambient Drone",
-        learn: "טקסטורה גרנולרית, פילטר שזז לאט בעזרת LFO, וריוורב גדול.",
-        steps: ["הרימו את Master Volume.", "שנו Pitch ו-Spray ב-Granular Cloud.", "האטו עוד יותר את ה-Rate של ה-LFO."] },
-      { preset: "ext-processing", title: "Process Your Voice",
-        learn: "צליל חי מהמיקרופון דרך פילטר וריוורב.",
-        steps: ["לחצו Enable Mic ואשרו בדפדפן.", "שימו אוזניות, ואז הרימו את Master Volume.", "הזיזו את ה-Cutoff של הפילטר בזמן שאתם מדברים או מנגנים."] },
-      { preset: "demo-reverb", title: "Plucks in a Hall",
-        learn: "תווים קצרים מסיקוונסר ו-Envelope, שנשלחים לריוורב ארוך.",
-        steps: ["הרימו את Master Volume.", "שנו Decay ו-Mix בריוורב."] },
-      { preset: "demo-envelope", title: "Shaping a Note",
+      { preset: "demo-envelope", level: 1, title: "Shaping a Note",
         learn: "מה עושים Attack, Decay, Sustain ו-Release; האוסצילוסקופ משרטט את הצורה.",
         steps: ["הרימו את Master Volume והחזיקו קליד.", "הסתכלו על האוסצילוסקופ בזמן שאתם מזיזים את ארבעת הסליידרים."] },
-      { preset: "demo-lfo", title: "Filter Wobble",
-        learn: "LFO שמזיז פילטר לבד.",
-        steps: ["הרימו את Master Volume.", "שנו את ה-Rate וה-Waveform של ה-LFO."] },
-      { preset: "demo-mixer", title: "Two Oscillators, One Mixer",
+      { preset: "demo-mixer", level: 1, title: "Two Oscillators, One Mixer",
         learn: "חיבור צלילים ומיקום שלהם ימינה ושמאלה.",
-        steps: ["הרימו את Master Volume.", "הזיזו VOL ו-PAN בכל ערוץ."] }
+        steps: ["הרימו את Master Volume.", "הזיזו VOL ו-PAN בכל ערוץ."] },
+      { preset: "demo-drums", level: 1, title: "Your First Beat",
+        learn: "מכונת תופים: ארבע שורות של צעדים, בכל אחת תוף אחר.",
+        steps: ["הרימו את Master Volume (מכונת התופים כבר מנגנת).", "געו בצעדים כדי להדליק או לכבות אותם.", "שנו Tempo ו-Swing."] },
+      { preset: "demo-reverb", level: 1, title: "Plucks in a Hall",
+        learn: "תווים קצרים מסיקוונסר ו-Envelope, שנשלחים לריוורב ארוך.",
+        steps: ["הרימו את Master Volume.", "שנו Decay ו-Mix בריוורב."] },
+      { preset: "demo-polysynth", level: 2, title: "Chords",
+        learn: "Poly Synth מנגן כמה תווים בבת אחת, כך שאפשר לנגן אקורדים.",
+        steps: ["הרימו את Master Volume.", "החזיקו כמה קלידים במקלדת בבת אחת.", "שנו Attack ו-Release ב-Poly Synth בשביל משטחים רכים או צלילים קצרים."] },
+      { preset: "demo-delay", level: 2, title: "Beat with Echo",
+        learn: "Stereo Delay שמסונכרן ל-CLOCK של מכונת התופים, כך שההדים נופלים בזמן.",
+        steps: ["הרימו את Master Volume (מכונת התופים כבר מנגנת).", "שנו Feedback ו-Mix ב-Stereo Delay.", "הדליקו Ping-Pong כדי שההדים יקפצו ימינה ושמאלה."] },
+      { preset: "ext-processing", level: 2, title: "Process Your Voice",
+        learn: "צליל חי מהמיקרופון דרך פילטר וריוורב.",
+        steps: ["לחצו Enable Mic ואשרו בדפדפן.", "שימו אוזניות, ואז הרימו את Master Volume.", "הזיזו את ה-Cutoff של הפילטר בזמן שאתם מדברים או מנגנים."] },
+      { preset: "demo-wavetable", level: 3, title: "Moving Wavetable",
+        learn: "Wavetable Osc שהצליל שלו משתנה כל הזמן, בעזרת כבל LFO על סליידר ה-Position.",
+        steps: ["הרימו את Master Volume.", "שנו את Table ב-Wavetable Osc.", "שנו את ה-Rate של ה-LFO כדי לעבור בין הגלים מהר או לאט יותר."] },
+      { preset: "ambient-drone", level: 3, title: "Ambient Drone",
+        learn: "טקסטורה גרנולרית, פילטר שזז לאט בעזרת LFO, וריוורב גדול.",
+        steps: ["הרימו את Master Volume.", "שנו Pitch ו-Spray ב-Granular Cloud.", "האטו עוד יותר את ה-Rate של ה-LFO."] }
     ],
     // Hebrew text for each jack (keys match portGuide.js GUIDE); missing keys fall back to English
     ports: {
@@ -1098,6 +1148,35 @@ window.presetData = {
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
+  "lesson-space": {
+    // Learn tab, lesson 6: Sequencer plucks -> VCA -> Stereo Delay (synced to the Sequencer CLOCK) -> Reverb -> Output
+    modules: [
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 100, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: false, pitch: 0 }, { active: false, pitch: 0 }, { active: true, pitch: 0.5833 },
+        { active: false, pitch: 0 }, { active: false, pitch: 0 }, { active: true, pitch: 0.4167 }, { active: false, pitch: 0 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 420, state: { waveform: "triangle" } },
+      { id: "env1", type: "envelope", x: 380, y: 420, state: { attack: 0.005, decay: 0.2, sustain: 0, release: 0.15 } },
+      { id: "vca1", type: "vca", x: 760, y: 420, state: { gain: 0 } },
+      { id: "dl1", type: "delay", x: 1080, y: 80, state: { L: { fb: 40, tone: 55, level: 100, mix: 40, rev: false, div: "3" }, R: { fb: 40, tone: 55, level: 100, mix: 40, rev: false, div: "4" }, pingpong: false, sync: true } },
+      { id: "rev1", type: "reverb", x: 1600, y: 80, state: { mix: 0.35, decay: 4 } },
+      { id: "out1", type: "output", x: 2000, y: 80, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 2000, y: 360, state: {} }
+    ],
+    connections: [
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "seq1", fromPortInfo: { id: "clock" }, toNode: "dl1", toPortInfo: { id: "clock" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "dl1", toPortInfo: { id: "in_l" } },
+      { fromNode: "dl1", fromPortInfo: { id: "out_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "dl1", fromPortInfo: { id: "out_r" }, toNode: "rev1", toPortInfo: { type: "in_r" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
   "ext-processing": {
     modules: [
       { id: "audin1", type: "audio_in", x: 60, y: 120, state: {} },
@@ -1119,5 +1198,19 @@ window.presetData = {
 // What each playTips entry points at (presetTips.js draws a ring around it), in the same order, for both languages.
 // 'type|Label' = the control labelled Label on that module, 'type|.class' = the group holding that element.
 window.playTipTargets = {
-  "demo-reverb": ["reverb|Decay", "reverb|Radius", "reverb|Mix", "oscillator|Waveform", "sequencer|.seq-step-box", "sequencer|Tempo", "envelope|Decay"]
+  "demo-reverb": ["reverb|Decay", "reverb|Radius", "reverb|Mix", "oscillator|Waveform", "sequencer|.seq-step-box", "sequencer|Tempo", "envelope|Decay"],
+  // Learn tab lessons, one target per lesson step
+  "demo-oscillator": ["output|Master Volume", "oscillator|Frequency", "oscillator|Waveform", "output|.port"],
+  "demo-keyboard": ["output|Master Volume", "keyboard|.kb-bend", "keyboard|.kb-oct-btn", "oscillator|Waveform"],
+  "classic-mono": ["output|Master Volume", "filter|Cutoff", "envelope|Attack", "envelope|Release"],
+  "seq-groove": ["output|Master Volume", "sequencer|.seq-step-box", "sequencer|Tempo", "filter|Mod Depth"],
+  "demo-lfo": ["output|Master Volume", "lfo|Rate", "lfo|Waveform", "oscillator|Frequency"],
+  "lesson-space": ["output|Master Volume", "delay|Feedback", "reverb|Decay", "reverb|Mix"]
 };
+
+// A lesson's steps are also the tips panel text for its preset (unless playTips already has one)
+['en', 'he'].forEach(l => {
+  const d = window.helpData[l];
+  d.playTips = d.playTips || {};
+  (d.lessons || []).forEach(ls => { if (!d.playTips[ls.preset]) d.playTips[ls.preset] = ls.steps; });
+});

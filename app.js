@@ -1944,15 +1944,31 @@ if (!window.SoundSandboxApp) {
       }
     }
 
-    // Toolbar groups (View, File): on iPad portrait the CSS folds each group into one button.
-    // Tapping it opens the group as a small menu; tapping a choice or anywhere else closes it.
+    // Toolbar groups (View, File): each group is one button that opens a small menu under it
+    // (position: fixed, kept on screen). Tapping a choice or anywhere else closes it.
     initToolbarGroups() {
       const groups = Array.from(document.querySelectorAll('.toolbar .tb-group'));
+      const place = (group) => {
+        const toggle = group.querySelector('.tb-group-toggle');
+        const items = group.querySelector('.tb-group-items');
+        if (!toggle || !items) return;
+        const r = toggle.getBoundingClientRect();
+        const toolbar = group.closest('.toolbar');
+        const bottom = toolbar ? toolbar.getBoundingClientRect().bottom : r.bottom;
+        const left = Math.min(Math.max(8, r.left), window.innerWidth - items.offsetWidth - 8);
+        items.style.left = `${Math.max(8, left)}px`;
+        items.style.top = `${bottom + 6}px`;
+      };
       const setOpen = (group, open) => {
         group.classList.toggle('open', open);
         const toggle = group.querySelector('.tb-group-toggle');
         if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) place(group);
       };
+      const closeAll = () => groups.forEach(g => { if (g.classList.contains('open')) setOpen(g, false); });
+      const toolbarEl = document.querySelector('.toolbar');
+      if (toolbarEl) toolbarEl.addEventListener('scroll', closeAll);
+      window.addEventListener('resize', closeAll);
       groups.forEach(group => {
         const toggle = group.querySelector('.tb-group-toggle');
         if (toggle) {

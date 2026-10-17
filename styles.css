@@ -2004,3 +2004,12 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
   50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
 }
+
+/* Copyright line at the bottom of the help book (#help-modal) */
+.help-copyright {
+  margin: 10px 0 0;
+  font-size: 11px;
+  text-align: center;
+  color: var(--muted-text);
+  flex-shrink: 0;
+}

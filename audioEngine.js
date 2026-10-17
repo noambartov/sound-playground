@@ -59,8 +59,11 @@ class AudioEngine {
     // and the fade-in follows from 'statechange' (needsFadeIn).
     restartOutputIfStale() {
         if (!this.outputStale || !this.ctx || document.visibilityState !== 'visible') return;
+        // Still asleep (paused in the background, or 'interrupted'): wake() starts it, and the restart
+        // runs from 'statechange' once it is running. A plain resume after the background pause (with the
+        // session type switched 'auto' -> 'playback' meanwhile) could leave the iPad output late.
+        if (this.ctx.state !== 'running') return;
         this.outputStale = false;
-        if (this.ctx.state !== 'running') return; // wake() starts it fresh anyway
         if (!this.masterFade) {
             this.ctx.suspend().catch(() => {});
             this.ctx.resume().catch(() => {});
@@ -180,7 +183,11 @@ class AudioEngine {
             // only appears after an interruption, never on the first visit.
             this.hasPlayed = this.ctx.state === 'running';
             this.ctx.addEventListener('statechange', () => {
-                if (this.ctx.state === 'running') { this.hasPlayed = true; this.fadeInIfNeeded(); }
+                if (this.ctx.state === 'running') {
+                    this.hasPlayed = true;
+                    if (this.outputStale && document.visibilityState === 'visible') this.restartOutputIfStale();
+                    else this.fadeInIfNeeded();
+                }
                 if (this.ctx.state === 'interrupted') this.outputStale = true;
             });
             this.setupMasterProtection();

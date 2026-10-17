@@ -77,6 +77,14 @@ html, body {
   overscroll-behavior: none;
 }
 
+/* The page itself never scrolls. iPad Safari otherwise let the whole page slide when
+   modules sat beyond the screen edge, showing an "edge" where the dots stopped. */
+html {
+  overflow: hidden;
+  overflow: clip;
+  height: 100%;
+}
+
 /* Safari reopened the page zoomed in: allow pinching the page back out (app.js resetPageZoom). */
 html.page-zoomed,
 html.page-zoomed body,
@@ -375,6 +383,10 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
+  /* Modules beyond the screen must not make the page larger (iPad page slide).
+     'clip' also stops focus from scrolling the workspace; 'hidden' is the fallback for older Safari. */
+  overflow: hidden;
+  overflow: clip;
   touch-action: none;
   background-color: var(--bg-color);
   background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1.5px);

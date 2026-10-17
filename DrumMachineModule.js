@@ -65,10 +65,10 @@ class DrumMachineModule extends ModuleBase {
       ]),
       [
         { id: 'main_l', label: 'MAIN L', signal: 'audio', title: 'Main Left',
-          guide: { text: 'All four drums mixed by their Pan, left side.', to: 'Output IN, Mixer, Reverb IN L, Recorder', match: ['output:in:in', 'mixer:in:ch_in', 'reverb:in:in_l', 'recorder:in:in', 'filter:in:audio'] },
+          guide: { text: 'All four drums mixed by their Pan, left side.', to: 'Output IN L, Mixer, Reverb IN L, Recorder', match: ['output:in:in', 'mixer:in:ch_in', 'reverb:in:in_l', 'recorder:in:in', 'filter:in:audio'] },
           chip: 'Output / Reverb L' },
         { id: 'main_r', label: 'MAIN R', signal: 'audio', title: 'Main Right',
-          guide: { text: 'All four drums mixed by their Pan, right side.', to: 'Output IN, Mixer, Reverb IN R', match: ['output:in:in', 'mixer:in:ch_in', 'reverb:in:in_r'] },
+          guide: { text: 'All four drums mixed by their Pan, right side.', to: 'Output IN R, Mixer, Reverb IN R', match: ['output:in:in_r', 'mixer:in:ch_in', 'reverb:in:in_r'] },
           chip: 'Output / Reverb R' },
         { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
           guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },

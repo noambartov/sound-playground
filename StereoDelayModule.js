@@ -42,10 +42,10 @@ class StereoDelayModule extends ModuleBase {
     ],
     outputs: [
       { id: 'out_l', label: 'OUT L', signal: 'audio', title: 'Left Output',
-        guide: { text: 'Left side: the dry sound plus its echoes (by Mix).', to: 'Output IN, Reverb IN L, Mixer, Recorder', match: ['output:in:in', 'reverb:in:in_l', 'mixer:in:ch_in', 'recorder:in:in'] },
+        guide: { text: 'Left side: the dry sound plus its echoes (by Mix).', to: 'Output IN L, Reverb IN L, Mixer, Recorder', match: ['output:in:in', 'reverb:in:in_l', 'mixer:in:ch_in', 'recorder:in:in'] },
         chip: 'Output / Reverb L' },
       { id: 'out_r', label: 'OUT R', signal: 'audio', title: 'Right Output',
-        guide: { text: 'Right side: the dry sound plus its echoes (by Mix).', to: 'Output IN, Reverb IN R, Mixer', match: ['output:in:in', 'reverb:in:in_r', 'mixer:in:ch_in'] },
+        guide: { text: 'Right side: the dry sound plus its echoes (by Mix).', to: 'Output IN R, Reverb IN R, Mixer', match: ['output:in:in_r', 'reverb:in:in_r', 'mixer:in:ch_in'] },
         chip: 'Output / Reverb R' }
     ]
   };

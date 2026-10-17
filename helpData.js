@@ -243,7 +243,7 @@ window.helpData = {
       { type: "output", group: "output", name: "Output", preset: "demo-output",
         summary: "Sends the sound to your speakers or headphones.",
         controls: ["Master Volume: starts at 0 when a patch loads."],
-        tips: ["THRU OUT passes a copy on to a Recorder or Oscilloscope."] },
+        tips: ["A stereo module (Reverb, Granular, Mixer, Stereo Delay, Drum Machine) gets two cables: its L output into IN L and its R output into IN R.", "One cable into IN L alone plays on both sides.", "THRU OUT passes a copy on to a Recorder or Oscilloscope."] },
       { type: "oscilloscope", group: "output", name: "Oscilloscope", preset: "demo-oscilloscope",
         summary: "Draws any signal so you can see it.",
         controls: [],
@@ -533,7 +533,7 @@ window.helpData = {
       { type: "output", group: "output", name: "Output", preset: "demo-output",
         summary: "שולח את הצליל לרמקולים או לאוזניות.",
         controls: ["Master Volume: מתחיל על 0 כשפאץ' נטען."],
-        tips: ["THRU OUT מעביר עותק הלאה ל-Recorder או לאוסצילוסקופ."] },
+        tips: ["מודול סטריאו (Reverb, Granular, Mixer, Stereo Delay, Drum Machine) מקבל שני כבלים: יציאת L שלו ל-IN L ויציאת R שלו ל-IN R.", "כבל אחד ל-IN L לבד מתנגן בשני הצדדים.", "THRU OUT מעביר עותק הלאה ל-Recorder או לאוסצילוסקופ."] },
       { type: "oscilloscope", group: "output", name: "Oscilloscope", preset: "demo-oscilloscope",
         summary: "משרטט כל אות כדי שאפשר יהיה לראות אותו.",
         controls: [],
@@ -590,7 +590,7 @@ window.helpData = {
       "granular:in:cv1": { text: "מזיז את ההגדרה שנבחרה בתפריט CV 1 (ברירת מחדל: Position).", where: "LFO, X / Y / MOTION של המצלמה, Envelope" },
       "granular:in:cv2": { text: "מזיז את ההגדרה שנבחרה בתפריט CV 2 (ברירת מחדל: Pitch).", where: "LFO, X / Y / MOTION של המצלמה, Envelope" },
       "granular:out:out_l": { text: "ענן הגרגרים, צד שמאל.", where: "Filter, Reverb, VCA, Output" },
-      "granular:out:out_r": { text: "ענן הגרגרים, צד ימין.", where: "Reverb IN R, Mixer, Output" },
+      "granular:out:out_r": { text: "ענן הגרגרים, צד ימין.", where: "Output IN R, Reverb IN R, Mixer" },
       "audio_in:out:audio": { text: "צליל חי מהמיקרופון או מכרטיס הקול.", where: "Filter, Granular, Reverb, VCA, Output" },
       "keyboard:out:freq": { text: "גובה הקליד שמנגנים.", where: "PITCH של האוסילטור" },
       "keyboard:out:gate": { text: "דולק כל עוד קליד לחוץ, כבוי כשעוזבים.", where: "GATE IN של Envelope, או CV של VCA" },
@@ -610,11 +610,11 @@ window.helpData = {
       "mixer:in:ch_in": { text: "ערוץ אחד במיקסר, עם עוצמה ו-PAN משלו.", where: "כל יציאת Audio" },
       "mixer:out:ch_out": { text: "הערוץ הזה לבד, אחרי כפתור העוצמה שלו.", where: "Reverb, Filter, Oscilloscope" },
       "mixer:out:out_l": { text: "כל הערוצים יחד, צד שמאל.", where: "Output, Reverb IN L, Recorder" },
-      "mixer:out:out_r": { text: "כל הערוצים יחד, צד ימין.", where: "Reverb IN R, Output" },
+      "mixer:out:out_r": { text: "כל הערוצים יחד, צד ימין.", where: "Output IN R, Reverb IN R" },
       "reverb:in:in_l": { text: "צליל שנשלח לחדר (שמאל).", where: "OUT של VCA, Filter, Mixer, Oscillator" },
       "reverb:in:in_r": { text: "צליל שנשלח לחדר (ימין).", where: "OUT R של Mixer, Granular" },
       "reverb:out:out_l": { text: "הצליל עם הריוורב, צד שמאל.", where: "Output, Recorder, Oscilloscope" },
-      "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output, Mixer" },
+      "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output IN R, Mixer" },
       "degrader:in:in": { text: "הצליל שרוצים לקלקל.", where: "OUT של VCA, Filter, Oscillator, Mixer, MAIN L של Drum Machine" },
       "degrader:out:out": { text: "הצליל אחרי הקלקול.", where: "Output, IN L של Reverb, Mixer, Oscilloscope" },
       "wavetable:in:pitch": { text: "מנגן תווים (בהרץ). כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת; Octave ו-Tune עדיין פועלים.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר, PITCH של Ribbon" },
@@ -628,7 +628,8 @@ window.helpData = {
       "envelope:out:env": { text: "הצורה של Attack / Decay / Sustain / Release.", where: "CV של VCA (עוצמת התו), CUT MOD של פילטר (בהירות התו)" },
       "lfo:in:rate": { text: "מאיץ ומאט את ה-LFO.", where: "LFO אחר, X / Y של המצלמה, ENV OUT" },
       "lfo:out:default": { text: "גל איטי שחוזר על עצמו. אפשר להפיל אותו גם על כל סליידר.", where: "CUT MOD של פילטר (וואו), CV של VCA (טרמולו), FM IN של אוסילטור (ויברטו)" },
-      "output:in:in": { text: "הולך לרמקולים. מרימים את Master Volume כדי לשמוע.", where: "המודול האחרון בשרשרת: VCA, Reverb, Filter, Mixer" },
+      "output:in:in": { text: "הולך לרמקולים, צד שמאל. לבד (בלי כבל ב-IN R) הוא מתנגן בשני הצדדים. מרימים את Master Volume כדי לשמוע.", where: "המודול האחרון בשרשרת: VCA, Filter, או יציאת L של מודול סטריאו" },
+      "output:in:in_r": { text: "צד ימין. מחברים לכאן את יציאת R של מודול סטריאו (Reverb, Granular, Mixer, Stereo Delay, MAIN R של Drum Machine), ואת יציאת L שלו ל-IN L.", where: "OUT R של Reverb, Granular, Mixer, Stereo Delay, MAIN R של Drum Machine" },
       "output:out:out": { text: "עותק של מה שמגיע ל-Output, לפני ה-Master Volume.", where: "Recorder, Oscilloscope" },
       "oscilloscope:in:audio": { text: "משרטט את האות. אין לו יציאה: כדי גם לשמוע, חברו את אותו מקור גם ל-Output.", where: "כל OUT" },
       "ribbon:out:pitch": { text: "התו שמתחת לאצבע או לעיפרון; הקצה השמאלי הוא Base Note.", where: "PITCH של אוסילטור, או כל סליידר" },
@@ -648,14 +649,14 @@ window.helpData = {
       "drums:out:cym_out": { text: "המצילה (Cymbal) לבד, אחרי ה-Level שלו (בלי ה-Pan).", where: "IN של Mixer, Filter, Reverb, כל אפקט" },
       "drums:out:cym_trig": { text: "פולס קצר (חצי צעד) בכל פעם ששורת המצילה (Cymbal) מנגנת.", where: "GATE IN של Envelope (כדי לבנות צליל משלכם עם Oscillator, Envelope ו-Filter), CV של VCA" },
       "drums:out:main_l": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד שמאל.", where: "IN של Output, Mixer, IN L של Reverb, Recorder" },
-      "drums:out:main_r": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד ימין.", where: "IN של Output, Mixer, IN R של Reverb" },
+      "drums:out:main_r": { text: "ארבעת התופים יחד לפי ה-Pan שלהם, צד ימין.", where: "IN R של Output, Mixer, IN R של Reverb" },
       "drums:out:clock": { text: "פולס בכל תו שש-עשרית בזמן הנגינה (בלי Swing), כדי שמודולים אחרים ילכו לפי הקצב.", where: "CLOCK של Stereo Delay (עם Sync דלוק)" },
       "sequencer:out:clock": { text: "פולס בכל צעד (שש-עשרית) בזמן הנגינה, פעיל או לא, כדי שמודולים אחרים ילכו לפי הקצב.", where: "CLOCK של Stereo Delay (עם Sync דלוק)" },
       "delay:in:in_l": { text: "הצליל להדהוד, צד שמאל. אם IN R ריק, הוא נכנס לשני הצדדים.", where: "Oscillator, Filter, VCA, MAIN L של מכונת התופים, Mixer" },
       "delay:in:in_r": { text: "הצליל להדהוד, צד ימין (לא חובה).", where: "MAIN R של מכונת התופים, OUT R של Mixer או Granular" },
       "delay:in:clock": { text: "פולס בכל שש-עשרית. כש-Sync דלוק, ה-Time של כל צד הולך לפי הקצב והחלוקה שלו.", where: "CLOCK של המטרונום, של מכונת התופים או של הסיקוונסר" },
       "delay:out:out_l": { text: "צד שמאל: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN L של Reverb, Mixer, Recorder" },
-      "delay:out:out_r": { text: "צד ימין: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN של Output, IN R של Reverb, Mixer" },
+      "delay:out:out_r": { text: "צד ימין: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN R של Output, IN R של Reverb, Mixer" },
       "metronome:out:click": { text: "צליל הקליק, אחד בכל פעמה, חזק וגבוה יותר בפעמה הראשונה של התיבה (כש-Accent דלוק).", where: "IN של Output, Mixer, Recorder" },
       "metronome:out:clock": { text: "דפיקה קצרה בכל תו שש-עשרית (ארבע בכל פעמה) כל עוד המטרונום מנגן. משאירה מודולים אחרים בקצב שלו, למשל CLOCK של Stereo Delay, או GATE IN של Envelope לתבנית של שש-עשריות.", where: "CLOCK של Stereo Delay, GATE IN של Envelope, CV של VCA" },
       "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
@@ -692,6 +693,7 @@ window.presetData = {
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_l" } },
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "gran1", toPortInfo: { type: "in_r" } },
       { fromNode: "gran1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "gran1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "gran1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -754,6 +756,7 @@ window.presetData = {
       { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -771,6 +774,7 @@ window.presetData = {
       { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "poly1", toPortInfo: { id: "knob:#polysynth_p_position_poly1", knob: "#polysynth_p_position_poly1" } },
       { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -796,6 +800,7 @@ window.presetData = {
       { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -916,6 +921,7 @@ window.presetData = {
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "1", type: "ch_in_1" } },
       { fromNode: "osc2", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "2", type: "ch_in_2" } },
       { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -964,9 +970,10 @@ window.presetData = {
     ],
     connections: [
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "dl1", toPortInfo: { id: "in_l" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_r" }, toNode: "dl1", toPortInfo: { id: "in_r" } },
       { fromNode: "dm1", fromPortInfo: { id: "clock" }, toNode: "dl1", toPortInfo: { id: "clock" } },
       { fromNode: "dl1", fromPortInfo: { id: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
-      { fromNode: "dl1", fromPortInfo: { id: "out_r" }, toNode: "out1", toPortInfo: { type: "in" } }
+      { fromNode: "dl1", fromPortInfo: { id: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } }
     ]
   },
   "demo-drums": {
@@ -983,7 +990,9 @@ window.presetData = {
     ],
     connections: [
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_r" }, toNode: "rev1", toPortInfo: { type: "in_r" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -1061,6 +1070,7 @@ window.presetData = {
       { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
       { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
@@ -1100,6 +1110,7 @@ window.presetData = {
       { fromNode: "audin1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "audio" } },
       { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   }

@@ -72,7 +72,7 @@ class VcaModule {
           <input type="range" id="vca_gain_${this.id}" min="0" max="1" step="0.01" value="${this.gainNode.gain.value}">
         </div>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #3f3f46;">
+        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
           <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;">
             <div class="port port-in" data-node-id="${this.id}" data-port-type="audio" title="Audio Input"></div>
             <span>IN</span>

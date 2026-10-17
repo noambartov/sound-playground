@@ -277,51 +277,51 @@ class EnvelopeModule {
                 <span>Envelope Generator (ADSR)</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
-            <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px; background: #ffffff;">
+            <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px; background: var(--panel-bg);">
                 
                 <!-- ADSR Vertical Sliders Grid -->
                 <div style="display: flex; justify-content: space-between; gap: 6px; width: 100%;">
                     
                     <!-- Attack -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: #f8fafc; padding: 6px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 0.65rem; font-weight: 700; color: #0f172a;">ATTACK</span>
-                        <span id="env_a_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: #64748b;">${this.formatTime(this.attack)}</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
+                        <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">ATTACK</span>
+                        <span id="env_a_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.attack)}</span>
                         <input type="range" min="0.001" max="2" step="0.005" value="${this.attack}"
-                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: #64748b;"
+                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setAttack(this.value)">
                     </div>
 
                     <!-- Decay -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: #f8fafc; padding: 6px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 0.65rem; font-weight: 700; color: #0f172a;">DECAY</span>
-                        <span id="env_d_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: #64748b;">${this.formatTime(this.decay)}</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
+                        <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">DECAY</span>
+                        <span id="env_d_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.decay)}</span>
                         <input type="range" min="0.001" max="2" step="0.005" value="${this.decay}"
-                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: #64748b;"
+                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setDecay(this.value)">
                     </div>
 
                     <!-- Sustain -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: #f8fafc; padding: 6px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 0.65rem; font-weight: 700; color: #0f172a;">SUSTAIN</span>
-                        <span id="env_s_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: #64748b;">${Math.round(this.sustain * 100)}%</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
+                        <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">SUSTAIN</span>
+                        <span id="env_s_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${Math.round(this.sustain * 100)}%</span>
                         <input type="range" min="0" max="1" step="0.01" value="${this.sustain}"
-                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: #64748b;"
+                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setSustain(this.value)">
                     </div>
 
                     <!-- Release -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: #f8fafc; padding: 6px 2px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                        <span style="font-size: 0.65rem; font-weight: 700; color: #0f172a;">RELEASE</span>
-                        <span id="env_r_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: #64748b;">${this.formatTime(this.release)}</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
+                        <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">RELEASE</span>
+                        <span id="env_r_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.release)}</span>
                         <input type="range" min="0.001" max="5" step="0.01" value="${this.release}"
-                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: #64748b;"
+                            style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setRelease(this.value)">
                     </div>
 
                 </div>
 
                 <!-- Input / Output Ports Matrix -->
-                <div style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                <div style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
                     
                     <!-- Gate In (Orange accent) -->
                     <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700;">

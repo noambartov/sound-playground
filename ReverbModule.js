@@ -218,7 +218,7 @@ class ReverbModule {
           <input type="range" min="0" max="1" step="0.01" value="${this.mix}" oninput="ReverbModule.updateParam('${this.id}', 'mix', this.value)">
         </div>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #e2e8f0; margin-top: 2px;">
+        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border); margin-top: 2px;">
           <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;">
             <div class="port port-in" data-node-id="${this.id}" data-port-type="in_l"></div>
             <span>IN L</span>

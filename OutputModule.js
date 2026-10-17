@@ -135,7 +135,7 @@ class OutputModule {
                     <input type="range" min="0" max="1" step="0.01" value="${currentVol}" 
                         oninput="synthApp.getModule('${this.id}').setVolume(this.value); document.getElementById('vol_val_${this.id}').innerText = Math.round(this.value * 100) + '%';">
                 </div>
-                <div class="ports-matrix" style="display: flex; justify-content: space-between; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                <div class="ports-matrix" style="display: flex; justify-content: space-between; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
                     <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
                         <div class="port port-in" data-node-id="${this.id}" data-port-type="in" title="Left Audio Input"></div>
                         <span class="port-label">IN L</span>

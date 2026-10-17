@@ -1104,3 +1104,9 @@ window.presetData = {
     ]
   }
 };
+
+// What each playTips entry points at (presetTips.js draws a ring around it), in the same order, for both languages.
+// 'type|Label' = the control labelled Label on that module, 'type|.class' = the group holding that element.
+window.playTipTargets = {
+  "demo-reverb": ["reverb|Decay", "reverb|Radius", "reverb|Mix", "oscillator|Waveform", "sequencer|.seq-step-box", "sequencer|Tempo", "envelope|Decay"]
+};

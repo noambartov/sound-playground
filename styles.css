@@ -19,12 +19,14 @@
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --grid-dot-color: #cbd5e1;
-  /* Notices and the tips panel: a dark bar on the light theme, a light bar on the dark theme */
-  --notice-bg: #1e293b;
-  --notice-text: #f1f5f9;
-  --notice-muted: #94a3b8;
-  --notice-btn-bg: #f8fafc;
+  /* Notices and the tips panel: a quiet panel in the theme colors, no accent color */
+  --notice-bg: #ffffff;
+  --notice-text: #0f172a;
+  --notice-muted: #64748b;
+  --notice-border: #e2e8f0;
+  --notice-btn-bg: #f1f5f9;
   --notice-btn-text: #0f172a;
+  --notice-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -46,11 +48,13 @@ body.dark-theme {
   --subtle-bg: #0f172a;
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
   --grid-dot-color: #334155;
-  --notice-bg: #f8fafc;
-  --notice-text: #0f172a;
-  --notice-muted: #64748b;
-  --notice-btn-bg: #0f172a;
+  --notice-bg: #1e293b;
+  --notice-text: #f8fafc;
+  --notice-muted: #94a3b8;
+  --notice-border: #334155;
+  --notice-btn-bg: #334155;
   --notice-btn-text: #f8fafc;
+  --notice-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* ==========================================================================
@@ -947,9 +951,9 @@ body.presentation-mode .node-header {
   max-width: min(520px, calc(100vw - 32px));
   background: var(--notice-bg);
   color: var(--notice-text);
-  border: 1px solid var(--notice-bg);
+  border: 1px solid var(--notice-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  box-shadow: var(--notice-shadow);
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 500;
@@ -1496,9 +1500,9 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   max-width: calc(100vw - 32px);
   background: var(--notice-bg);
   color: var(--notice-text);
-  border: 1px solid var(--notice-bg);
+  border: 1px solid var(--notice-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  box-shadow: var(--notice-shadow);
   padding: 8px 10px 8px 16px;
   font-size: 13px;
   font-weight: 500;
@@ -1507,12 +1511,12 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 }
 .update-notice .tool-btn {
   background: transparent;
-  border-color: var(--notice-muted);
+  border-color: var(--notice-border);
   color: var(--notice-text);
 }
 .update-notice .update-notice-refresh {
   background: var(--notice-btn-bg);
-  border-color: var(--notice-btn-bg);
+  border-color: var(--notice-border);
   color: var(--notice-btn-text);
 }
 .wt-display.wt-drawing {
@@ -1688,9 +1692,21 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--text-color);
 }
 .empty-canvas-hint p { margin: 0 0 16px; }
+.empty-canvas-hint .empty-canvas-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.empty-canvas-hint .empty-canvas-guide {
+  pointer-events: auto;
+  padding: 12px 20px;
+  font-size: 16px;
+}
 .empty-canvas-hint .empty-canvas-demo {
   pointer-events: auto;
-  margin: 0 0 16px;
+  margin: 0;
   padding: 12px 32px;
   font-size: 16px;
   background: var(--primary-color);
@@ -1791,9 +1807,9 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   width: min(320px, calc(100vw - 32px));
   background: var(--notice-bg);
   color: var(--notice-text);
-  border: 1px solid var(--notice-bg);
+  border: 1px solid var(--notice-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  box-shadow: var(--notice-shadow);
   padding: 12px 14px;
   font-size: 13px;
   line-height: 1.45;
@@ -1823,12 +1839,12 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--notice-text);
   cursor: pointer;
 }
-.preset-tips-lang { text-decoration: underline; }
+.preset-tips-lang { text-decoration: underline; color: var(--notice-muted); }
 .preset-tips-close { font-size: 16px; line-height: 1; opacity: 0.7; }
 .preset-tips-text { margin: 0 0 10px; }
 .preset-tips .preset-tips-next {
   background: var(--notice-btn-bg);
-  border-color: var(--notice-btn-bg);
+  border-color: var(--notice-border);
   color: var(--notice-btn-text);
 }
 .preset-tips .preset-tips-next[hidden] { display: none; }
@@ -1838,4 +1854,19 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 /* Below 1400 px the centered notice would touch the tips panel, so it moves up above it */
 @media (max-width: 1399px) {
   body.preset-tips-open .app-toast { bottom: calc(32px + var(--preset-tips-h, 0px)); }
+}
+
+/* Ring around what the current tip talks about (presetTips.js) */
+.tip-ring {
+  position: fixed;
+  border: 2px solid #f59e0b;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 99997;
+  animation: tip-ring-pulse 1.6s ease-in-out infinite;
+}
+.tip-ring[hidden] { display: none; }
+@keyframes tip-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
 }

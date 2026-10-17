@@ -167,7 +167,12 @@ if (!window.SoundSandboxApp) {
       }
     }
 
-    showNotification(message) {
+    // heMessage: optional Hebrew text, shown when the user chose Hebrew (localStorage 'sp_intro_lang', see onboarding.js)
+    showNotification(message, heMessage) {
+      let rtl = false;
+      if (heMessage) {
+        try { if (localStorage.getItem('sp_intro_lang') === 'he') { message = heMessage; rtl = true; } } catch (e) {}
+      }
       let toast = document.getElementById('synth-toast-notification');
       if (!toast) {
         toast = document.createElement('div');
@@ -177,6 +182,7 @@ if (!window.SoundSandboxApp) {
         document.body.appendChild(toast);
       }
       toast.textContent = message;
+      toast.style.direction = rtl ? 'rtl' : 'ltr';
       toast.style.display = 'block';
       requestAnimationFrame(() => toast.classList.add('visible'));
 
@@ -833,7 +839,9 @@ if (!window.SoundSandboxApp) {
           this.fitToModules(add ? newIds : null);
           this.render();
           this.scheduleHistoryCapture();
-          this.showNotification((add ? 'Patch added next to your modules. ' : 'Patch loaded. ') + 'Volume starts at 0: raise Master Volume on the Output module to hear it.');
+          this.showNotification(
+            (add ? 'Patch added next to your modules. ' : 'Patch loaded. ') + 'Volume starts at 0: raise Master Volume on the Output module to hear it.',
+            (add ? 'הפאץ׳ נוסף ליד המודולים שלך. ' : 'הפאץ׳ נטען. ') + 'העוצמה מתחילה ב-0: הרם את Master Volume במודול Output כדי לשמוע.');
         });
       });
 

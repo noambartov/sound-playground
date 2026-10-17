@@ -253,7 +253,7 @@ class SequencerModule {
         this.clearStepHighlights();
         const stepEl = document.getElementById(`seq_step_${this.id}_${index}`);
         if (stepEl) {
-            stepEl.style.borderColor = '#0284c7';
+            stepEl.style.borderColor = 'var(--primary-color)';
             stepEl.style.boxShadow = '0 0 6px rgba(2, 132, 199, 0.4)';
         }
     }
@@ -263,7 +263,7 @@ class SequencerModule {
         if (card) {
             const allSteps = card.querySelectorAll('.seq-step-box');
             allSteps.forEach(el => {
-                el.style.borderColor = '#e2e8f0';
+                el.style.borderColor = 'var(--panel-border)';
                 el.style.boxShadow = 'none';
             });
         }
@@ -282,8 +282,8 @@ class SequencerModule {
         let html = '';
         this.steps.forEach((step, idx) => {
             html += `
-                <div id="seq_step_${this.id}_${idx}" class="seq-step-box" style="display: flex; flex-direction: column; align-items: center; width: 55px; min-width: 55px; background: #ffffff; padding: 8px 4px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 8px; box-sizing: border-box;">
-                    <div style="font-weight: 700; font-size: 0.75rem; color: #0f172a; text-align: center; border-bottom: 1px solid #e2e8f0; width: 100%; padding-bottom: 2px;">#${idx + 1}</div>
+                <div id="seq_step_${this.id}_${idx}" class="seq-step-box" style="display: flex; flex-direction: column; align-items: center; width: 55px; min-width: 55px; background: var(--panel-bg); padding: 8px 4px; border-radius: 8px; border: 1px solid var(--panel-border); gap: 8px; box-sizing: border-box;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-color); text-align: center; border-bottom: 1px solid var(--panel-border); width: 100%; padding-bottom: 2px;">#${idx + 1}</div>
                     
                     <button class="tool-btn" style="padding: 2px 4px; font-size: 0.65rem; font-weight: 700; width: 100%; opacity: ${step.active ? '1' : '0.4'};" 
                         onclick="SequencerModule.toggleStepActive('${this.id}', ${idx})">
@@ -292,7 +292,7 @@ class SequencerModule {
 
                     <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; margin-top: 4px;">
                         <input type="range" min="0" max="1" step="0.01" value="${step.pitch}"
-                            style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: #64748b;"
+                            style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="SequencerModule.updateStepPitch('${this.id}', ${idx}, this.value)">
                     </div>
                 </div>
@@ -380,18 +380,18 @@ class SequencerModule {
                 <span>Step Sequencer</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
-            <div class="node-body" style="display: flex; flex-direction: row; gap: 12px; padding: 12px; width: max-content; background: #ffffff;">
+            <div class="node-body" style="display: flex; flex-direction: row; gap: 12px; padding: 12px; width: max-content; background: var(--panel-bg);">
                 
                 <!-- Fixed Left Control Panel -->
-                <div style="display: flex; flex-direction: column; width: 140px; min-width: 140px; background: #ffffff; padding: 10px 8px; border-radius: 8px; border: 1px solid #cbd5e1; gap: 8px; box-sizing: border-box; align-items: center;">
-                    <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; width: 100%; text-align: center;">CONTROL</div>
+                <div style="display: flex; flex-direction: column; width: 140px; min-width: 140px; background: var(--panel-bg); padding: 10px 8px; border-radius: 8px; border: 1px solid var(--btn-border); gap: 8px; box-sizing: border-box; align-items: center;">
+                    <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-color); border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; width: 100%; text-align: center;">CONTROL</div>
                     
                     <!-- Play & Mode -->
                     <div style="display: flex; gap: 4px; width: 100%;">
                         <button id="seq_play_btn_${this.id}" class="tool-btn" style="flex: 1; font-weight: 700; padding: 4px; font-size: 0.75rem;" 
                             onclick="SequencerModule.togglePlay('${this.id}')">Play</button>
                         
-                        <select onchange="SequencerModule.setMode('${this.id}', this.value)" style="padding: 2px 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 0.8rem; font-weight: 700;">
+                        <select onchange="SequencerModule.setMode('${this.id}', this.value)" style="padding: 2px 4px; border-radius: 4px; border: 1px solid var(--btn-border); background: var(--btn-bg); color: var(--text-color); font-size: 0.8rem; font-weight: 700;">
                             <option value="forward" ${this.playMode === 'forward' ? 'selected' : ''}>→</option>
                             <option value="backward" ${this.playMode === 'backward' ? 'selected' : ''}>←</option>
                             <option value="pingpong" ${this.playMode === 'pingpong' ? 'selected' : ''}>⇄</option>
@@ -401,21 +401,21 @@ class SequencerModule {
 
                     <!-- Tempo -->
                     <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: #64748b;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: var(--muted-text);">
                             <span>TEMPO</span>
                             <span id="seq_bpm_val_${this.id}">${this.bpm} BPM</span>
                         </div>
-                        <input type="range" min="30" max="300" step="1" value="${this.bpm}" style="width: 100%; accent-color: #64748b;"
+                        <input type="range" min="30" max="300" step="1" value="${this.bpm}" style="width: 100%; accent-color: var(--muted-text);"
                             oninput="SequencerModule.updateBpm('${this.id}', this.value)">
                     </div>
 
                     <!-- Octave Range -->
                     <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: #64748b;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: var(--muted-text);">
                             <span>OCTAVE</span>
                             <span id="seq_oct_val_${this.id}">${this.octaveRange} OCT</span>
                         </div>
-                        <input type="range" min="1" max="7" step="1" value="${this.octaveRange}" style="width: 100%; accent-color: #64748b;"
+                        <input type="range" min="1" max="7" step="1" value="${this.octaveRange}" style="width: 100%; accent-color: var(--muted-text);"
                             oninput="SequencerModule.setOctave('${this.id}', this.value)">
                     </div>
 
@@ -428,7 +428,7 @@ class SequencerModule {
                     </div>
 
                     <!-- Outputs Section -->
-                    <div style="display: flex; justify-content: space-around; width: 100%; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 2px;">
+                    <div style="display: flex; justify-content: space-around; width: 100%; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 2px;">
                         <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <span style="font-size: 0.65rem; font-weight: 700;">PITCH CV</span>
                             <div class="port port-out" data-node-id="${this.id}" data-port-type="pitch" title="Pitch CV Output"></div>
@@ -445,7 +445,7 @@ class SequencerModule {
                 </div>
 
                 <!-- Vertical Divider -->
-                <div style="width: 1px; background: #e2e8f0; align-self: stretch;"></div>
+                <div style="width: 1px; background: var(--panel-border); align-self: stretch;"></div>
 
                 <!-- Right Expanding Steps Section -->
                 <div id="seq_steps_container_${this.id}" style="display: flex; flex-direction: row; gap: 8px; align-items: stretch;">

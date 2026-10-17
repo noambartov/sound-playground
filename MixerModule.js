@@ -66,7 +66,7 @@ class MixerModule {
                 const container = document.getElementById(`mixer_channels_${this.id}`);
                 if (container) {
                     container.innerHTML = Object.keys(this.channels).map(ch => `
-                        <div class="mixer-channel-strip" style="display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: #ffffff; padding: 10px 6px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 8px; box-sizing: border-box;">
+                        <div class="mixer-channel-strip" style="display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: var(--panel-bg); padding: 10px 6px; border-radius: 8px; border: 1px solid var(--panel-border); gap: 8px; box-sizing: border-box;">
                             ${this.renderChannelHTML(ch)}
                         </div>
                     `).join('');
@@ -184,7 +184,7 @@ class MixerModule {
 
         const chEl = document.createElement('div');
         chEl.className = 'mixer-channel-strip';
-        chEl.style.cssText = 'display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: #ffffff; padding: 10px 6px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 8px; box-sizing: border-box;';
+        chEl.style.cssText = 'display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: var(--panel-bg); padding: 10px 6px; border-radius: 8px; border: 1px solid var(--panel-border); gap: 8px; box-sizing: border-box;';
         chEl.innerHTML = this.renderChannelHTML(ch);
 
         container.appendChild(chEl);
@@ -202,7 +202,7 @@ class MixerModule {
 
     renderChannelHTML(ch) {
         return `
-            <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; text-align: center; border-bottom: 1px solid #e2e8f0; width: 100%; padding-bottom: 4px;">CH ${ch}</div>
+            <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-color); text-align: center; border-bottom: 1px solid var(--panel-border); width: 100%; padding-bottom: 4px;">CH ${ch}</div>
             
             <div style="display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%;">
                 <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
@@ -216,16 +216,16 @@ class MixerModule {
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 2px; width: 100%; align-items: center; margin-top: 2px;">
-                <label style="font-size: 0.65rem; font-weight: 600; color: #64748b; text-align: center;">PAN</label>
+                <label style="font-size: 0.65rem; font-weight: 600; color: var(--muted-text); text-align: center;">PAN</label>
                 <input type="range" min="-1" max="1" step="0.05" value="${this.channels[ch].panValue}"
-                    style="width: 100%; accent-color: #64748b;"
+                    style="width: 100%; accent-color: var(--muted-text);"
                     oninput="synthApp.getModule('${this.id}').setChannelPan(${ch}, this.value)">
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; margin-top: 4px;">
-                <label style="font-size: 0.65rem; font-weight: 600; color: #64748b; text-align: center;">VOL</label>
+                <label style="font-size: 0.65rem; font-weight: 600; color: var(--muted-text); text-align: center;">VOL</label>
                 <input type="range" min="0" max="1" step="0.01" value="${this.channels[ch].volumeValue}"
-                    style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: #64748b;"
+                    style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: var(--muted-text);"
                     oninput="synthApp.getModule('${this.id}').setChannelVolume(${ch}, this.value)">
             </div>
         `;
@@ -245,11 +245,11 @@ class MixerModule {
                 <span>Audio Mixer</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
-            <div class="node-body" style="display: flex; flex-direction: row; gap: 12px; padding: 12px; width: max-content; background: #ffffff;">
+            <div class="node-body" style="display: flex; flex-direction: row; gap: 12px; padding: 12px; width: max-content; background: var(--panel-bg);">
                 
-                <div style="display: flex; flex-direction: column; width: 100px; min-width: 100px; background: #ffffff; padding: 10px 8px; border-radius: 8px; border: 1px solid #cbd5e1; gap: 10px; box-sizing: border-box; align-items: center; justify-content: space-between;">
+                <div style="display: flex; flex-direction: column; width: 100px; min-width: 100px; background: var(--panel-bg); padding: 10px 8px; border-radius: 8px; border: 1px solid var(--btn-border); gap: 10px; box-sizing: border-box; align-items: center; justify-content: space-between;">
                     <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center;">
-                        <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px; width: 100%;">MASTER</div>
+                        <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-color); border-bottom: 1px solid var(--panel-border); padding-bottom: 4px; margin-bottom: 8px; width: 100%;">MASTER</div>
                         
                         <div style="display: flex; justify-content: space-around; width: 100%; margin-bottom: 10px;">
                             <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
@@ -263,9 +263,9 @@ class MixerModule {
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center;">
-                            <label style="font-size: 0.65rem; font-weight: 600; color: #64748b;">MASTER VOL</label>
+                            <label style="font-size: 0.65rem; font-weight: 600; color: var(--muted-text);">MASTER VOL</label>
                             <input type="range" min="0" max="1" step="0.01" value="${this.masterVolumeValue}"
-                                style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: #64748b;"
+                                style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: var(--muted-text);"
                                 oninput="synthApp.getModule('${this.id}').setMasterVolume(this.value)">
                         </div>
                     </div>
@@ -277,11 +277,11 @@ class MixerModule {
                     </button>
                 </div>
 
-                <div style="width: 1px; background: #e2e8f0; align-self: stretch;"></div>
+                <div style="width: 1px; background: var(--panel-border); align-self: stretch;"></div>
 
                 <div id="mixer_channels_${this.id}" style="display: flex; flex-direction: row; gap: 10px; align-items: stretch;">
                     ${Object.keys(this.channels).map(ch => `
-                        <div class="mixer-channel-strip" style="display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: #ffffff; padding: 10px 6px; border-radius: 8px; border: 1px solid #e2e8f0; gap: 8px; box-sizing: border-box;">
+                        <div class="mixer-channel-strip" style="display: flex; flex-direction: column; align-items: center; width: 85px; min-width: 85px; background: var(--panel-bg); padding: 10px 6px; border-radius: 8px; border: 1px solid var(--panel-border); gap: 8px; box-sizing: border-box;">
                             ${this.renderChannelHTML(ch)}
                         </div>
                     `).join('')}

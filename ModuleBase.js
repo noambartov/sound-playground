@@ -226,6 +226,11 @@ class ModuleBase {
     this.onMount(card);
   }
 
+  // Called by app.toggleTheme(); a module with a canvas display redraws it in the new colors
+  onThemeChange() {
+    if (this.requestDraw) this.requestDraw();
+  }
+
   cleanup() {
     try { this.destroy(); } catch (e) {}
     this.ownedNodes.forEach(n => {

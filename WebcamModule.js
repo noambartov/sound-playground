@@ -90,11 +90,11 @@ class WebcamModule {
       </div>
       <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <!-- אזור תצוגת המצלמה -->
-        <div class="webcam-preview-container" style="position: relative; width: 100%; height: 110px; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid var(--panel-border, #374151); overflow: hidden; display: flex; align-items: center; justify-content: center;">
+        <div class="webcam-preview-container" style="position: relative; width: 100%; height: 110px; background: var(--subtle-bg); border-radius: 6px; border: 1px solid var(--panel-border, #374151); overflow: hidden; display: flex; align-items: center; justify-content: center;">
           <video id="video_${this.id}" autoplay playsinline muted style="display: none;"></video>
           <canvas id="canvas_${this.id}" width="160" height="120" style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></canvas>
           
-          <button id="btn_toggle_${this.id}" class="action-btn" onclick="WebcamModule.toggleCamera('${this.id}')" style="position: absolute; z-index: 10; padding: 6px 12px; font-size: 11px; cursor: pointer; background: rgba(31, 41, 55, 0.85); backdrop-filter: blur(4px); border: 1px solid var(--panel-border, #4b5563); color: #fff; border-radius: 4px;">
+          <button id="btn_toggle_${this.id}" class="action-btn" onclick="WebcamModule.toggleCamera('${this.id}')" style="position: absolute; z-index: 10; padding: 6px 12px; font-size: 11px; cursor: pointer; background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--text-color); border-radius: 4px;">
             Start Camera
           </button>
         </div>
@@ -129,22 +129,22 @@ class WebcamModule {
         <!-- אזור יציאות האות -->
         <div class="ports-container" style="margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 8px; border-top: 1px solid var(--panel-border, #374151);">
           
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.04); border-radius: 4px; font-size: 10px; font-weight: 700;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: var(--subtle-bg); border-radius: 4px; font-size: 10px; font-weight: 700;">
             <span>X CV</span>
             <div class="port port-out" data-node-id="${this.id}" data-port-id="out_x" data-port-type="cv" title="X Position CV"></div>
           </div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.04); border-radius: 4px; font-size: 10px; font-weight: 700;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: var(--subtle-bg); border-radius: 4px; font-size: 10px; font-weight: 700;">
             <span>MOTION</span>
             <div class="port port-out" data-node-id="${this.id}" data-port-id="out_motion" data-port-type="cv" title="Motion Intensity CV"></div>
           </div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.04); border-radius: 4px; font-size: 10px; font-weight: 700;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: var(--subtle-bg); border-radius: 4px; font-size: 10px; font-weight: 700;">
             <span>Y CV</span>
             <div class="port port-out" data-node-id="${this.id}" data-port-id="out_y" data-port-type="cv" title="Y Position CV"></div>
           </div>
 
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: rgba(255,255,255,0.04); border-radius: 4px; font-size: 10px; font-weight: 700;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: var(--subtle-bg); border-radius: 4px; font-size: 10px; font-weight: 700;">
             <span>GATE</span>
             <div class="port port-out" data-node-id="${this.id}" data-port-id="out_gate" data-port-type="gate" title="Motion Gate Trigger"></div>
           </div>
@@ -187,6 +187,7 @@ class WebcamModule {
         if (btn) {
           btn.textContent = 'Stop Camera';
           btn.style.background = 'rgba(220, 38, 38, 0.8)';
+          btn.style.color = '#ffffff';
         }
 
         this.processVideoFrame();
@@ -214,7 +215,8 @@ class WebcamModule {
     const btn = document.getElementById(`btn_toggle_${this.id}`);
     if (btn) {
       btn.textContent = 'Start Camera';
-      btn.style.background = 'rgba(31, 41, 55, 0.85)';
+      btn.style.background = 'var(--btn-bg)';
+      btn.style.color = 'var(--text-color)';
     }
 
     // איפוס מוצאי CV בעת עצירה

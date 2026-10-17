@@ -183,7 +183,7 @@ class FilterModule {
                         oninput="synthApp.getModule('${this.id}').setModDepth(this.value)">
                 </div>
 
-                <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #e2e8f0;">
+                <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
                     <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;">
                         <div class="port port-in" data-node-id="${this.id}" data-port-type="audio"></div>
                         <span>IN</span>

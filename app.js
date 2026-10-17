@@ -145,6 +145,8 @@ if (!window.SoundSandboxApp) {
       if (this.themeToggleBtn) {
         this.themeToggleBtn.textContent = this.theme === 'light' ? 'Light' : 'Dark';
       }
+      // Modules that paint a <canvas> repaint it in the new theme colors
+      Object.values(this.modules).forEach(m => { if (m.instance && m.instance.onThemeChange) m.instance.onThemeChange(); });
       this.drawConnections();
     }
 

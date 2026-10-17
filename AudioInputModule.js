@@ -55,8 +55,8 @@ class AudioInputModule {
         </div>
 
         <div>
-          <div style="font-size: 10px; color: #888; margin-bottom: 3px;">Signal Indicator</div>
-          <div style="width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden;">
+          <div style="font-size: 10px; color: var(--muted-text); margin-bottom: 3px;">Signal Indicator</div>
+          <div style="width: 100%; height: 6px; background: var(--panel-border); border-radius: 3px; overflow: hidden;">
             <div id="meter_bar_${this.id}" style="width: 0%; height: 100%; background: #4caf50; transition: width 0.05s ease;"></div>
           </div>
         </div>
@@ -65,7 +65,7 @@ class AudioInputModule {
           Status: Off
         </div>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 6px; border-top: 1px solid #e2e8f0;">
+        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 6px; border-top: 1px solid var(--panel-border);">
           <div class="port-group"></div>
           <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;">
             <span>OUT</span>

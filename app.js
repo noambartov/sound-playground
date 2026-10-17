@@ -267,9 +267,11 @@ if (!window.SoundSandboxApp) {
 
       const deleteBtn = card.querySelector('.delete-module-btn, .close-btn, .delete-btn, .action-btn-close');
       if (deleteBtn) {
+        // The modules' own inline onclick would delete at once (a click if it is sounding): use the faded path
+        deleteBtn.removeAttribute('onclick');
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.deleteNode(id);
+          this.removeModules([id]);
         });
       }
 
@@ -435,7 +437,7 @@ if (!window.SoundSandboxApp) {
             this.deleteConnection(this.selectedConnection);
           } else if (this.selectedNodeIds.size > 0) {
             e.preventDefault();
-            Array.from(this.selectedNodeIds).forEach(id => this.deleteNode(id));
+            this.removeModules(Array.from(this.selectedNodeIds));
           }
         }
 
@@ -641,6 +643,11 @@ if (!window.SoundSandboxApp) {
       } else {
         fn();
       }
+    }
+
+    // Deleting modules by hand (× or Delete key), behind the same short master fade
+    removeModules(ids) {
+      this.withAudioFade(() => ids.forEach(id => { if (this.modules[id]) this.deleteNode(id); }));
     }
 
     clearWorkspace() {

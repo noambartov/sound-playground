@@ -1654,56 +1654,7 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--muted-text);
 }
 
-/* First-run welcome card and empty-canvas hint (onboarding.js) */
-.welcome-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(15, 23, 42, 0.35);
-  z-index: 100001;
-}
-.welcome-card {
-  max-width: 440px;
-  width: 100%;
-  background: var(--panel-bg);
-  color: var(--text-color);
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 24px;
-  direction: ltr;
-}
-.welcome-card h2 {
-  margin: 0 0 10px;
-  font-size: 20px;
-}
-.welcome-card p {
-  margin: 0 0 18px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-.welcome-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.welcome-actions .tool-btn {
-  padding: 10px 14px;
-  font-size: 14px;
-}
-.welcome-actions .welcome-primary {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: #ffffff;
-}
-.welcome-card .welcome-note {
-  margin: 16px 0 0;
-  font-size: 12px;
-  color: var(--muted-text);
-}
+/* Empty-canvas explanation, Play demo button and its flight to the Toolbar Demo button (onboarding.js) */
 .empty-canvas-hint {
   position: absolute;
   top: 50%;
@@ -1715,10 +1666,44 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-size: 14px;
   line-height: 1.5;
   pointer-events: none;
-  z-index: 1;
+  z-index: 40;
 }
-.empty-canvas-hint p { margin: 0 0 8px; }
+.empty-canvas-hint h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  color: var(--text-color);
+}
+.empty-canvas-hint p { margin: 0 0 16px; }
+.empty-canvas-hint .empty-canvas-demo {
+  pointer-events: auto;
+  margin: 0 0 16px;
+  padding: 12px 32px;
+  font-size: 16px;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+}
+.empty-canvas-hint .empty-canvas-demo:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.empty-canvas-hint .empty-canvas-note { font-size: 12px; }
 .empty-canvas-hint[hidden] { display: none; }
+.empty-canvas-hint .empty-canvas-short { display: none; }
+.empty-canvas-hint.docked .empty-canvas-intro { display: none; }
+.empty-canvas-hint.docked .empty-canvas-short { display: block; }
+.demo-fly {
+  position: fixed;
+  z-index: 100002;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+}
 /* ==========================================================================
    PHONE (iPhone portrait or landscape). Same query as isPhone() in app.js
    initDraggablePanels. iPad and desktop never match it.

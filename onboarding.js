@@ -1,18 +1,16 @@
-// onboarding.js - first-run help for newcomers: a welcome card on the first visit and a hint on the empty canvas.
-// The welcome card shows once per browser (localStorage 'sp_welcome_seen'); every button also starts the audio.
+// onboarding.js - help for newcomers. Until the first module appears, the empty canvas shows a short explanation and a big
+// Play demo button; then the button flies into the Toolbar as a plain Demo button (#demo-btn) and stays there
+// (localStorage 'sp_demo_docked'). Later, an empty canvas shows only a short text hint.
+// Pressing either button also starts the audio (the user gesture browsers require).
 (function () {
   'use strict';
 
-  const SEEN_KEY = 'sp_welcome_seen';
   const DEMO_PRESET = 'demo-reverb';   // a Sequencer melody through Reverb: plays by itself, no keys needed
   const DEMO_VOLUME = 0.5;
+  const DOCKED_KEY = 'sp_demo_docked';
+  let docked = false;
 
   function app() { return window.synthApp; }
-
-  function startAudio() {
-    const a = app();
-    if (a && typeof a.ensureAudioContextRunning === 'function') a.ensureAudioContextRunning();
-  }
 
   function moduleCount() {
     const a = app();
@@ -24,6 +22,7 @@
     const a = app();
     const preset = window.presetData ? window.presetData[DEMO_PRESET] : null;
     if (!a || !preset || typeof a.loadPatchData !== 'function') return;
+    if (typeof a.ensureAudioContextRunning === 'function') a.ensureAudioContextRunning();
     const newIds = a.loadPatchData(preset, { add: true }) || [];
     setTimeout(() => {
       Object.values(a.modules || {}).forEach(m => {
@@ -35,53 +34,37 @@
     }, 300);
   }
 
-  function closeWelcome(overlay) {
-    try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) {}
-    overlay.remove();
-    document.removeEventListener('keydown', overlay._onKey);
-    updateEmptyHint();
-  }
-
-  function showWelcome() {
-    const overlay = document.createElement('div');
-    overlay.id = 'welcome-overlay';
-    overlay.className = 'welcome-overlay';
-    overlay.innerHTML = `
-      <div class="welcome-card" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
-        <h2 id="welcome-title">Welcome to Sound Playground</h2>
-        <p>A modular synthesizer in your browser. Each module makes or shapes sound, and cables connect them.
-          You hear only what is cabled into an <strong>Output</strong> module.</p>
-        <div class="welcome-actions">
-          <button type="button" class="tool-btn welcome-primary" data-welcome="demo">Play a demo patch</button>
-          <button type="button" class="tool-btn" data-welcome="guide">Open the guide</button>
-          <button type="button" class="tool-btn" data-welcome="empty">Start from scratch</button>
-        </div>
-        <p class="welcome-note">No sound? Turn up your device volume. On iPhone, also turn off silent mode.</p>
-      </div>`;
-
-    overlay.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-welcome]');
-      if (!btn && e.target !== overlay) return;
-      startAudio();
-      const choice = btn ? btn.getAttribute('data-welcome') : 'empty';
-      closeWelcome(overlay);
-      if (choice === 'demo') playDemo();
-      if (choice === 'guide') { const help = document.getElementById('help-btn'); if (help) help.click(); }
-    });
-    overlay._onKey = (e) => { if (e.key === 'Escape') closeWelcome(overlay); };
-    document.addEventListener('keydown', overlay._onKey);
-
-    document.body.appendChild(overlay);
-    const primary = overlay.querySelector('.welcome-primary');
-    if (primary) primary.focus();
-  }
-
-  // Quiet text in the middle of the canvas while it has no modules
   let hint = null;
+  let toolbarBtn = null;
+
   function updateEmptyHint() {
     if (!hint) return;
-    const show = moduleCount() === 0 && !document.getElementById('welcome-overlay');
-    hint.hidden = !show;
+    const empty = moduleCount() === 0;
+    if (!empty && !docked) dock(true);
+    hint.hidden = !empty;
+    hint.classList.toggle('docked', docked);
+  }
+
+  // Moves the big button into the Toolbar; animate = fly a copy of it from the middle of the screen to the Toolbar
+  function dock(animate) {
+    docked = true;
+    try { localStorage.setItem(DOCKED_KEY, '1'); } catch (e) {}
+    if (!toolbarBtn) return;
+    const big = hint && hint.querySelector('.empty-canvas-demo');
+    const from = big && !hint.hidden ? big.getBoundingClientRect() : null;
+    toolbarBtn.hidden = false;
+    if (!animate || !from || !from.width || typeof toolbarBtn.animate !== 'function') return;
+    const to = toolbarBtn.getBoundingClientRect();
+    const ghost = big.cloneNode(true);
+    ghost.className = 'tool-btn demo-fly';
+    Object.assign(ghost.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px' });
+    document.body.appendChild(ghost);
+    toolbarBtn.style.visibility = 'hidden';
+    const anim = ghost.animate([
+      { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px', fontSize: '16px', opacity: 1 },
+      { left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px', fontSize: '12px', opacity: 0.9 }
+    ], { duration: 700, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' });
+    anim.onfinish = () => { ghost.remove(); toolbarBtn.style.visibility = ''; };
   }
 
   function initEmptyHint() {
@@ -90,9 +73,26 @@
     if (!container || !layer) return;
     hint = document.createElement('div');
     hint.className = 'empty-canvas-hint';
-    hint.innerHTML = `<p>Add modules from the <strong>Modules</strong> menu, then cable them into an <strong>Output</strong> module to hear them.</p>
-      <p>Or press <strong>?</strong> for ready-made patches and the guide.</p>`;
+    hint.innerHTML = `
+      <div class="empty-canvas-intro">
+      <h2>Sound Playground</h2>
+      <p>A modular synthesizer in your browser. Each module makes or shapes sound, and cables connect them.
+        You hear only what is cabled into an <strong>Output</strong> module.</p>
+      <button type="button" class="tool-btn empty-canvas-demo">Play demo</button>
+      <p>Or add modules from the <strong>Modules</strong> menu, or press <strong>?</strong> for the guide.</p>
+      <p class="empty-canvas-note">No sound? Turn up your device volume. On iPhone, also turn off silent mode.</p>
+      </div>
+      <p class="empty-canvas-short">Add modules from the <strong>Modules</strong> menu and cable them into an <strong>Output</strong> module,
+        or press <strong>Demo</strong> to hear an example.</p>`;
+    const btn = hint.querySelector('.empty-canvas-demo');
+    // Keep the press away from the canvas (selection box, pan)
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(t => btn.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    btn.addEventListener('click', playDemo);
     container.appendChild(hint);
+    toolbarBtn = document.getElementById('demo-btn');
+    if (toolbarBtn) toolbarBtn.addEventListener('click', playDemo);
+    try { docked = localStorage.getItem(DOCKED_KEY) === '1'; } catch (e) {}
+    if (docked && toolbarBtn) toolbarBtn.hidden = false;
     new MutationObserver(updateEmptyHint).observe(layer, { childList: true });
     updateEmptyHint();
   }
@@ -100,9 +100,6 @@
   function init() {
     if (!app()) { setTimeout(init, 50); return; }
     initEmptyHint();
-    let seen = false;
-    try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch (e) {}
-    if (!seen && moduleCount() === 0) showWelcome();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

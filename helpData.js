@@ -233,6 +233,10 @@ window.helpData = {
         summary: "A one-knob lo-fi effect: turning Degrade ages the sound from clean, through warm tape and lo-fi, to fully wrecked.",
         controls: ["Degrade 0%: clean, the sound passes through untouched.", "Up to 30% (Tape): soft saturation, and the highs soften a little.", "30% to 60% (Lo-Fi): fewer bits (16 down to 8), a lower sample rate (down to 8 kHz) for a rough digital sound, and a slight tape wobble in pitch.", "60% to 100% (Wrecked): only 3 to 4 bits, a very low sample rate that rings metallic, rising hiss and record crackle, and the highs almost closed."],
         tips: ["Drop an LFO OUT cable on the Degrade slider: the sound falls apart and comes back by itself.", "Above 60% you hear hiss and crackle even when nothing plays, like an old record."] },
+      { type: "compressor", group: "processors", name: "Compressor", preset: "demo-compressor",
+        summary: "Evens out the volume: whenever the sound gets louder than the Threshold, it is turned down. It makes drums punchier, and with the SC input a kick can make another sound duck on every beat (the dance-music \"pump\").",
+        controls: ["The display: the line shows how loud the sound comes out (upwards) for how loud it comes in (to the right). Past the Threshold (the thin upright line) the line bends flatter: that is the compression. The dot is the level coming in right now. The bar on the right and the Reduction readout show how many dB are being taken off.", "Threshold: the level where turning down starts. Lower it to compress more of the sound.", "Ratio: how hard it turns down past the Threshold. 2:1 is gentle, 4:1 is clear, 20:1 works as a limiter (almost nothing gets past the Threshold).", "Attack: how fast it turns down when the sound gets loud. A slower Attack (10 to 30 ms) lets the start of each drum hit through, for more punch.", "Release: how fast it lets go when the sound gets quieter. A short Release pumps, a long one is smooth.", "Knee: at 0 dB it starts turning down sharply at the Threshold; a higher Knee eases in gently.", "Makeup: turns the whole result up again, to win back the volume the compression took.", "Mix: the compressed sound against the original. Around 50% is \"parallel compression\": punchy but still natural."],
+        tips: ["A cable in SC (sidechain): now that sound decides when to turn down. Drum Machine Kick OUT into SC and a held sound into IN L: the held sound ducks on every kick.", "Watch the Reduction readout: a few dB is gentle glue, 10 dB or more is a strong effect.", "Drum Machine MAIN L and MAIN R into IN L and IN R, a low Threshold and an Attack around 20 ms: the drums sound bigger and punchier. Raise Makeup to get the volume back."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "Draws the shape of a note over time each time a gate arrives.",
         controls: ["Attack: fade-in time.", "Decay: time to fall to the Sustain level.", "Sustain: level held while the key is down.", "Release: fade-out after the key is let go."],
@@ -549,6 +553,10 @@ window.helpData = {
         summary: "אפקט לו-פיי עם כפתור אחד: סיבוב של Degrade \"מזקין\" את הצליל, מנקי, דרך חום של טייפ ולו-פיי, ועד הרס מלא.",
         controls: ["Degrade על 0%: נקי, הצליל עובר בלי שינוי.", "עד 30% (Tape): עיוות רך (סטורציה), והגבהים מתעמעמים מעט.", "30% עד 60% (Lo-Fi): פחות ביטים (מ-16 ל-8), קצב דגימה נמוך יותר (עד 8 kHz) לצליל דיגיטלי ומחוספס, ורעד קל בגובה הצליל כמו בקלטת.", "60% עד 100% (Wrecked): רק 3 עד 4 ביטים, קצב דגימה נמוך מאוד שמצלצל מתכתי, רעש רקע ופצפוצי תקליט שעולים, והגבהים כמעט סגורים."],
         tips: ["הפילו כבל מ-LFO OUT על הסליידר Degrade: הצליל מתפרק ומתאחה לבד.", "מעל 60% שומעים רעש ופצפוצים גם כשלא מנגן כלום, כמו בתקליט ישן."] },
+      { type: "compressor", group: "processors", name: "Compressor", preset: "demo-compressor",
+        summary: "מאזן את העוצמה: בכל פעם שהצליל חזק יותר מה-Threshold, הוא מנמיך אותו. הוא נותן לתופים יותר \"פאנץ'\", ועם הכניסה SC בס-דראם יכול לגרום לצליל אחר לשקוע בכל מכה (ה\"פאמפ\" של מוזיקת ריקודים).",
+        controls: ["המסך: הקו מראה כמה חזק הצליל יוצא (למעלה) לפי כמה חזק הוא נכנס (ימינה). אחרי ה-Threshold (הקו הדק העומד) הקו מתכופף ונהיה שטוח יותר: זו הדחיסה. הנקודה היא העוצמה שנכנסת עכשיו. הפס מימין והכיתוב Reduction מראים כמה dB מורידים.", "Threshold: העוצמה שממנה מתחילים להנמיך. מורידים אותו כדי לדחוס יותר מהצליל.", "Ratio: כמה חזק מנמיכים מעבר ל-Threshold. 2:1 עדין, 4:1 ברור, 20:1 עובד כמו לימיטר (כמעט כלום לא עובר את ה-Threshold).", "Attack: כמה מהר מנמיכים כשהצליל מתחזק. Attack איטי יותר (10 עד 30 ms) מעביר את תחילת כל מכת תוף, ליותר פאנץ'.", "Release: כמה מהר משחררים כשהצליל נחלש. Release קצר \"פומפם\", ארוך נשמע חלק.", "Knee: ב-0 dB ההנמכה מתחילה בבת אחת ב-Threshold; Knee גבוה יותר נכנס בהדרגה.", "Makeup: מגביר את כל התוצאה בחזרה, כדי להחזיר את העוצמה שהדחיסה לקחה.", "Mix: הצליל הדחוס מול המקורי. בערך 50% זו \"דחיסה מקבילה\": פאנץ' אבל עדיין טבעי."],
+        tips: ["כבל ב-SC (סייד-צ'יין): עכשיו הצליל הזה קובע מתי להנמיך. Kick OUT של מכונת התופים אל SC וצליל מתמשך אל IN L: הצליל המתמשך שוקע בכל בס-דראם.", "שימו לב לכיתוב Reduction: כמה dB זה \"דבק\" עדין, 10 dB ומעלה זה אפקט חזק.", "MAIN L ו-MAIN R של מכונת התופים אל IN L ו-IN R, Threshold נמוך ו-Attack בערך 20 ms: התופים נשמעים גדולים יותר ועם יותר פאנץ'. מעלים Makeup כדי להחזיר את העוצמה."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "משרטט את הצורה של תו לאורך זמן בכל פעם שמגיע Gate.",
         controls: ["Attack: זמן הכניסה.", "Decay: הזמן לרדת לרמת ה-Sustain.", "Sustain: הרמה שנשארת כל עוד הקליד לחוץ.", "Release: הדעיכה אחרי שעוזבים את הקליד."],
@@ -667,6 +675,11 @@ window.helpData = {
       "reverb:out:out_r": { text: "הצליל עם הריוורב, צד ימין.", where: "Output IN R, Mixer" },
       "degrader:in:in": { text: "הצליל שרוצים לקלקל.", where: "OUT של VCA, Filter, Oscillator, Mixer, MAIN L של Drum Machine" },
       "degrader:out:out": { text: "הצליל אחרי הקלקול.", where: "Output, IN L של Reverb, Mixer, Oscilloscope" },
+      "compressor:in:in_l": { text: "הצליל לדחיסה, צד שמאל. אם IN R ריק, הוא נכנס לשני הצדדים.", where: "MAIN L של מכונת התופים, OUT L של Mixer, Poly Synth, Filter, VCA" },
+      "compressor:in:in_r": { text: "הצליל לדחיסה, צד ימין (לא חובה). שני הצדדים מונמכים יחד, כך שהתמונה הסטריאופונית נשארת במקום.", where: "MAIN R של מכונת התופים, OUT R של Mixer או Granular" },
+      "compressor:in:sc": { text: "סייד-צ'יין: כשיש כאן כבל, הצליל הזה (ולא זה שב-IN) קובע מתי להנמיך. בס-דראם כאן גורם לפד לשקוע בכל פעמה.", where: "Kick OUT של מכונת התופים, Oscillator, כל צליל" },
+      "compressor:out:out_l": { text: "צד שמאל, דחוס (לפי Mix).", where: "IN של Output, IN L של Reverb או Stereo Delay, Mixer, Recorder" },
+      "compressor:out:out_r": { text: "צד ימין, דחוס (לפי Mix).", where: "IN R של Output, IN R של Reverb או Stereo Delay, Mixer" },
       "wavetable:in:pitch": { text: "מנגן תווים (בהרץ). כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת; Octave ו-Tune עדיין פועלים.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר, PITCH של Ribbon" },
       "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
       "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
@@ -852,6 +865,29 @@ window.presetData = {
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-compressor": {
+    modules: [
+      { id: "dm1", type: "drums", x: 40, y: 80, state: { tempo: 118, bars: 1, rows: [
+        { sound: "kick909", steps: "2000200020002000" },
+        { sound: "clap", steps: "0000100000001000" },
+        { sound: "hat808c", steps: "0010001000100010" },
+        { sound: "cym808", steps: "0000000000000000" }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 560, state: { waveform: "sawtooth", frequency: 110 } },
+      { id: "flt1", type: "filter", x: 400, y: 560, state: { type: "lowpass", frequency: 900, resonance: 3 } },
+      { id: "comp1", type: "compressor", x: 880, y: 80, state: { threshold: -32, ratio: 8, attack: 1, release: 200, knee: 6, makeup: 0, mix: 100 } },
+      { id: "out1", type: "output", x: 1220, y: 80, state: {} }
+    ],
+    connections: [
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "flt1", toPortInfo: { type: "audio" } },
+      { fromNode: "flt1", fromPortInfo: { id: "output" }, toNode: "comp1", toPortInfo: { id: "in_l" } },
+      { fromNode: "dm1", fromPortInfo: { id: "kick_out" }, toNode: "comp1", toPortInfo: { id: "sc" } },
+      { fromNode: "comp1", fromPortInfo: { id: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "comp1", fromPortInfo: { id: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_r" }, toNode: "out1", toPortInfo: { type: "in_r" } }
     ]
   },
   "demo-degrader": {

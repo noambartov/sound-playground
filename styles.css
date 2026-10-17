@@ -1868,6 +1868,21 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   body.preset-tips-open .app-toast { bottom: calc(32px + var(--preset-tips-h, 0px)); }
 }
 
+/* iPad portrait and other narrow non-phone screens: the toolbar is wider than the screen.
+   It wraps onto a second row instead, because anything sticking out past the screen edge
+   makes iPad Safari shrink the whole page (the dotted canvas then ends before the screen does).
+   Same query as "not isPhone()", so the phone layout is untouched. */
+@media (min-width: 701px) and (min-height: 501px) {
+  .toolbar {
+    max-width: calc(100vw - 40px);
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}
+@media (min-width: 701px) and (min-height: 501px) and (max-width: 1279px) {
+  .sidebar { top: 120px; }
+}
+
 /* Ring around what the current tip talks about (presetTips.js) */
 .tip-ring {
   position: fixed;

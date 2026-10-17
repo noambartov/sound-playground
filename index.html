@@ -21,7 +21,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.23">
+  <link rel="stylesheet" href="styles.css?v=3.24">
 </head>
 <body class="light-theme">
 
@@ -74,9 +74,16 @@
     <button id="redo-btn" class="tool-btn" title="Redo (Cmd+Shift+Z)" aria-label="Redo" disabled>&#8631;</button>
     <button id="help-btn" class="tool-btn" title="Help & Presets Guide" aria-label="Help and Presets Guide">?</button>
     <button id="demo-btn" class="tool-btn" title="Play a demo patch" aria-label="Play a demo patch" hidden>Demo</button>
+    <!-- Toolbar groups: on narrow non-phone screens (iPad portrait) each group folds into one button
+         that opens it as a small menu; elsewhere the wrapper is invisible (display: contents). -->
+    <div class="tb-group" data-group="view">
+      <button type="button" class="tool-btn tb-group-toggle" aria-expanded="false" aria-label="View options">View</button>
+      <div class="tb-group-items">
     <button id="theme-toggle-btn" class="tool-btn" title="Toggle Theme (Light/Dark)" aria-label="Toggle Theme">Theme</button>
     <button id="presentation-mode-btn" class="tool-btn" title="Toggle Play / Edit Mode" aria-label="Toggle Play Mode">Play Mode</button>
     <button id="cable-layer-btn" class="tool-btn" title="Show cables in front of or behind the modules" aria-label="Toggle Cable Layer">Cables: Front</button>
+      </div>
+    </div>
     
     <div class="zoom-controls" role="group" aria-label="Zoom Controls">
       <button id="zoom-out-btn" class="tool-btn" title="Zoom Out" aria-label="Zoom Out">-</button>
@@ -85,11 +92,16 @@
       <button id="zoom-reset-btn" class="tool-btn" title="Reset Zoom" aria-label="Reset Zoom">100%</button>
     </div>
 
+    <div class="tb-group" data-group="file">
+      <button type="button" class="tool-btn tb-group-toggle" aria-expanded="false" aria-label="File options">File</button>
+      <div class="tb-group-items">
     <button id="save-patch-btn" class="tool-btn" title="Export Patch to JSON" aria-label="Save Patch">Save</button>
     <button id="load-patch-btn" class="tool-btn" title="Import Patch from JSON" aria-label="Load Patch">Load</button>
     <input type="file" id="import-patch-input" accept=".json,application/json" style="display: none;" aria-hidden="true">
     
     <button id="clear-workspace-btn" class="tool-btn danger-btn" title="Clear Workspace" aria-label="Clear Workspace">Clear</button>
+      </div>
+    </div>
     <button id="toggle_tooltips_btn" class="tool-btn" aria-label="Toggle Tooltips">
       Tooltips: ON
     </button>
@@ -166,7 +178,7 @@
 
   <!-- Main Application -->
   <script src="modulation.js?v=2"></script>
-  <script src="app.js?v=28"></script>
+  <script src="app.js?v=29"></script>
   <script src="presetTips.js?v=3"></script>
   <script src="onboarding.js?v=5"></script>
   <script src="pwa.js?v=3"></script>

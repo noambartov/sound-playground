@@ -1367,6 +1367,64 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: #fff;
 }
 
+/* EQ (EqModule.js) */
+.eq-display {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 740 / 300;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+  touch-action: none;
+  cursor: grab;
+}
+
+.eq-hint {
+  font-size: 10px;
+  color: var(--muted-text);
+  margin-top: -4px;
+}
+
+.eq-grid {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+}
+
+.eq-head span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-text);
+  text-align: center;
+}
+
+.eq-name {
+  font-size: 11px;
+  font-weight: 600;
+  padding-bottom: 4px;
+}
+
+.eq-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eq-cell input[type="range"] {
+  width: 100%;
+}
+
+.eq-readout {
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Compressor (CompressorModule.js) */
 .comp-display {
   width: 100%;

@@ -269,10 +269,19 @@
     if (!port) return;
     hideHint();
     // On touch screens there is no hover: show the full card while the finger is on the jack
-    if (e.pointerType !== 'mouse' && !document.body.classList.contains('tooltips-disabled')) showHint(port);
+    if (e.pointerType !== 'mouse' && !document.body.classList.contains('tooltips-disabled')) {
+      showHint(port);
+      pressStart = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    }
     setTimeout(applyHighlights, 0);
   }, true);
-  const endPress = () => setTimeout(() => { clearHighlights(); hideHint(); }, 0);
+  // ...but hide it as soon as the finger starts dragging a cable, so it never covers the jack being aimed at
+  let pressStart = null;
+  window.addEventListener('pointermove', (e) => {
+    if (!pressStart || e.pointerId !== pressStart.id) return;
+    if (Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > 8) { pressStart = null; hideHint(); }
+  }, true);
+  const endPress = () => { pressStart = null; setTimeout(() => { clearHighlights(); hideHint(); }, 0); };
   window.addEventListener('pointerup', endPress, true);
   window.addEventListener('pointercancel', endPress, true);
 

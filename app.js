@@ -165,6 +165,7 @@ if (!window.SoundSandboxApp) {
       if (this.tooltipsBtn) {
         this.tooltipsBtn.textContent = `Tooltips: ${this.tooltipsEnabled ? 'ON' : 'OFF'}`;
       }
+      if (window.presetTips) window.presetTips.onTooltips(this.tooltipsEnabled);
     }
 
     // heMessage: optional Hebrew text, shown when the user chose Hebrew (localStorage 'sp_intro_lang', see onboarding.js)

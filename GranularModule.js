@@ -167,7 +167,7 @@ class GranularModule {
 
       <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         
-        <div style="display: flex; flex-direction: column; gap: 8px; background: #f8fafc; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px;">
+        <div style="display: flex; flex-direction: column; gap: 8px; background: var(--subtle-bg); padding: 8px; border: 1px solid var(--panel-border); border-radius: 6px;">
           <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 4px;">
               <label style="font-size: 11px; font-weight: 600;">Source:</label>
@@ -183,7 +183,7 @@ class GranularModule {
             </div>
           </div>
 
-          <canvas id="waveform_${this.id}" width="340" height="40" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; width: 100%; height: 40px;"></canvas>
+          <canvas id="waveform_${this.id}" width="340" height="40" style="background: var(--panel-bg); border: 1px solid var(--btn-border); border-radius: 4px; width: 100%; height: 40px;"></canvas>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
@@ -236,7 +236,7 @@ class GranularModule {
           </div>
         </div>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #e2e8f0; margin-top: 2px;">
+        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border); margin-top: 2px;">
           <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;">
             <div class="port port-in" data-port-type="in_l" data-node-id="${this.id}"></div>
             <span>IN L</span>
@@ -588,6 +588,10 @@ class GranularModule {
     return this.cv1Node;
   }
 
+  onThemeChange() {
+    this.drawWaveform();
+  }
+
   drawWaveform() {
     if (!this.card) return;
     const canvas = this.card.querySelector(`#waveform_${this.id}`);
@@ -596,13 +600,19 @@ class GranularModule {
     const w = canvas.width;
     const h = canvas.height;
 
-    ctx.fillStyle = '#f8fafc';
+    // Colors follow the theme (onThemeChange() redraws)
+    const css = getComputedStyle(this.card);
+    const bg = css.getPropertyValue('--subtle-bg').trim() || '#f8fafc';
+    const muted = css.getPropertyValue('--muted-text').trim() || '#64748b';
+    const border = css.getPropertyValue('--btn-border').trim() || '#cbd5e1';
+    const text = css.getPropertyValue('--text-color').trim() || '#0f172a';
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
 
     const activeBuf = this.getActiveBuffer();
 
     if (!activeBuf || (this.sourceMode === 'file' && !this.fileBuffer)) {
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = muted;
       ctx.font = '10px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('No Audio Loaded', w / 2, h / 2 + 3);
@@ -613,7 +623,7 @@ class GranularModule {
     const step = Math.ceil(data.length / w);
     const amp = h / 2;
 
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = muted;
     for (let i = 0; i < w; i++) {
       let min = 1.0;
       let max = -1.0;
@@ -631,7 +641,7 @@ class GranularModule {
       posX = ((writePercent + this.position) % 1) * w;
 
       const writeX = writePercent * w;
-      ctx.strokeStyle = '#cbd5e1';
+      ctx.strokeStyle = border;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(writeX, 0);
@@ -639,7 +649,7 @@ class GranularModule {
       ctx.stroke();
     }
 
-    ctx.strokeStyle = '#0f172a';
+    ctx.strokeStyle = text;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(posX, 0);

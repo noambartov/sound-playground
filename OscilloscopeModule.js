@@ -22,10 +22,10 @@ class OscilloscopeModule {
       </div>
       <div class="node-body" style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
         <div class="control-group scope-container" style="text-align: center;">
-          <canvas id="scope_canvas_${this.id}" width="240" height="120" style="background: #18181b; border-radius: 6px; border: 1px solid #3f3f46; display: block; margin: 0 auto;"></canvas>
+          <canvas id="scope_canvas_${this.id}" width="240" height="120" style="background: var(--subtle-bg); border-radius: 6px; border: 1px solid var(--panel-border); display: block; margin: 0 auto;"></canvas>
         </div>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 6px; border-top: 1px solid #e2e8f0;">
+        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 6px; border-top: 1px solid var(--panel-border);">
           <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700;">
             <div class="port port-in" data-port-type="audio" data-node-id="${this.id}" title="Audio Input"></div>
             <span>IN</span>
@@ -39,11 +39,27 @@ class OscilloscopeModule {
   }
 
   bindEvents(card) {
+    this.card = card;
+    this.readColors();
     this.canvas = card.querySelector(`#scope_canvas_${this.id}`);
     if (this.canvas) {
       this.canvasCtx = this.canvas.getContext('2d');
       this.startDrawing();
     }
+  }
+
+  // Screen colors come from the theme variables (re-read on every theme switch)
+  readColors() {
+    const css = getComputedStyle(this.card || document.body);
+    this.colors = {
+      bg: css.getPropertyValue('--subtle-bg').trim() || '#f1f5f9',
+      axis: css.getPropertyValue('--panel-border').trim() || '#e2e8f0',
+      trace: css.getPropertyValue('--primary-color').trim() || '#2563eb'
+    };
+  }
+
+  onThemeChange() {
+    this.readColors();
   }
 
   startDrawing() {
@@ -59,12 +75,12 @@ class OscilloscopeModule {
       this.analyserNode.getByteTimeDomainData(this.dataArray);
 
       // ניקוי הקנווס
-      this.canvasCtx.fillStyle = '#18181b';
+      this.canvasCtx.fillStyle = this.colors.bg;
       this.canvasCtx.fillRect(0, 0, width, height);
 
       // ציור קו אופקי מרכזי (Zero Axis)
       this.canvasCtx.lineWidth = 1;
-      this.canvasCtx.strokeStyle = '#27272a';
+      this.canvasCtx.strokeStyle = this.colors.axis;
       this.canvasCtx.beginPath();
       this.canvasCtx.moveTo(0, height / 2);
       this.canvasCtx.lineTo(width, height / 2);
@@ -81,7 +97,7 @@ class OscilloscopeModule {
 
       // ציור צורת הגל
       this.canvasCtx.lineWidth = 2;
-      this.canvasCtx.strokeStyle = '#10b981';
+      this.canvasCtx.strokeStyle = this.colors.trace;
       this.canvasCtx.beginPath();
 
       const displayedSamples = this.dataArray.length - triggerIndex;

@@ -317,10 +317,10 @@ class RecorderModule {
                         <span>Timer: <span id="rec_timer_${this.id}">00:00</span></span>
                         <span>Target: -10 LUFS</span>
                     </div>
-                    <div id="rec_status_${this.id}" style="font-size: 10px; text-align: center; color: #a1a1aa;">Ready</div>
+                    <div id="rec_status_${this.id}" style="font-size: 10px; text-align: center; color: var(--muted-text);">Ready</div>
                 </div>
 
-                <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid #3f3f46;">
+                <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
                     <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
                         <div class="port port-in" data-node-id="${this.id}" data-port-id="in" data-port-type="audio" title="Audio Input to Record"></div>
                         <span>IN</span>

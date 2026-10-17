@@ -31,7 +31,14 @@
         if (typeof reason === 'string') sessionStorage.setItem(REASON_KEY, reason);
       }
     } catch (e) {}
-    location.reload();
+    // Fade the sound out first so the reload does not click
+    const eng = window.audioEngine;
+    if (eng && eng.ctx && eng.ctx.state === 'running' && typeof eng.fadeOut === 'function') {
+      eng.fadeOut(0.08);
+      setTimeout(() => location.reload(), 130);
+    } else {
+      location.reload();
+    }
   }
 
   // A bar like the update notice: text plus a primary button and Later.

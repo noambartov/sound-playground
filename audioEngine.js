@@ -6,6 +6,7 @@ class AudioEngine {
         this.dcBlocker = null;
         this.initAudioContext();
         this.watchInterruptions();
+        this.fadeOnLeave();
     }
 
     // iPad / iPhone: switching to another app puts the sound in an 'interrupted' state
@@ -157,23 +158,56 @@ class AudioEngine {
         this.masterFade.connect(this.ctx.destination);
     }
 
-    // Runs fn (which tears down / rebuilds modules) behind a short master fade:
-    // fade out over 30 ms, run fn, then fade back in over 40 ms. Runs fn at once when no sound plays.
-    fadeAround(fn) {
+    // Ramps the master to silence over `seconds`; returns the audio time when it is silent.
+    fadeOut(seconds) {
         const ctx = this.ctx, g = this.masterFade && this.masterFade.gain;
-        if (!g || ctx.state !== 'running') { fn(); return; }
+        if (!g) return 0;
         const now = ctx.currentTime;
         g.cancelScheduledValues(now);
         g.setValueAtTime(g.value, now);
-        g.linearRampToValueAtTime(0, now + 0.03);
-        setTimeout(() => {
-            try { fn(); } finally {
-                const t = ctx.currentTime;
-                g.cancelScheduledValues(t);
-                g.setValueAtTime(0, t);
-                g.linearRampToValueAtTime(1, t + 0.04);
+        g.linearRampToValueAtTime(0, now + seconds);
+        return now + seconds;
+    }
+
+    // Runs fn (which tears down / rebuilds modules) behind a master fade: fade out over 80 ms, wait
+    // until the audio thread has really rendered the silence (iPad renders ahead in bigger chunks and
+    // timers can be late, so a fixed timer is not enough), run fn, then fade back in over 80 ms.
+    // Runs fn at once when no sound plays.
+    fadeAround(fn) {
+        const ctx = this.ctx, g = this.masterFade && this.masterFade.gain;
+        if (!g || ctx.state !== 'running') { fn(); return; }
+        const silentAt = this.fadeOut(0.08) + 0.03;
+        const started = performance.now();
+        const go = () => {
+            if (ctx.state === 'running' && ctx.currentTime < silentAt && performance.now() - started < 600) {
+                setTimeout(go, 15);
+                return;
             }
-        }, 45);
+            try { fn(); } finally {
+                const t = ctx.currentTime + 0.02;
+                g.cancelScheduledValues(ctx.currentTime);
+                g.setValueAtTime(0, ctx.currentTime);
+                g.setValueAtTime(0, t);
+                g.linearRampToValueAtTime(1, t + 0.08);
+            }
+        };
+        setTimeout(go, 90);
+    }
+
+    // Closing the window or reloading cuts the sound at once (a click): start a quick fade as soon as
+    // the page is about to go. The browser usually keeps rendering long enough for it to finish.
+    fadeOnLeave() {
+        const leave = () => { if (this.ctx && this.ctx.state === 'running') this.fadeOut(0.015); };
+        window.addEventListener('beforeunload', leave);
+        window.addEventListener('pagehide', leave);
+        // Back from the back/forward cache: sound up again
+        window.addEventListener('pageshow', (e) => {
+            if (!e.persisted || !this.masterFade) return;
+            const t = this.ctx.currentTime;
+            this.masterFade.gain.cancelScheduledValues(t);
+            this.masterFade.gain.setValueAtTime(0, t);
+            this.masterFade.gain.linearRampToValueAtTime(1, t + 0.08);
+        });
     }
 
     getMasterInput() {

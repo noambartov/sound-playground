@@ -3,7 +3,8 @@
 // still on the canvas). Switching Tooltips off hides it, and while Tooltips is off presets open no tips.
 // Tips come from helpData: playTips[preset] when written, else the recipe's steps, else the module's controls and tips.
 // After the preset's own tips come general canvas tips (moving around, zoom, selecting, cables, menus, the guide),
-// worded for touch or mouse. A pulsing ring marks what the current tip talks about (window.playTipTargets, CANVAS_TIPS).
+// worded for touch or mouse. A pulsing ring marks what the current tip talks about (window.playTipTargets, CANVAS_TIPS;
+// a preset tip without a written target points at the first control on the canvas its text names, autoTarget()).
 // English by default; a button switches to Hebrew (shared with the empty-canvas text, localStorage 'sp_intro_lang').
 (function () {
   'use strict';
@@ -92,7 +93,7 @@
     }
     const kind = isTouch() ? 'touch' : 'mouse';
     return [
-      ...own.map((text, i) => ({ text, target: targets[i] || null })),
+      ...own.map((text, i) => ({ text, target: targets[i] || null, auto: true })),
       ...lessonEnd,
       ...CANVAS_TIPS.map(t => ({ text: t[kind][lang], target: t.target }))
     ];
@@ -121,6 +122,86 @@
     return box && box !== card ? box : label;
   }
 
+  // Every control on the canvas that has a visible name: { name, box, card, module words }
+  // box = the smallest group around the name that holds its slider / menu / button
+  function canvasControls() {
+    const app = window.synthApp;
+    const out = [];
+    Object.values((app && app.modules) || {}).forEach(m => {
+      const card = m.card;
+      if (!card) return;
+      const header = card.querySelector('.node-header');
+      const words = ((header ? header.textContent : '') + ' ' + m.type).toLowerCase();
+      card.querySelectorAll('label, span, div, button, strong, b').forEach(el => {
+        if (el.closest('.port, .ports-row, .node-header')) return;
+        let name = el.tagName === 'BUTTON' ? el.textContent
+          : [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('');
+        name = name.split(':')[0].replace(/\s+/g, ' ').trim();
+        if (name.length < 2 || name.length > 28 || !/[a-z]/i.test(name) || /^\d/.test(name)) return;
+        let box = el;
+        while (box && box !== card && !(box.matches('button, select') || box.querySelector('input, select, button'))) box = box.parentElement;
+        if (!box || box === card || !box.getBoundingClientRect().width) return;   // hidden controls can't be ringed
+        out.push({ name: name.toLowerCase(), box, words });
+      });
+    });
+    return out;
+  }
+
+  // The jacks on the canvas: { name (as printed, upper case), box (the jack with its label), words }
+  function canvasJacks() {
+    const app = window.synthApp;
+    const out = [];
+    Object.values((app && app.modules) || {}).forEach(m => {
+      const card = m.card;
+      if (!card) return;
+      const header = card.querySelector('.node-header');
+      const words = ((header ? header.textContent : '') + ' ' + m.type).toLowerCase();
+      card.querySelectorAll('.port').forEach(port => {
+        const box = port.parentElement;
+        const name = (box ? box.textContent : '').replace(/\s+/g, ' ').trim();
+        if (name.length >= 2 && name.length <= 16 && name === name.toUpperCase()) out.push({ name, box, words });
+      });
+    });
+    return out;
+  }
+
+  // The control or jack a tip's text talks about, when the tip has no written target (or it is not on the canvas):
+  // the name that appears first in the text (whole word; a longer name wins at the same spot, e.g. Master Volume
+  // over Volume; on the module the text names when several modules have it). Control names match in any case,
+  // jack names only as printed in capitals (IN, CV, CUT MOD), so ordinary words like "in" never match.
+  // Nothing named: the module the text names, else the module the preset is about (its help-book page, or demo-<type>).
+  function autoTarget(text, key) {
+    const lower = ' ' + text.toLowerCase() + ' ';
+    const raw = ' ' + text + ' ';
+    const esc = n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let best = null;
+    const consider = (c, hay, name) => {
+      const hit = new RegExp('(^|[^A-Za-z0-9])' + esc(name) + '(?![A-Za-z0-9])').exec(hay);
+      if (!hit) return;
+      const pos = hit.index + hit[1].length;
+      const named = c.words.split(/[^a-z0-9]+/).some(w => w.length > 2 && lower.includes(w)) ? 1 : 0;
+      const score = [pos, -name.length, -named];
+      if (!best || score[0] < best.score[0] || (score[0] === best.score[0] && (score[1] < best.score[1] || (score[1] === best.score[1] && score[2] < best.score[2]))))
+        best = { score, box: c.box, name };
+    };
+    canvasControls().forEach(c => consider(c, lower, c.name));
+    canvasJacks().forEach(c => consider(c, raw, c.name));
+    if (best) return best;
+    const app = window.synthApp;
+    const mods = Object.values((app && app.modules) || {}).filter(m => m.card);
+    const named = mods.find(m => {
+      const header = m.card.querySelector('.node-header');
+      const title = (header ? header.textContent : '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 3);
+      return [m.type, ...title].some(w => lower.includes(w.toLowerCase()));
+    });
+    const page = window.helpData && window.helpData.en && (window.helpData.en.modules || []).find(p => p.preset === key);
+    const about = page ? page.type : (key || '').replace(/^demo-/, '');
+    const plain = t => t.toLowerCase().replace(/[^a-z]/g, '');
+    const own = mods.find(m => plain(m.type) === plain(about));
+    const m = named || own;
+    return m ? { box: m.card, name: m.type } : null;
+  }
+
   // A pulsing ring around the target, kept in place every frame (modules move, the view zooms)
   function placeRing() {
     if (!ring) return;
@@ -138,7 +219,7 @@
     if (ringTarget) requestAnimationFrame(placeRing);
   }
 
-  function pointAt(target) {
+  function pointAt(target, text) {
     if (!ring) {
       ring = document.createElement('div');
       ring.className = 'tip-ring';
@@ -146,7 +227,14 @@
       document.body.appendChild(ring);
     }
     const wasRunning = !!ringTarget;
-    ringTarget = resolveTarget(target);
+    let label = target;
+    ringTarget = target && resolveTarget(target);
+    if (!ringTarget && text) {
+      const auto = autoTarget(text, presetKey);
+      ringTarget = auto && auto.box;
+      label = auto && auto.name;
+    }
+    ring.dataset.label = ringTarget ? (label || '') : '';
     if (!ringTarget) { ring.hidden = true; return; }
     if (!wasRunning) requestAnimationFrame(placeRing);
   }
@@ -165,7 +253,7 @@
     panel.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
     panel.querySelector('.preset-tips-count').textContent = ui.count(index + 1, tips.length);
     panel.querySelector('.preset-tips-text').textContent = tips[index].text;
-    pointAt(tips[index].target);
+    pointAt(tips[index].target, tips[index].auto ? tips[index].text : null);
     const action = tips[index].action;
     const actionBtn = panel.querySelector('.preset-tips-action');
     actionBtn.hidden = !action;

@@ -19,6 +19,12 @@
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --grid-dot-color: #cbd5e1;
+  /* Notices and the tips panel: a dark bar on the light theme, a light bar on the dark theme */
+  --notice-bg: #1e293b;
+  --notice-text: #f1f5f9;
+  --notice-muted: #94a3b8;
+  --notice-btn-bg: #f8fafc;
+  --notice-btn-text: #0f172a;
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -40,6 +46,11 @@ body.dark-theme {
   --subtle-bg: #0f172a;
   --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
   --grid-dot-color: #334155;
+  --notice-bg: #f8fafc;
+  --notice-text: #0f172a;
+  --notice-muted: #64748b;
+  --notice-btn-bg: #0f172a;
+  --notice-btn-text: #f8fafc;
 }
 
 /* ==========================================================================
@@ -934,12 +945,11 @@ body.presentation-mode .node-header {
   left: 50%;
   transform: translate(-50%, 8px);
   max-width: min(520px, calc(100vw - 32px));
-  background: var(--panel-bg);
-  color: var(--text-color);
-  border: 1px solid var(--panel-border);
-  border-left: 3px solid var(--primary-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border: 1px solid var(--notice-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 500;
@@ -1484,22 +1494,26 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   align-items: center;
   gap: 10px;
   max-width: calc(100vw - 32px);
-  background: var(--panel-bg);
-  color: var(--text-color);
-  border: 1px solid var(--panel-border);
-  border-left: 3px solid var(--primary-color);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border: 1px solid var(--notice-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
   padding: 8px 10px 8px 16px;
   font-size: 13px;
   font-weight: 500;
   direction: ltr;
   z-index: 100000;
 }
+.update-notice .tool-btn {
+  background: transparent;
+  border-color: var(--notice-muted);
+  color: var(--notice-text);
+}
 .update-notice .update-notice-refresh {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: #ffffff;
+  background: var(--notice-btn-bg);
+  border-color: var(--notice-btn-bg);
+  color: var(--notice-btn-text);
 }
 .wt-display.wt-drawing {
   cursor: crosshair;
@@ -1767,4 +1781,61 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   }
   .sidebar.phone-collapsed h3::after { content: "Show"; }
   .sidebar.phone-collapsed > :not(h3) { display: none !important; }
+}
+
+/* Tips panel while a preset plays (presetTips.js), bottom left; full width at the bottom on narrow screens */
+.preset-tips {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(320px, calc(100vw - 32px));
+  background: var(--notice-bg);
+  color: var(--notice-text);
+  border: 1px solid var(--notice-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  z-index: 99998;
+}
+.preset-tips[hidden] { display: none; }
+.preset-tips-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--notice-muted);
+}
+.preset-tips-count { flex: 1; }
+.preset-tips-lang,
+.preset-tips-close {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font: inherit;
+  font-size: 12px;
+  text-transform: none;
+  color: var(--notice-text);
+  cursor: pointer;
+}
+.preset-tips-lang { text-decoration: underline; }
+.preset-tips-close { font-size: 16px; line-height: 1; opacity: 0.7; }
+.preset-tips-text { margin: 0 0 10px; }
+.preset-tips .preset-tips-next {
+  background: var(--notice-btn-bg);
+  border-color: var(--notice-btn-bg);
+  color: var(--notice-btn-text);
+}
+.preset-tips .preset-tips-next[hidden] { display: none; }
+@media (max-width: 700px) {
+  .preset-tips { left: 16px; right: 16px; width: auto; }
+}
+/* Below 1400 px the centered notice would touch the tips panel, so it moves up above it */
+@media (max-width: 1399px) {
+  body.preset-tips-open .app-toast { bottom: calc(32px + var(--preset-tips-h, 0px)); }
 }

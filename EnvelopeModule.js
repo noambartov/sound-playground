@@ -1,3 +1,47 @@
+// ADSR envelope drawn in the audio thread: input = gate (on above 0.2), output = envelope 0..1.
+// Straight-line segments like the main-thread fallback: Attack from the current value to 1, Decay to
+// Sustain, hold, Release from the current value to 0. Times in seconds (at least 3 ms) arrive by port.
+const ADSR_WORKLET = `
+class AdsrEnvProcessor extends AudioWorkletProcessor {
+    constructor() {
+        super();
+        this.p = { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.3 };
+        this.gate = false; this.stage = 0; this.v = 0; this.from = 0; this.t = 0; this.len = 1;
+        this.port.onmessage = (e) => Object.assign(this.p, e.data);
+    }
+    begin(stage, seconds) {
+        this.stage = stage; this.from = this.v; this.t = 0;
+        this.len = Math.max(1, Math.max(0.003, seconds) * sampleRate);
+    }
+    process(inputs, outputs) {
+        const gateIn = inputs[0] && inputs[0][0];
+        const out = outputs[0][0];
+        const p = this.p, sus = Math.min(1, Math.max(0, p.sustain));
+        for (let i = 0; i < out.length; i++) {
+            const on = gateIn ? gateIn[i] > 0.2 : false;
+            if (on && !this.gate) this.begin(1, p.attack);
+            else if (!on && this.gate) this.begin(4, p.release);
+            this.gate = on;
+            if (this.stage === 1) {
+                this.v = this.from + (1 - this.from) * (++this.t / this.len);
+                if (this.t >= this.len) { this.v = 1; this.begin(2, p.decay); }
+            } else if (this.stage === 2) {
+                this.v = 1 + (sus - 1) * (++this.t / this.len);
+                if (this.t >= this.len) { this.v = sus; this.stage = 3; }
+            } else if (this.stage === 3) {
+                this.v += (sus - this.v) * 0.002;
+            } else if (this.stage === 4) {
+                this.v = this.from * (1 - ++this.t / this.len);
+                if (this.t >= this.len) { this.v = 0; this.stage = 0; }
+            }
+            out[i] = this.v;
+        }
+        return true;
+    }
+}
+registerProcessor('adsr-env-processor', AdsrEnvProcessor);
+`;
+
 class EnvelopeModule {
     constructor(id, audioCtx) {
         this.id = id;
@@ -20,60 +64,37 @@ class EnvelopeModule {
         // Gate Input Node
         this.gateInputNode = this.ctx.createGain();
 
-        // Output Envelope CV Node
+        // Output Envelope CV Node. The envelope itself is drawn sample by sample in an AudioWorklet
+        // (ADSR_WORKLET) that also reads the gate, so it starts exactly when the gate rises. Scheduling
+        // it from the main thread at ctx.currentTime started notes from a stale time and sometimes jumped
+        // straight to the top of the attack: a click. envNode is only used by the fallback below.
+        this.outNode = this.ctx.createGain();
         this.envNode = this.ctx.createConstantSource();
         this.envNode.offset.setValueAtTime(0, this.ctx.currentTime);
+        this.envNode.connect(this.outNode);
         this.envNode.start();
 
-        // High-performance AudioWorklet Gate Detector (replaces ScriptProcessorNode)
         this.initGateDetector();
     }
 
     async initGateDetector() {
         try {
             if (this.ctx.audioWorklet) {
-                if (!EnvelopeModule.workletRegistered) {
-                    const workletCode = `
-                        class GateDetectorProcessor extends AudioWorkletProcessor {
-                            constructor() {
-                                super();
-                                this.lastGateState = false;
-                            }
-                            process(inputs) {
-                                const input = inputs[0];
-                                if (input && input[0] && input[0].length > 0) {
-                                    const channel = input[0];
-                                    for (let i = 0; i < channel.length; i++) {
-                                        const isGateOn = channel[i] > 0.2;
-                                        if (!this.lastGateState && isGateOn) {
-                                            this.port.postMessage({ type: 'gateOn' });
-                                        } else if (this.lastGateState && !isGateOn) {
-                                            this.port.postMessage({ type: 'gateOff' });
-                                        }
-                                        this.lastGateState = isGateOn;
-                                    }
-                                }
-                                return true;
-                            }
-                        }
-                        registerProcessor('gate-detector-processor', GateDetectorProcessor);
-                    `;
-                    const blob = new Blob([workletCode], { type: 'application/javascript' });
+                if (!EnvelopeModule.workletReady) {
+                    const blob = new Blob([ADSR_WORKLET], { type: 'application/javascript' });
                     const url = URL.createObjectURL(blob);
-                    await this.ctx.audioWorklet.addModule(url);
-                    URL.revokeObjectURL(url);
-                    EnvelopeModule.workletRegistered = true;
+                    EnvelopeModule.workletReady = this.ctx.audioWorklet.addModule(url)
+                        .finally(() => URL.revokeObjectURL(url));
                 }
+                await EnvelopeModule.workletReady;
+                if (this.destroyed) return;
 
-                this.gateWorklet = new AudioWorkletNode(this.ctx, 'gate-detector-processor');
-                this.gateInputNode.connect(this.gateWorklet);
-                this.gateWorklet.port.onmessage = (e) => {
-                    if (e.data.type === 'gateOn') {
-                        this.triggerAttack();
-                    } else if (e.data.type === 'gateOff') {
-                        this.triggerRelease();
-                    }
-                };
+                this.adsrNode = new AudioWorkletNode(this.ctx, 'adsr-env-processor', {
+                    numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1]
+                });
+                this.gateInputNode.connect(this.adsrNode);
+                this.adsrNode.connect(this.outNode);
+                this.sendParams();
                 return;
             }
         } catch (err) {
@@ -98,6 +119,13 @@ class EnvelopeModule {
             }
             lastGateState = isGateOn;
         }, 12);
+    }
+
+    sendParams() {
+        if (!this.adsrNode) return;
+        this.adsrNode.port.postMessage({
+            attack: this.attack, decay: this.decay, sustain: this.sustain, release: this.release
+        });
     }
 
     // --- State Protocol ---
@@ -135,7 +163,7 @@ class EnvelopeModule {
     }
 
     getAudioOutput(portType) {
-        return this.envNode;
+        return this.outNode;
     }
 
     // --- ADSR Trigger Logic ---
@@ -190,24 +218,28 @@ class EnvelopeModule {
     // --- Control Setters ---
     setAttack(val) {
         this.attack = parseFloat(val);
+        this.sendParams();
         const label = document.getElementById(`env_a_val_${this.id}`);
         if (label) label.innerText = this.formatTime(this.attack);
     }
 
     setDecay(val) {
         this.decay = parseFloat(val);
+        this.sendParams();
         const label = document.getElementById(`env_d_val_${this.id}`);
         if (label) label.innerText = this.formatTime(this.decay);
     }
 
     setSustain(val) {
         this.sustain = parseFloat(val);
+        this.sendParams();
         const label = document.getElementById(`env_s_val_${this.id}`);
         if (label) label.innerText = Math.round(this.sustain * 100) + '%';
     }
 
     setRelease(val) {
         this.release = parseFloat(val);
+        this.sendParams();
         const label = document.getElementById(`env_r_val_${this.id}`);
         if (label) label.innerText = this.formatTime(this.release);
     }
@@ -221,9 +253,11 @@ class EnvelopeModule {
         if (this.fallbackTimer) {
             clearInterval(this.fallbackTimer);
         }
-        if (this.gateWorklet) {
-            try { this.gateWorklet.disconnect(); } catch(e){}
+        this.destroyed = true;
+        if (this.adsrNode) {
+            try { this.adsrNode.disconnect(); } catch(e){}
         }
+        try { this.outNode.disconnect(); } catch(e){}
         try { this.gateInputNode.disconnect(); } catch(e){}
         try { this.envNode.stop(); } catch(e){}
         try { this.envNode.disconnect(); } catch(e){}

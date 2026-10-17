@@ -253,6 +253,18 @@ window.helpData = {
         controls: ["Record / Stop & Export. The level is normalized so recordings come out at an even loudness."],
         tips: ["On iPad, the share sheet opens: choose Save to Files."] }
     ],
+    // Tips shown in the tips panel while a preset plays (presetTips.js); presets without an entry use their recipe steps or module controls
+    playTips: {
+      "demo-reverb": [
+        "Raise Decay on the Reverb to make the room ring longer.",
+        "Raise Radius on the Reverb for a bigger room.",
+        "Turn Mix on the Reverb down to hear the dry sound, or up for a dreamy wash.",
+        "Change the Oscillator Waveform to Sawtooth for a brighter, buzzier tone.",
+        "Drag the step sliders on the Sequencer to change the melody, and turn steps On or Off for a new rhythm.",
+        "Raise Tempo on the Sequencer to play faster.",
+        "Raise Decay on the Envelope for longer notes."
+      ]
+    },
     recipes: [
       { preset: "classic-mono", title: "Classic Mono Synth",
         learn: "The basic synth: notes, a filter and a volume shape.",
@@ -531,6 +543,17 @@ window.helpData = {
         controls: ["Record / Stop & Export. העוצמה מנורמלת כך שההקלטות יוצאות בעוצמה אחידה."],
         tips: ["באייפד נפתח חלון השיתוף: בוחרים Save to Files."] }
     ],
+    playTips: {
+      "demo-reverb": [
+        "הרם את Decay ב-Reverb כדי שהחדר יהדהד יותר זמן.",
+        "הרם את Radius ב-Reverb בשביל חדר גדול יותר.",
+        "הורד את Mix ב-Reverb כדי לשמוע את הצליל היבש, או הרם אותו בשביל ענן חלומי.",
+        "שנה את ה-Waveform באוסילטור ל-Sawtooth בשביל צליל בהיר ומזמזם יותר.",
+        "גרור את סליידרי הצעדים בסיקוונסר כדי לשנות את המנגינה, והדלק או כבה צעדים בשביל קצב חדש.",
+        "הרם את Tempo בסיקוונסר כדי לנגן מהר יותר.",
+        "הרם את Decay ב-Envelope בשביל תווים ארוכים יותר."
+      ]
+    },
     recipes: [
       { preset: "classic-mono", title: "Classic Mono Synth",
         learn: "הסינתסייזר הבסיסי: תווים, פילטר וצורת עוצמה.",

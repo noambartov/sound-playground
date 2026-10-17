@@ -344,6 +344,7 @@
         if (m.instance.def && !m.instance.playing && typeof m.instance.start === 'function') m.instance.start();
       });
     }, 300);
+    if (window.presetTips) window.presetTips.show(key);
     closeModal();
   }
 

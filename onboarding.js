@@ -32,6 +32,7 @@
       });
       a.showNotification('The demo is playing. Master Volume on the Output module sets the loudness, and Stop on the Sequencer stops it.');
     }, 300);
+    if (window.presetTips) window.presetTips.show(DEMO_PRESET);
   }
 
   let hint = null;

@@ -29,6 +29,7 @@ if (!window.SoundSandboxApp) {
       this.bindEvents();
       this.bindCanvasInteractions();
       this.initDraggablePanels();
+      this.initToolbarGroups();
       this.initSidebarGroups();
       this.initHistory();
     }
@@ -1941,6 +1942,36 @@ if (!window.SoundSandboxApp) {
       if (typeof MutationObserver !== 'undefined') {
         new MutationObserver(() => { sync(); filter(); }).observe(sidebar, { childList: true, subtree: true });
       }
+    }
+
+    // Toolbar groups (View, File): on iPad portrait the CSS folds each group into one button.
+    // Tapping it opens the group as a small menu; tapping a choice or anywhere else closes it.
+    initToolbarGroups() {
+      const groups = Array.from(document.querySelectorAll('.toolbar .tb-group'));
+      const setOpen = (group, open) => {
+        group.classList.toggle('open', open);
+        const toggle = group.querySelector('.tb-group-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      groups.forEach(group => {
+        const toggle = group.querySelector('.tb-group-toggle');
+        if (toggle) {
+          toggle.addEventListener('click', () => {
+            const open = !group.classList.contains('open');
+            groups.forEach(g => setOpen(g, false));
+            setOpen(group, open);
+          });
+        }
+        const items = group.querySelector('.tb-group-items');
+        if (items) {
+          items.addEventListener('click', (e) => {
+            if (e.target.closest('.tool-btn')) setOpen(group, false);
+          });
+        }
+      });
+      document.addEventListener('pointerdown', (e) => {
+        groups.forEach(g => { if (g.classList.contains('open') && !g.contains(e.target)) setOpen(g, false); });
+      }, true);
     }
 
     initDraggablePanels() {

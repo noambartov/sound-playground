@@ -388,7 +388,7 @@
     container.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
       btn.onclick = () => {
         if (btn.dataset.lesson) markLessonDone(btn.getAttribute('data-preset'));
-        loadPreset(btn.getAttribute('data-preset'));
+        loadPreset(btn.getAttribute('data-preset'), !!btn.dataset.lesson);
       };
     });
     container.querySelectorAll('.book-mod-btn[data-module]').forEach(btn => {
@@ -407,12 +407,20 @@
     });
   }
 
-  // A preset is added next to the modules already on the canvas (an empty canvas just gets the preset)
-  function loadPreset(key) {
+  // A preset is added next to the modules already on the canvas (an empty canvas just gets the preset).
+  // A lesson (replace) clears the canvas first, behind the app's short audio fade; Undo brings the old canvas back.
+  function loadPreset(key, replace) {
     const preset = window.presetData ? window.presetData[key] : null;
-    if (!preset || !window.synthApp || typeof window.synthApp.loadPatchData !== 'function') return;
+    const app = window.synthApp;
+    if (!preset || !app || typeof app.loadPatchData !== 'function') return;
+    closeModal();
+    if (replace && typeof app.withAudioFade === 'function') app.withAudioFade(() => startPreset(key, preset, false));
+    else startPreset(key, preset, true);
+  }
+
+  function startPreset(key, preset, add) {
     // The app itself shows the "patch added, raise the volume" notice
-    const newIds = window.synthApp.loadPatchData(preset, { add: true }) || [];
+    const newIds = window.synthApp.loadPatchData(preset, { add }) || [];
     if (window.synthApp.audioCtx && window.synthApp.audioCtx.state === 'suspended') window.synthApp.audioCtx.resume();
     // The preset's Sequencers, Drum Machines and Metronomes (any template module with start()) start right away (its Output volume is still at 0)
     setTimeout(() => {
@@ -423,7 +431,6 @@
       });
     }, 300);
     if (window.presetTips) window.presetTips.show(key);
-    closeModal();
   }
 
   function openModal() {

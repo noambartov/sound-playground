@@ -237,6 +237,10 @@ window.helpData = {
         summary: "Evens out the volume: whenever the sound gets louder than the Threshold, it is turned down. It makes drums punchier, and with the SC input a kick can make another sound duck on every beat (the dance-music \"pump\").",
         controls: ["The display: the line shows how loud the sound comes out (upwards) for how loud it comes in (to the right). Past the Threshold (the thin upright line) the line bends flatter: that is the compression. The dot is the level coming in right now. The bar on the right and the Reduction readout show how many dB are being taken off.", "Threshold: the level where turning down starts. Lower it to compress more of the sound.", "Ratio: how hard it turns down past the Threshold. 2:1 is gentle, 4:1 is clear, 20:1 works as a limiter (almost nothing gets past the Threshold).", "Attack: how fast it turns down when the sound gets loud. A slower Attack (10 to 30 ms) lets the start of each drum hit through, for more punch.", "Release: how fast it lets go when the sound gets quieter. A short Release pumps, a long one is smooth.", "Knee: at 0 dB it starts turning down sharply at the Threshold; a higher Knee eases in gently.", "Makeup: turns the whole result up again, to win back the volume the compression took.", "Mix: the compressed sound against the original. Around 50% is \"parallel compression\": punchy but still natural."],
         tips: ["A cable in SC (sidechain): now that sound decides when to turn down. Drum Machine Kick OUT into SC and a held sound into IN L: the held sound ducks on every kick.", "Watch the Reduction readout: a few dB is gentle glue, 10 dB or more is a strong effect.", "Drum Machine MAIN L and MAIN R into IN L and IN R, a low Threshold and an Attack around 20 ms: the drums sound bigger and punchier. Raise Makeup to get the volume back."] },
+      { type: "eq", group: "processors", name: "EQ", preset: "demo-eq",
+        summary: "Shapes the tone: turns chosen ranges of the sound up or down, from the deep lows to the airy highs. Four bands plus a Low Cut and a High Cut, drawn as one curve over the live sound.",
+        controls: ["The display: left is low (20 Hz), right is high (20 kHz); up is louder, down is quieter. The line is the EQ curve, the faint shape behind it is the sound right now. Drag a dot: left / right sets that band's frequency, up / down its gain.", "Low and High: shelves that lift or lower everything below (Low) or above (High) their Freq.", "Mid 1 and Mid 2: a bump or dip around their Freq. Q sets how wide: low Q is broad and gentle, high Q is narrow and sharp.", "Gain: -18 to +18 dB per band. 0 dB leaves that band untouched.", "Low Cut: removes everything below its frequency (Off at the far left), for example rumble. High Cut: removes everything above it (Off at the far right), for a darker, muffled sound.", "Output: the overall level after the EQ."],
+        tips: ["Cutting usually sounds more natural than boosting: rather than raising the highs, try lowering the muddy mids around 300 to 500 Hz.", "To find a harsh spot, raise a Mid band with a high Q, slide it until it sounds worst, then pull its Gain down.", "Drop an LFO OUT cable on the High Cut slider for the DJ-style sweep from muffled to bright."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "Draws the shape of a note over time each time a gate arrives.",
         controls: ["Attack: fade-in time.", "Decay: time to fall to the Sustain level.", "Sustain: level held while the key is down.", "Release: fade-out after the key is let go."],
@@ -557,6 +561,10 @@ window.helpData = {
         summary: "מאזן את העוצמה: בכל פעם שהצליל חזק יותר מה-Threshold, הוא מנמיך אותו. הוא נותן לתופים יותר \"פאנץ'\", ועם הכניסה SC בס-דראם יכול לגרום לצליל אחר לשקוע בכל מכה (ה\"פאמפ\" של מוזיקת ריקודים).",
         controls: ["המסך: הקו מראה כמה חזק הצליל יוצא (למעלה) לפי כמה חזק הוא נכנס (ימינה). אחרי ה-Threshold (הקו הדק העומד) הקו מתכופף ונהיה שטוח יותר: זו הדחיסה. הנקודה היא העוצמה שנכנסת עכשיו. הפס מימין והכיתוב Reduction מראים כמה dB מורידים.", "Threshold: העוצמה שממנה מתחילים להנמיך. מורידים אותו כדי לדחוס יותר מהצליל.", "Ratio: כמה חזק מנמיכים מעבר ל-Threshold. 2:1 עדין, 4:1 ברור, 20:1 עובד כמו לימיטר (כמעט כלום לא עובר את ה-Threshold).", "Attack: כמה מהר מנמיכים כשהצליל מתחזק. Attack איטי יותר (10 עד 30 ms) מעביר את תחילת כל מכת תוף, ליותר פאנץ'.", "Release: כמה מהר משחררים כשהצליל נחלש. Release קצר \"פומפם\", ארוך נשמע חלק.", "Knee: ב-0 dB ההנמכה מתחילה בבת אחת ב-Threshold; Knee גבוה יותר נכנס בהדרגה.", "Makeup: מגביר את כל התוצאה בחזרה, כדי להחזיר את העוצמה שהדחיסה לקחה.", "Mix: הצליל הדחוס מול המקורי. בערך 50% זו \"דחיסה מקבילה\": פאנץ' אבל עדיין טבעי."],
         tips: ["כבל ב-SC (סייד-צ'יין): עכשיו הצליל הזה קובע מתי להנמיך. Kick OUT של מכונת התופים אל SC וצליל מתמשך אל IN L: הצליל המתמשך שוקע בכל בס-דראם.", "שימו לב לכיתוב Reduction: כמה dB זה \"דבק\" עדין, 10 dB ומעלה זה אפקט חזק.", "MAIN L ו-MAIN R של מכונת התופים אל IN L ו-IN R, Threshold נמוך ו-Attack בערך 20 ms: התופים נשמעים גדולים יותר ועם יותר פאנץ'. מעלים Makeup כדי להחזיר את העוצמה."] },
+      { type: "eq", group: "processors", name: "EQ", preset: "demo-eq",
+        summary: "מעצב את הגוון: מגביר או מנמיך טווחים שבוחרים בצליל, מהבסים העמוקים ועד הגבהים האווריריים. ארבעה פסים ועוד Low Cut ו-High Cut, מצוירים כעקומה אחת מעל הצליל החי.",
+        controls: ["המסך: שמאל זה נמוך (20 Hz), ימין זה גבוה (20 kHz); למעלה חזק יותר, למטה שקט יותר. הקו הוא עקומת ה-EQ, והצורה החיוורת מאחוריו היא הצליל ברגע זה. גוררים נקודה: ימינה ושמאלה משנה את התדר של הפס, למעלה ולמטה את העוצמה שלו.", "Low ו-High: \"מדפים\" שמגביהים או מנמיכים את כל מה שמתחת (Low) או מעל (High) ל-Freq שלהם.", "Mid 1 ו-Mid 2: גבעה או גומה סביב ה-Freq שלהם. Q קובע כמה רחב: Q נמוך רחב ועדין, Q גבוה צר וחד.", "Gain: מ-18- עד 18+ dB לכל פס. 0 dB משאיר את הפס בלי שינוי.", "Low Cut: מסיר את כל מה שמתחת לתדר שלו (Off בקצה השמאלי), למשל רעש רקע נמוך. High Cut: מסיר את כל מה שמעליו (Off בקצה הימני), לצליל כהה ועמום.", "Output: העוצמה הכוללת אחרי ה-EQ."],
+        tips: ["הנמכה נשמעת בדרך כלל טבעית יותר מהגברה: במקום להרים את הגבהים, נסו להוריד את האמצעים ה\"בוציים\" סביב 300 עד 500 Hz.", "כדי למצוא נקודה צורמת, מרימים פס Mid עם Q גבוה, מזיזים אותו עד שזה נשמע הכי גרוע, ואז מורידים את ה-Gain שלו.", "הפילו כבל מ-LFO OUT על הסליידר High Cut: סוויפ בסגנון DJ מעמום לבהיר."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "משרטט את הצורה של תו לאורך זמן בכל פעם שמגיע Gate.",
         controls: ["Attack: זמן הכניסה.", "Decay: הזמן לרדת לרמת ה-Sustain.", "Sustain: הרמה שנשארת כל עוד הקליד לחוץ.", "Release: הדעיכה אחרי שעוזבים את הקליד."],
@@ -680,6 +688,10 @@ window.helpData = {
       "compressor:in:sc": { text: "סייד-צ'יין: כשיש כאן כבל, הצליל הזה (ולא זה שב-IN) קובע מתי להנמיך. בס-דראם כאן גורם לפד לשקוע בכל פעמה.", where: "Kick OUT של מכונת התופים, Oscillator, כל צליל" },
       "compressor:out:out_l": { text: "צד שמאל, דחוס (לפי Mix).", where: "IN של Output, IN L של Reverb או Stereo Delay, Mixer, Recorder" },
       "compressor:out:out_r": { text: "צד ימין, דחוס (לפי Mix).", where: "IN R של Output, IN R של Reverb או Stereo Delay, Mixer" },
+      "eq:in:in_l": { text: "הצליל לעיצוב, צד שמאל. אם IN R ריק, הוא נכנס לשני הצדדים.", where: "Oscillator, Filter, VCA, Poly Synth, MAIN L של מכונת התופים, OUT L של Mixer" },
+      "eq:in:in_r": { text: "הצליל לעיצוב, צד ימין (לא חובה).", where: "MAIN R של מכונת התופים, OUT R של Mixer או Compressor" },
+      "eq:out:out_l": { text: "צד שמאל, אחרי ה-EQ.", where: "IN של Output, IN L של Compressor, Reverb או Stereo Delay, Mixer" },
+      "eq:out:out_r": { text: "צד ימין, אחרי ה-EQ.", where: "IN R של Output, IN R של Compressor, Reverb או Stereo Delay, Mixer" },
       "wavetable:in:pitch": { text: "מנגן תווים (בהרץ). כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת; Octave ו-Tune עדיין פועלים.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר, PITCH של Ribbon" },
       "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
       "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
@@ -865,6 +877,28 @@ window.presetData = {
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-eq": {
+    modules: [
+      { id: "dm1", type: "drums", x: 40, y: 80, state: { tempo: 112, swing: 15, bars: 1, rows: [
+        { sound: "kick808", steps: "2000001000200000" },
+        { sound: "snare909", steps: "0000200000002000" },
+        { sound: "hat808c", steps: "1010101210101012" },
+        { sound: "ride", steps: "0000000000000010" }
+      ] } },
+      { id: "eq1", type: "eq", x: 880, y: 80, state: { low_freq: 20.1, low_gain: 6, m1_freq: 45, m1_gain: -5, m1_q: 1.2, m2_freq: 70, m2_gain: 0, m2_q: 1, high_freq: 86.7, high_gain: 4, lowcut: 0, highcut: 75, output: -2 } },
+      { id: "lfo1", type: "lfo", x: 880, y: 760, state: { rate: 0.12, depth: 80 } },
+      { id: "out1", type: "output", x: 1340, y: 80, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 1340, y: 380, state: {} }
+    ],
+    connections: [
+      { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "eq1", toPortInfo: { id: "in_l" } },
+      { fromNode: "dm1", fromPortInfo: { id: "main_r" }, toNode: "eq1", toPortInfo: { id: "in_r" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "eq1", toPortInfo: { id: "knob:#eq_p_highcut_eq1", knob: "#eq_p_highcut_eq1" } },
+      { fromNode: "eq1", fromPortInfo: { id: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "eq1", fromPortInfo: { id: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "eq1", fromPortInfo: { id: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-compressor": {

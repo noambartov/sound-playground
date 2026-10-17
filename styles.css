@@ -1690,8 +1690,23 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 .empty-canvas-hint .empty-canvas-note { font-size: 12px; }
 .empty-canvas-hint[hidden] { display: none; }
 .empty-canvas-hint .empty-canvas-short { display: none; }
+.empty-canvas-hint [data-lang="he"],
+.empty-canvas-hint.lang-he [data-lang="en"] { display: none; }
+.empty-canvas-hint.lang-he .empty-canvas-intro [data-lang="he"] { display: block; }
+.empty-canvas-hint.docked.lang-he .empty-canvas-short[data-lang="he"] { display: block; }
+.empty-canvas-hint .empty-canvas-lang {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-color);
+  cursor: pointer;
+}
 .empty-canvas-hint.docked .empty-canvas-intro { display: none; }
-.empty-canvas-hint.docked .empty-canvas-short { display: block; }
+.empty-canvas-hint.docked .empty-canvas-short[data-lang="en"] { display: block; }
+.empty-canvas-hint.docked.lang-he .empty-canvas-short[data-lang="en"] { display: none; }
 .demo-fly {
   position: fixed;
   z-index: 100002;

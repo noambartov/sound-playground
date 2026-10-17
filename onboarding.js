@@ -1,6 +1,6 @@
 // onboarding.js - help for newcomers. Until the first module appears, the empty canvas shows a short explanation and a big
 // Play demo button; then the button flies into the Toolbar as a plain Demo button (#demo-btn) and stays there
-// (localStorage 'sp_demo_docked'). Later, an empty canvas shows only a short text hint.
+// (localStorage 'sp_demo_docked'). Later, an empty canvas shows only a short text hint. A small button switches the text to Hebrew.
 // Pressing either button also starts the audio (the user gesture browsers require).
 (function () {
   'use strict';
@@ -36,6 +36,18 @@
 
   let hint = null;
   let toolbarBtn = null;
+  // The text is English by default; the owner allowed an optional Hebrew version here, like in the manual
+  const LANG_KEY = 'sp_intro_lang';
+  let lang = 'en';
+
+  function setLang(next) {
+    lang = next;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+    hint.classList.toggle('lang-he', lang === 'he');
+    hint.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
+    hint.querySelector('.empty-canvas-lang').textContent = lang === 'he' ? 'English' : 'עברית';
+    hint.querySelector('.empty-canvas-demo').textContent = lang === 'he' ? 'נגן דמו' : 'Play demo';
+  }
 
   function updateEmptyHint() {
     if (!hint) return;
@@ -75,19 +87,32 @@
     hint.className = 'empty-canvas-hint';
     hint.innerHTML = `
       <div class="empty-canvas-intro">
-      <h2>Sound Playground</h2>
-      <p>A modular synthesizer in your browser. Each module makes or shapes sound, and cables connect them.
-        You hear only what is cabled into an <strong>Output</strong> module.</p>
-      <button type="button" class="tool-btn empty-canvas-demo">Play demo</button>
-      <p>Or add modules from the <strong>Modules</strong> menu, or press <strong>?</strong> for the guide.</p>
-      <p class="empty-canvas-note">No sound? Turn up your device volume. On iPhone, also turn off silent mode.</p>
+        <h2>Sound Playground</h2>
+        <p data-lang="en">You're looking at an empty canvas. Pick modules from the <strong>Modules</strong> menu and connect them with cables to make sound.
+          Follow the sound's path and make sure it ends in an <strong>Output</strong> module, so you can hear it.
+          For any question, use the <strong>?</strong> button or <strong>Tooltips</strong> in the top bar.</p>
+        <p data-lang="he">לפניך קנבס ריק. בחר מודולים מתפריט <strong>Modules</strong> וחבר ביניהם בכבלים כדי ליצור סאונד.
+          עקוב אחרי מסלול הסאונד וודא שהוא מגיע למודול <strong>Output</strong>, כדי שתוכל לשמוע אותו.
+          בכל שאלה אפשר להיעזר בכפתור <strong>?</strong> או ב-<strong>Tooltips</strong> בסרגל העליון.</p>
+        <button type="button" class="tool-btn empty-canvas-demo">Play demo</button>
+        <p class="empty-canvas-note" data-lang="en">Works great on a phone too, but for a first try a larger screen is recommended.<br>
+          No sound? Turn up your device volume. On iPhone, also turn off silent mode.</p>
+        <p class="empty-canvas-note" data-lang="he">עובד מצוין גם בטלפון, אבל בפעם הראשונה מומלץ להתנסות על מסך גדול יותר.<br>
+          אין צליל? הגבר את עוצמת הקול במכשיר. באייפון, כבה גם את מצב השקט.</p>
       </div>
-      <p class="empty-canvas-short">Add modules from the <strong>Modules</strong> menu and cable them into an <strong>Output</strong> module,
-        or press <strong>Demo</strong> to hear an example.</p>`;
+      <p class="empty-canvas-short" data-lang="en">Add modules from the <strong>Modules</strong> menu and cable them into an <strong>Output</strong> module,
+        or press <strong>Demo</strong> to hear an example.</p>
+      <p class="empty-canvas-short" data-lang="he">הוסף מודולים מתפריט <strong>Modules</strong> וחבר אותם בכבל למודול <strong>Output</strong>,
+        או לחץ על <strong>Demo</strong> כדי לשמוע דוגמה.</p>
+      <button type="button" class="empty-canvas-lang">עברית</button>`;
     const btn = hint.querySelector('.empty-canvas-demo');
-    // Keep the press away from the canvas (selection box, pan)
-    ['pointerdown', 'mousedown', 'touchstart'].forEach(t => btn.addEventListener(t, e => e.stopPropagation(), { passive: true }));
+    const langBtn = hint.querySelector('.empty-canvas-lang');
+    // Keep presses away from the canvas (selection box, pan)
+    [btn, langBtn].forEach(b => ['pointerdown', 'mousedown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })));
     btn.addEventListener('click', playDemo);
+    langBtn.addEventListener('click', () => setLang(lang === 'he' ? 'en' : 'he'));
+    try { if (localStorage.getItem(LANG_KEY) === 'he') lang = 'he'; } catch (e) {}
+    setLang(lang);
     container.appendChild(hint);
     toolbarBtn = document.getElementById('demo-btn');
     if (toolbarBtn) toolbarBtn.addEventListener('click', playDemo);

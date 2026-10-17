@@ -1367,6 +1367,24 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: #fff;
 }
 
+/* Compressor (CompressorModule.js) */
+.comp-display {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 600 / 250;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+}
+
+.comp-readout {
+  font-size: 11px;
+  color: var(--muted-text);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Stereo Delay (StereoDelayModule.js) */
 .sd-display {
   width: 100%;

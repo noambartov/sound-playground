@@ -1,4 +1,6 @@
-// presetTips.js - a small tips panel at the bottom of the screen while a preset plays ("Try moving ... to get ...").
+// presetTips.js - a small tips panel at the bottom of the screen while a preset plays ("Try moving ... to get ..."),
+// and whenever the Tooltips button is switched on (then with the canvas tips, after the last preset's tips if one is
+// still on the canvas). Switching Tooltips off hides it, and while Tooltips is off presets open no tips.
 // Tips come from helpData: playTips[preset] when written, else the recipe's steps, else the module's controls and tips.
 // After the preset's own tips come general canvas tips (moving around, zoom, selecting, cables, menus, the guide),
 // worded for touch or mouse. A pulsing ring marks what the current tip talks about (window.playTipTargets, CANVAS_TIPS).
@@ -42,7 +44,8 @@
   let panel = null;
   let ring = null;
   let ringTarget = null;
-  let presetKey = null;
+  let presetKey = null;   // the last preset loaded, kept until the canvas is emptied
+  let open = false;
   let index = 0;
 
   function getLang() {
@@ -129,8 +132,12 @@
     if (!wasRunning) requestAnimationFrame(placeRing);
   }
 
+  function tooltipsOn() {
+    return !document.body.classList.contains('tooltips-disabled');
+  }
+
   function render() {
-    if (!panel || !presetKey) return;
+    if (!panel || !open) return;
     const lang = getLang();
     const tips = tipsFor(presetKey, lang);
     if (!tips.length) { hide(); return; }
@@ -151,7 +158,7 @@
 
   function hide() {
     if (panel) panel.hidden = true;
-    presetKey = null;
+    open = false;
     ringTarget = null;
     if (ring) ring.hidden = true;
     document.body.classList.remove('preset-tips-open');
@@ -179,18 +186,26 @@
     document.body.appendChild(panel);
     const layer = document.getElementById('modules-layer');
     if (layer) new MutationObserver(() => {
-      if (window.synthApp && Object.keys(window.synthApp.modules || {}).length === 0) hide();
+      if (window.synthApp && Object.keys(window.synthApp.modules || {}).length === 0) { presetKey = null; hide(); }
     }).observe(layer, { childList: true });
   }
 
-  // Called after a preset is loaded (help.js, onboarding.js)
+  // Called after a preset is loaded (help.js, onboarding.js); key = null shows the canvas tips only
   function show(key) {
     if (!panel) build();
-    presetKey = key;
+    if (key) presetKey = key;
+    if (!tooltipsOn()) return;
+    open = true;
     index = 0;
     render();
     setTimeout(render, 400);
   }
 
-  window.presetTips = { show, hide };
+  // The Tooltips button (app.js toggleTooltips) switches the panel on and off with the jack hints
+  function onTooltips(enabled) {
+    if (enabled) show(presetKey);
+    else hide();
+  }
+
+  window.presetTips = { show, hide, onTooltips };
 })();

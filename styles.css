@@ -1860,6 +1860,14 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--notice-btn-text);
 }
 .preset-tips .preset-tips-next[hidden] { display: none; }
+.preset-tips-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+.preset-tips .preset-tips-action {
+  background: var(--notice-btn-bg);
+  border-color: var(--notice-border);
+  color: var(--notice-btn-text);
+  font-weight: 700;
+}
+.preset-tips .preset-tips-action[hidden] { display: none; }
 @media (max-width: 700px) {
   .preset-tips { left: 16px; right: 16px; width: auto; }
 }

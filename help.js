@@ -433,6 +433,14 @@
     if (window.presetTips) window.presetTips.show(key);
   }
 
+  // Lets the tips panel start the next lesson (presetTips.js, the tip after a lesson's steps)
+  window.helpBook = {
+    loadLesson(key) {
+      markLessonDone(key);
+      loadPreset(key, true);
+    }
+  };
+
   function openModal() {
     const modal = document.getElementById('help-modal');
     if (!modal) return;

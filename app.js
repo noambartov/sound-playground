@@ -484,7 +484,7 @@ if (!window.SoundSandboxApp) {
       const size = id => ({ w: byId[id].card.offsetWidth, h: byId[id].card.offsetHeight });
       const originX = Math.min(...ids.map(id => byId[id].card.offsetLeft));
       const originY = Math.min(...ids.map(id => byId[id].card.offsetTop));
-      let targets = this.arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY });
+      let targets = this.arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY, categoryRank });
       if (!targets) {
 
       // Columns, ordered by where the cabled neighbours sit (a few back-and-forth passes)
@@ -560,7 +560,7 @@ if (!window.SoundSandboxApp) {
     // sit to the right of the rows; chains that reach no Mixer get a row under them; modules
     // with no cables a last row. Columns still follow the signal (rank). Returns null without a
     // Mixer channel in use, so Arrange falls back to plain columns.
-    arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY }) {
+    arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY, categoryRank }) {
       const isMixer = id => byId[id] && byId[id].type === 'mixer';
       const chOf = info => {
         if (!info) return null;
@@ -587,18 +587,44 @@ if (!window.SoundSandboxApp) {
       });
       const keys = [...new Set(ids.flatMap(id => [...lanes[id]]))];
       if (!keys.length) return null;
-      keys.sort((a, b) => {
-        const [ma, ca] = a.split(':'), [mb, cb] = b.split(':');
-        return (rank[ma] - rank[mb]) || (byId[ma].card.offsetTop - byId[mb].card.offsetTop) || (ma < mb ? -1 : ma > mb ? 1 : 0) || (+ca - +cb);
-      });
+      // Row order: a channel's path of channel numbers from the last Mixer, so a sub-mixer's
+      // channels sit together just above the main channel the sub-mixer feeds
+      const tops = [...new Set(keys.map(k => k.split(':')[0]))].filter(m => !lanes[m].size)
+        .sort((a, b) => (rank[a] - rank[b]) || (byId[a].card.offsetTop - byId[b].card.offsetTop));
+      const pathMemo = {};
+      const pathOf = (key, depth = 0) => {
+        if (pathMemo[key]) return pathMemo[key];
+        const [m, ch] = key.split(':');
+        const parents = [...lanes[m]];
+        let base;
+        if (parents.length && depth < 8) base = parents.map(k => pathOf(k, depth + 1)).sort(cmpPath)[0];
+        else base = [tops.indexOf(m) < 0 ? tops.length : tops.indexOf(m)];
+        return (pathMemo[key] = base.concat([+ch]));
+      };
+      // Element by element; when one path continues the other, the longer (the sub-mixer's channel) first
+      function cmpPath(a, b) {
+        for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] - b[i];
+        return b.length - a.length;
+      }
+      keys.sort((a, b) => cmpPath(pathOf(a), pathOf(b)));
       const laneIds = keys.map(() => []);
       const shared = [], bus = [], noMixer = [];
-      ids.forEach(id => {
+      // A module reaching several rows: if everything it feeds sits in one row it joins that row
+      // (a voice's envelope); else a sound module (a voice sent to two effects) takes the first of
+      // its rows, and a controller or modulator (clock, Harmony Walker) goes to the shared row on top.
+      // Walked from the end of the chain, so the modules it feeds are already placed.
+      const rowOf = {};
+      order.slice().reverse().forEach(id => {
         if (loose.includes(id)) return;
-        const l = [...lanes[id]];
-        if (l.length === 1) laneIds[keys.indexOf(l[0])].push(id);
-        else if (l.length > 1) shared.push(id);
-        else bus.push(id);
+        let l = [...lanes[id]];
+        if (l.length > 1) {
+          const fed = [...new Set(fwd[id].filter(t => rowOf[t] !== undefined).map(t => rowOf[t]))];
+          if (fed.length === 1 && fed[0] !== 'shared' && fed[0] !== 'bus') l = [fed[0]];
+          else if (categoryRank(byId[id].type) !== 0) l = [l.sort((a, b) => keys.indexOf(a) - keys.indexOf(b))[0]];
+        }
+        if (l.length === 1) { laneIds[keys.indexOf(l[0])].push(id); rowOf[id] = l[0]; }
+        else if (l.length > 1) { shared.push(id); rowOf[id] = 'shared'; }
+        else { bus.push(id); rowOf[id] = 'bus'; }
       });
       const laneMax = Math.max(-1, ...laneIds.flat().concat(shared).map(id => rank[id]));
       // Chains that reach no Mixer and would collide with the rows' columns get their own row
@@ -631,7 +657,24 @@ if (!window.SoundSandboxApp) {
       let y = originY;
       if (shared.length) y += placeRow(shared, y) + rowGap;
       const lanesTop = y;
-      laneIds.forEach(row => { if (row.length) y += placeRow(row, y) + rowGap; });
+      // A sub-mixer is not given a row of its own: it stands to the right of its channels' rows, centred on them
+      const span = {};
+      const subMixers = ids.filter(id => isMixer(id) && keys.some(k => k.startsWith(`${id}:`)) && laneIds.some(row => row.includes(id)));
+      laneIds.forEach((row, i) => {
+        const rest = row.filter(id => !subMixers.includes(id));
+        if (!rest.length) return;
+        const h = placeRow(rest, y);
+        const m = keys[i].split(':')[0];
+        span[m] = span[m] || { top: y, bottom: y + h };
+        span[m].bottom = y + h;
+        y += h + rowGap;
+      });
+      subMixers.forEach(id => {
+        const sp = span[id];
+        if (!sp) { y += placeRow([id], y) + rowGap; return; }
+        targets[id] = { x: colX[rank[id]], y: Math.round(sp.top + Math.max(0, (sp.bottom - sp.top - size(id).h) / 2)) };
+        y = Math.max(y, targets[id].y + size(id).h + rowGap);
+      });
       if (noMixer.length) y += placeRow(noMixer, y) + rowGap;
       const lanesH = Math.max(0, y - rowGap - lanesTop);
       // Mixer, effects after it and Output: a column each, centred on the rows

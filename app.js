@@ -1872,6 +1872,27 @@ if (!window.SoundSandboxApp) {
 
       element.addEventListener('pointerdown', () => this.bringToFront(element), true);
 
+      // A tap on an empty spot of the card (not a control, jack, canvas or anything clickable)
+      // lights up the module's chain, like a tap on its title bar
+      element.addEventListener('pointerdown', (e) => {
+        if (this.isPresentationMode || (e.button && e.button !== 0)) return;
+        const t = e.target;
+        if (!(t instanceof Element) || t.closest('.node-header')) return;
+        if (t.closest('input, select, button, textarea, canvas, svg, a, label, video, [contenteditable], [role="button"], .port, .module-resize-handle')) return;
+        const cursor = getComputedStyle(t).cursor;
+        if (cursor && cursor !== 'auto' && cursor !== 'default') return;
+        const sx = e.clientX, sy = e.clientY;
+        const up = (ev) => {
+          window.removeEventListener('pointerup', up);
+          window.removeEventListener('pointercancel', up);
+          if (ev.type !== 'pointerup' || e.defaultPrevented || this.isPinching) return;
+          if (Math.hypot(ev.clientX - sx, ev.clientY - sy) > 5) return;
+          this.setFocus(id);
+        };
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', up);
+      });
+
       // Resize grip in the bottom-right corner (the browser's own resize corner does not work with touch / Apple Pencil)
       const grip = document.createElement('div');
       grip.className = 'module-resize-handle';
@@ -2175,7 +2196,9 @@ if (!window.SoundSandboxApp) {
             const color = this.getConnectionColor(conn, fromPortEl);
 
             const isSelected = conn === this.selectedConnection;
-            const dimmed = this.focusChain && !isSelected && !(this.focusChain.has(conn.fromNode) && this.focusChain.has(conn.toNode));
+            const inChain = this.focusChain && this.focusChain.has(conn.fromNode) && this.focusChain.has(conn.toNode);
+            const dimmed = this.focusChain && !isSelected && !inChain;
+            const style = { arrow: true, bold: !!inChain };
             const { rects: covers, stubAt } = stack ? this.getCoveringRects(stack, fromCard, toCard, p1, p2) : { rects: [], stubAt: null };
             this.ctx.save();
             if (dimmed) this.ctx.globalAlpha = 0.12;
@@ -2189,7 +2212,7 @@ if (!window.SoundSandboxApp) {
                 this.ctx.clip('evenodd');
               });
             }
-            const points = this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);
+            const points = this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected, style);
             this.ctx.restore();
             if (stubAt) {
               this.ctx.save();
@@ -2197,7 +2220,7 @@ if (!window.SoundSandboxApp) {
               this.ctx.beginPath();
               this.ctx.arc(stubAt.x, stubAt.y, 18, 0, Math.PI * 2);
               this.ctx.clip();
-              this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected);
+              this.drawBezierCable(p1.x, p1.y, p2.x, p2.y, color, isSelected, style);
               this.ctx.restore();
             }
             this.cableHitPaths.push({ conn, points });
@@ -2262,7 +2285,9 @@ if (!window.SoundSandboxApp) {
       return { cp1x: x1 + dx, cp1y: y1 + sag, cp2x: x2 - dx, cp2y: y2 + sag };
     }
 
-    drawBezierCable(x1, y1, x2, y2, color, isSelected = false) {
+    // style.bold: a cable of the highlighted chain (thicker); style.arrow: a small arrowhead in the
+    // middle of the cable pointing the way the signal flows (OUT to IN)
+    drawBezierCable(x1, y1, x2, y2, color, isSelected = false, style = {}) {
       const { cp1x, cp1y, cp2x, cp2y } = this.getBezierControlPoints(x1, y1, x2, y2);
 
       this.ctx.lineCap = 'round';
@@ -2284,8 +2309,25 @@ if (!window.SoundSandboxApp) {
 
       trace();
       this.ctx.strokeStyle = color;
-      this.ctx.lineWidth = isSelected ? 6 : 3.5;
+      this.ctx.lineWidth = isSelected ? 6 : style.bold ? 6 : 3.5;
       this.ctx.stroke();
+
+      if (style.arrow && Math.hypot(x2 - x1, y2 - y1) > 60) {
+        // Point and direction of the curve at its middle (t = 0.5)
+        const mx = (x1 + 3 * cp1x + 3 * cp2x + x2) / 8;
+        const my = (y1 + 3 * cp1y + 3 * cp2y + y2) / 8;
+        const dx = (x2 + cp2x - cp1x - x1), dy = (y2 + cp2y - cp1y - y1);
+        const len = Math.hypot(dx, dy) || 1;
+        const ux = dx / len, uy = dy / len;
+        const a = style.bold || isSelected ? 9 : 7;
+        this.ctx.beginPath();
+        this.ctx.moveTo(mx + ux * a, my + uy * a);
+        this.ctx.lineTo(mx - ux * a - uy * a * 0.8, my - uy * a + ux * a * 0.8);
+        this.ctx.lineTo(mx - ux * a + uy * a * 0.8, my - uy * a - ux * a * 0.8);
+        this.ctx.closePath();
+        this.ctx.fillStyle = color;
+        this.ctx.fill();
+      }
 
       return { x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2 };
     }

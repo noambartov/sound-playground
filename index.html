@@ -23,7 +23,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.32">
+  <link rel="stylesheet" href="styles.css?v=3.34">
 </head>
 <body class="light-theme">
 
@@ -76,6 +76,7 @@
     <button id="redo-btn" class="tool-btn" title="Redo (Cmd+Shift+Z)" aria-label="Redo" disabled>&#8631;</button>
     <button id="help-btn" class="tool-btn" title="Help & Presets Guide" aria-label="Help and Presets Guide">?</button>
     <button id="demo-btn" class="tool-btn" title="Play a demo patch" aria-label="Play a demo patch" hidden>Demo</button>
+    <button id="improbability-btn" class="tool-btn" title="Improbability: tap to nudge every slider to a random new value, long press (or Shift+click) for total chaos. Only selected modules change if some are selected. Undo puts it back." aria-label="Improbability: randomize the module settings">Improbability</button>
     <!-- Toolbar groups: on narrow non-phone screens (iPad portrait) each group folds into one button
          that opens it as a small menu; elsewhere the wrapper is invisible (display: contents). -->
     <div class="tb-group" data-group="view">
@@ -154,7 +155,7 @@
   <script src="touchSliders.js?v=1"></script>
 
   <!-- Modules Scripts -->
-  <script src="helpData.js?v=32"></script>
+  <script src="helpData.js?v=33"></script>
   <script src="portGuide.js?v=10"></script>
   <script src="help.js?v=12"></script>
   <script src="OscilloscopeModule.js?v=3"></script>
@@ -188,6 +189,7 @@
   <!-- Main Application -->
   <script src="modulation.js?v=2"></script>
   <script src="app.js?v=32"></script>
+  <script src="improbability.js?v=1"></script>
   <script src="presetTips.js?v=5"></script>
   <script src="onboarding.js?v=5"></script>
   <script src="pwa.js?v=3"></script>

@@ -2159,8 +2159,19 @@ if (!window.SoundSandboxApp) {
         handle.classList.add('panel-drag-handle');
         handle.title = 'Drag to move. Double-click to reset position.';
 
+        // Width the panel wants (measured at the left edge, so a panel squeezed against the right edge
+        // and wrapped onto two rows still reports its one-row width)
+        const naturalWidth = () => {
+          const prevLeft = el.style.left, prevRight = el.style.right;
+          el.style.left = '0px';
+          el.style.right = 'auto';
+          const w = Math.ceil(el.getBoundingClientRect().width) + 1; // +1: a fractional width would wrap at the edge
+          el.style.left = prevLeft;
+          el.style.right = prevRight;
+          return w;
+        };
         const placeAt = (left, top) => {
-          const maxLeft = Math.max(0, window.innerWidth - el.offsetWidth);
+          const maxLeft = Math.max(0, window.innerWidth - naturalWidth());
           const maxTop = Math.max(0, window.innerHeight - 40);
           left = Math.min(Math.max(0, left), maxLeft);
           top = Math.min(Math.max(0, top), maxTop);
@@ -2178,6 +2189,12 @@ if (!window.SoundSandboxApp) {
         window.addEventListener('resize', () => {
           if (el.style.left) placeAt(parseFloat(el.style.left), parseFloat(el.style.top));
         });
+        // ...and when its buttons change (e.g. the Demo button appears in the Toolbar), slide it left so it keeps one row.
+        if (window.MutationObserver) {
+          new MutationObserver(() => {
+            if (el.style.left && !el.classList.contains('panel-dragging')) placeAt(parseFloat(el.style.left), parseFloat(el.style.top));
+          }).observe(el, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden'] });
+        }
 
         handle.addEventListener('pointerdown', (e) => {
           if (e.button !== 0) return;

@@ -242,6 +242,10 @@ window.helpData = {
         summary: "Shapes the tone: turns chosen ranges of the sound up or down, from the deep lows to the airy highs. Four bands plus a Low Cut and a High Cut, drawn as one curve over the live sound.",
         controls: ["The display: left is low (20 Hz), right is high (20 kHz); up is louder, down is quieter. The line is the EQ curve, the faint shape behind it is the sound right now. Drag a dot: left / right sets that band's frequency, up / down its gain.", "Low and High: shelves that lift or lower everything below (Low) or above (High) their Freq.", "Mid 1 and Mid 2: a bump or dip around their Freq. Q sets how wide: low Q is broad and gentle, high Q is narrow and sharp.", "Gain: -18 to +18 dB per band. 0 dB leaves that band untouched.", "Low Cut: removes everything below its frequency (Off at the far left), for example rumble. High Cut: removes everything above it (Off at the far right), for a darker, muffled sound.", "Output: the overall level after the EQ."],
         tips: ["Cutting usually sounds more natural than boosting: rather than raising the highs, try lowering the muddy mids around 300 to 500 Hz.", "To find a harsh spot, raise a Mid band with a high Q, slide it until it sounds worst, then pull its Gain down.", "Drop an LFO OUT cable on the High Cut slider for the DJ-style sweep from muffled to bright."] },
+      { type: "vocoder", group: "processors", name: "Vocoder", preset: "demo-vocoder",
+        summary: "Makes one sound talk with the shape of another: the MOD sound (a voice, drums) is put onto the CARRIER sound (a synth). You hear the synth's notes speaking or singing the voice's vowels and rhythm, the classic robot voice.",
+        controls: ["The display: one bar per band, from low (left) to high (right). The bars are the MOD sound's shape right now; that shape is what the carrier takes on.", "CARRIER: the sound that gives the notes. A bright, steady sound works best: a sawtooth Oscillator or Poly Synth chords. MOD: the sound that gives the shape (vowels, consonants, rhythm). With nothing in either one, the Vocoder is silent.", "Bands: how many frequency bands both sounds are split into. 8 is rough and robotic, 32 is clearer and closer to speech.", "Attack: how fast a band opens when the MOD sound gets louder. Release: how fast it closes again. A short Release follows speech closely, a long one smears it into a pad.", "Shift: moves the shape up or down (in semitones) without changing the notes: down sounds like a giant, up like a tiny creature.", "Noise: mixes a little hiss into the carrier, so sounds like S and SH come through.", "Width: spreads the bands between left and right; 0% is mono.", "Level: the overall volume.", "Freeze: holds the shape of this moment (for example one vowel) while the carrier keeps playing."],
+        tips: ["Talk into it: a Mic / Audio In module into MOD and a sawtooth Oscillator or Poly Synth into CARRIER. Use headphones, otherwise the speakers feed back into the mic.", "Drum Machine MAIN L into MOD: the synth plays the rhythm of the drums.", "Poly Synth chords into CARRIER give a choir of robots; play chords while the MOD sound keeps going.", "Press Freeze on a vowel you like and play notes: the synth keeps singing that vowel."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "Draws the shape of a note over time each time a gate arrives.",
         controls: ["Attack: fade-in time.", "Decay: time to fall to the Sustain level.", "Sustain: level held while the key is down.", "Release: fade-out after the key is let go."],
@@ -567,6 +571,10 @@ window.helpData = {
         summary: "מעצב את הגוון: מגביר או מנמיך טווחים שבוחרים בצליל, מהבסים העמוקים ועד הגבהים האווריריים. ארבעה פסים ועוד Low Cut ו-High Cut, מצוירים כעקומה אחת מעל הצליל החי.",
         controls: ["המסך: שמאל זה נמוך (20 Hz), ימין זה גבוה (20 kHz); למעלה חזק יותר, למטה שקט יותר. הקו הוא עקומת ה-EQ, והצורה החיוורת מאחוריו היא הצליל ברגע זה. גוררים נקודה: ימינה ושמאלה משנה את התדר של הפס, למעלה ולמטה את העוצמה שלו.", "Low ו-High: \"מדפים\" שמגביהים או מנמיכים את כל מה שמתחת (Low) או מעל (High) ל-Freq שלהם.", "Mid 1 ו-Mid 2: גבעה או גומה סביב ה-Freq שלהם. Q קובע כמה רחב: Q נמוך רחב ועדין, Q גבוה צר וחד.", "Gain: מ-18- עד 18+ dB לכל פס. 0 dB משאיר את הפס בלי שינוי.", "Low Cut: מסיר את כל מה שמתחת לתדר שלו (Off בקצה השמאלי), למשל רעש רקע נמוך. High Cut: מסיר את כל מה שמעליו (Off בקצה הימני), לצליל כהה ועמום.", "Output: העוצמה הכוללת אחרי ה-EQ."],
         tips: ["הנמכה נשמעת בדרך כלל טבעית יותר מהגברה: במקום להרים את הגבהים, נסו להוריד את האמצעים ה\"בוציים\" סביב 300 עד 500 Hz.", "כדי למצוא נקודה צורמת, מרימים פס Mid עם Q גבוה, מזיזים אותו עד שזה נשמע הכי גרוע, ואז מורידים את ה-Gain שלו.", "הפילו כבל מ-LFO OUT על הסליידר High Cut: סוויפ בסגנון DJ מעמום לבהיר."] },
+      { type: "vocoder", group: "processors", name: "Vocoder", preset: "demo-vocoder",
+        summary: "גורם לצליל אחד לדבר בצורה של צליל אחר: הצליל שב-MOD (קול, תופים) מולבש על הצליל שב-CARRIER (סינתיסייזר). שומעים את התווים של הסינת' מדברים או שרים את התנועות והקצב של הקול, הקול הרובוטי הקלאסי.",
+        controls: ["המסך: עמודה לכל פס, מנמוך (שמאל) לגבוה (ימין). העמודות הן הצורה של הצליל שב-MOD ברגע זה; זו הצורה שה-CARRIER מקבל.", "CARRIER: הצליל שנותן את התווים. הכי טוב צליל בהיר ויציב: Oscillator בגל מסור (sawtooth) או אקורדים של Poly Synth. MOD: הצליל שנותן את הצורה (תנועות, עיצורים, קצב). בלי שום דבר באחד מהם, ה-Vocoder שקט.", "Bands: לכמה פסי תדרים מחלקים את שני הצלילים. 8 גס ורובוטי, 32 ברור יותר וקרוב יותר לדיבור.", "Attack: כמה מהר פס נפתח כשהצליל שב-MOD מתחזק. Release: כמה מהר הוא נסגר שוב. Release קצר עוקב מקרוב אחרי דיבור, ארוך מורח אותו לפד.", "Shift: מזיז את הצורה למעלה או למטה (בחצאי טונים) בלי לשנות את התווים: למטה נשמע כמו ענק, למעלה כמו יצור קטנטן.", "Noise: מוסיף קצת רחש ל-CARRIER, כדי שצלילים כמו ס' וש' יעברו.", "Width: מפזר את הפסים בין שמאל לימין; 0% זה מונו.", "Level: העוצמה הכוללת.", "Freeze: מקפיא את הצורה של הרגע הזה (למשל תנועה אחת) בזמן שה-CARRIER ממשיך לנגן."],
+        tips: ["לדבר לתוכו: מודול Mic / Audio In אל MOD, ו-Oscillator בגל מסור או Poly Synth אל CARRIER. השתמשו באוזניות, אחרת הרמקולים חוזרים למיקרופון.", "MAIN L של מכונת התופים אל MOD: הסינת' מנגן את הקצב של התופים.", "אקורדים של Poly Synth ב-CARRIER נותנים מקהלה של רובוטים; מנגנים אקורדים בזמן שהצליל שב-MOD ממשיך.", "לוחצים Freeze על תנועה שאוהבים ומנגנים תווים: הסינת' ממשיך לשיר את התנועה הזאת."] },
       { type: "envelope", group: "modulation", name: "Envelope (ADSR)", preset: "demo-envelope",
         summary: "משרטט את הצורה של תו לאורך זמן בכל פעם שמגיע Gate.",
         controls: ["Attack: זמן הכניסה.", "Decay: הזמן לרדת לרמת ה-Sustain.", "Sustain: הרמה שנשארת כל עוד הקליד לחוץ.", "Release: הדעיכה אחרי שעוזבים את הקליד."],
@@ -694,6 +702,10 @@ window.helpData = {
       "eq:in:in_r": { text: "הצליל לעיצוב, צד ימין (לא חובה).", where: "MAIN R של מכונת התופים, OUT R של Mixer או Compressor" },
       "eq:out:out_l": { text: "צד שמאל, אחרי ה-EQ.", where: "IN של Output, IN L של Compressor, Reverb או Stereo Delay, Mixer" },
       "eq:out:out_r": { text: "צד ימין, אחרי ה-EQ.", where: "IN R של Output, IN R של Compressor, Reverb או Stereo Delay, Mixer" },
+      "vocoder:in:carrier": { text: "הצליל שמעצבים: הוא נותן את התווים. הכי טוב צליל בהיר ויציב (Oscillator בגל מסור, אקורד של Poly Synth).", where: "OUT של Oscillator (sawtooth), OUT של Poly Synth, OUT של Wavetable Osc, OUT של VCA" },
+      "vocoder:in:modulator": { text: "הצליל שמעצב: התנועות והקצב שלו מולבשים על ה-CARRIER. קול מהמיקרופון הוא הקלאסי; גם תופים או טבלת Vocal עובדים.", where: "OUT של Mic / Audio In, OUT של Wavetable Osc (טבלת Vocal), MAIN L של מכונת התופים" },
+      "vocoder:out:out_l": { text: "הסינת' המדבר, צד שמאל.", where: "IN של Output, IN L של Reverb או Stereo Delay, Mixer, Recorder" },
+      "vocoder:out:out_r": { text: "הסינת' המדבר, צד ימין.", where: "IN R של Output, IN R של Reverb או Stereo Delay, Mixer" },
       "wavetable:in:pitch": { text: "מנגן תווים (בהרץ). כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת; Octave ו-Tune עדיין פועלים.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר, PITCH של Ribbon" },
       "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
       "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
@@ -879,6 +891,37 @@ window.presetData = {
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-vocoder": {
+    modules: [
+      { id: "seq1", type: "sequencer", x: 40, y: 80, state: { bpm: 92, octaveRange: 1, steps: [
+        { active: true, pitch: 0 }, { active: true, pitch: 0.25 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 0.4167 },
+        { active: true, pitch: 0.25 }, { active: true, pitch: 0.5833 }, { active: true, pitch: 1 }, { active: true, pitch: 0.5833 }
+      ] } },
+      { id: "osc1", type: "oscillator", x: 40, y: 520, state: { waveform: "sawtooth" } },
+      { id: "wt1", type: "wavetable", x: 760, y: 80, state: { table: "vocal", position: 50, freq: 130 } },
+      { id: "lfo1", type: "lfo", x: 1100, y: 80, state: { rate: 0.2, depth: 50 } },
+      { id: "env1", type: "envelope", x: 400, y: 520, state: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.25 } },
+      { id: "vca1", type: "vca", x: 1100, y: 480, state: { gain: 0 } },
+      { id: "voc1", type: "vocoder", x: 1440, y: 200, state: { bands: "16", attack: 5, release: 60, shift: 0, noise: 10, width: 50, level: 0, freeze: false } },
+      { id: "rev1", type: "reverb", x: 1800, y: 200, state: {} },
+      { id: "out1", type: "output", x: 2140, y: 200, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 2140, y: 480, state: {} }
+    ],
+    connections: [
+      { fromNode: "seq1", fromPortInfo: { type: "pitch" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "seq1", fromPortInfo: { type: "gate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "voc1", toPortInfo: { id: "carrier" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "wt1", toPortInfo: { id: "knob:#wavetable_p_position_wt1", knob: "#wavetable_p_position_wt1" } },
+      { fromNode: "wt1", fromPortInfo: { id: "out" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "voc1", toPortInfo: { id: "modulator" } },
+      { fromNode: "voc1", fromPortInfo: { id: "out_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "voc1", fromPortInfo: { id: "out_r" }, toNode: "rev1", toPortInfo: { type: "in_r" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "voc1", fromPortInfo: { id: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-eq": {

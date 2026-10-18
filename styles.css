@@ -1635,6 +1635,11 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 
 .hw-step.off { opacity: 0.3; }
 
+.hw-jacks {
+  margin-top: 0;
+  justify-content: space-between;
+}
+
 .hw-chip {
   display: flex;
   align-items: center;

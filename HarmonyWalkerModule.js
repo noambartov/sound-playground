@@ -21,6 +21,10 @@
 // - Chance table: functional harmony, each next chord picked by chance (V goes to I most of the time).
 // - Cube Dance / Power Towers: random walks where one note moves by a half step (triads with augmented
 //   chords, or the four kinds of seventh chord).
+// - Upper structure: follows the chord arriving at FOLLOW (another Walker's or a Keyboard's NOTES) and
+//   plays a triad above it (on II, bIII, bV, bVI, VI...), changing at the same moment.
+// An arpeggiator plays the chord's notes one by one (ARP and ARP GATE), with up / down and
+// Philip Glass style patterns (broken 1 3 5 3, three against four, additive 1 2, 1 2 3, ...).
 // Tuning: equal temperament, just intonation (every grid point its own pure pitch, which can drift),
 // 19 or 31 equal steps per octave (drift too), or Bohlen-Pierce (13 steps per tritave 3:1, its own
 // Tonnetz of 3:5:7 chords). Glide slides the voices from one chord to the next. The chord goes out on
@@ -89,6 +93,19 @@ const HW_CHANCES = [
   { 1: 0.35, 3: 0.35, 4: 0.15, 2: 0.1, 0: 0.05 },
   { 0: 0.7, 2: 0.2, 5: 0.1 }
 ];
+// Upper structure: the triad above the followed chord's root ([half steps above it, kind])
+const HW_UPPERS = {
+  II: [2, 'M'], bIII: [3, 'M'], IV: [5, 'M'], bV: [6, 'M'], V: [7, 'M'], bVI: [8, 'M'], VI: [9, 'M']
+};
+// Auto: the uppers that suit each kind of chord below
+const HW_UPPER_AUTO = {
+  M: ['II', 'V'], maj7: ['II', 'V'], m6: ['IV'], m: ['IV', 'bIII'], m7: ['IV', 'bIII'], mM7: ['V'],
+  '7': ['II', 'bIII', 'bV', 'bVI', 'VI'], dim: ['bVI'], dim7: ['bVI'], m7b5: ['bVI'], aug: ['II']
+};
+// Arpeggiator rates: notes per beat
+const HW_ARP_RATES = { '8': 2, '8t': 3, '16': 4, '16t': 6 };
+const HW_FOLLOW_KINDS = ['M', 'm', '7', 'maj7', 'm7', 'dim', 'aug', 'm7b5', 'dim7', 'mM7', 'm6'];
+
 // Half-step graphs: which chord kinds each walk uses
 const HW_GRAPHS = { cube: ['M', 'm', 'aug'], towers: ['7', 'm7', 'm7b5', 'dim7'] };
 
@@ -120,7 +137,7 @@ class HarmonyWalkerModule extends ModuleBase {
     params: [
       { id: 'source', label: 'Source', kind: 'select', value: 'tonnetz',
         options: [['tonnetz', 'Tonnetz moves'], ['progression', 'Progression'], ['markov', 'Chance table'],
-          ['markov7', 'Chance table, 7th chords'], ['cube', 'Cube Dance (half steps)'], ['towers', 'Power Towers (7th chords)']] },
+          ['markov7', 'Chance table, 7th chords'], ['cube', 'Cube Dance (half steps)'], ['towers', 'Power Towers (7th chords)'], ['upper', 'Upper structure (FOLLOW)']] },
       { id: 'movement', label: 'Movement', kind: 'select', value: 'drift',
         options: [['pl', 'Hexatonic cycle (P L)'], ['pr', 'Octatonic cycle (P R)'], ['lr', 'Chain of thirds (L R)'],
           ['plr', 'P L R'], ['drift', 'Drift (L P R P)'], ['mystery', 'Mystery (H P)'], ['wander', 'Wander (N R S L)'],
@@ -128,6 +145,10 @@ class HarmonyWalkerModule extends ModuleBase {
       { id: 'length', label: 'Steps', min: 1, max: HW_MAX_STEPS, step: 1, value: 4 },
       { id: 'progression', label: 'Progression', kind: 'select', value: 'axis',
         options: Object.keys(HW_PROGS).map(k => [k, HW_PROGS[k].label]) },
+      { id: 'upper', label: 'Upper', kind: 'select', value: 'auto',
+        options: [['auto', 'Auto (suits the chord)'], ['II', 'II (9, #11, 13)'], ['bIII', 'bIII (#9, 5, b7)'], ['IV', 'IV (11, 13, root)'],
+          ['bV', 'bV (#11, b7, b9)'], ['V', 'V (5, 7, 9)'], ['bVI', 'bVI (b13, root, #9)'], ['VI', 'VI (13, b9, 3)'],
+          ['R', 'Tonnetz R neighbour'], ['L', 'Tonnetz L neighbour'], ['random', 'Random (II to VI)']] },
       { id: 'every', label: 'Change Every', min: 1, max: 16, step: 1, value: 4,
         format: v => `${v} ${v === 1 ? 'beat' : 'beats'}` },
       { id: 'tempo', label: 'Tempo', min: 20, max: 200, step: 1, value: 80, unit: 'BPM' },
@@ -141,12 +162,21 @@ class HarmonyWalkerModule extends ModuleBase {
           ['edo19', '19 equal, drifting'], ['edo31', '31 equal, drifting'],
           ['bp', 'Bohlen-Pierce (13 per tritave)'], ['bpjust', 'Bohlen-Pierce, just']] },
       { id: 'glide', label: 'Glide', min: 0, max: 3000, step: 10, value: 0,
-        format: v => (v > 0 ? `${v} ms` : 'Off') }
+        format: v => (v > 0 ? `${v} ms` : 'Off') },
+      { id: 'arp', label: 'Arp Pattern', kind: 'select', value: 'off',
+        options: [['off', 'Off'], ['up', 'Up'], ['down', 'Down'], ['updown', 'Up and down'], ['broken', 'Broken (1 3 5 3)'],
+          ['threefour', 'Three against four'], ['additive', 'Additive (1 2, 1 2 3, ...)'], ['random', 'Random']] },
+      { id: 'arpRate', label: 'Arp Rate', kind: 'select', value: '8',
+        options: [['8', '1/8'], ['8t', '1/8 triplets'], ['16', '1/16'], ['16t', '1/16 triplets']] },
+      { id: 'arpOct', label: 'Arp Octaves', min: 1, max: 3, step: 1, value: 1 }
     ],
     inputs: [
       { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Input', inline: true,
         guide: { text: 'A pulse on every 16th note. With a cable here the Walker follows that tempo instead of its own (Change Every counts beats of 4 pulses).', from: 'Metronome CLOCK, Drum Machine CLOCK, Sequencer CLOCK', match: ['metronome:out:clock', 'drums:out:clock', 'sequencer:out:clock'] },
-        chip: 'Metronome / Drums CLOCK' }
+        chip: 'Metronome / Drums CLOCK' },
+      { id: 'follow', label: 'FOLLOW', signal: 'gate', title: 'Follow Input (NOTES of another Walker or a Keyboard)', inline: true,
+        guide: { text: 'The chord to follow: another Harmony Walker\'s or a Keyboard\'s NOTES. With Source set to Upper structure, this Walker plays a triad above every chord that arrives here, at the same moment. Carries notes, not sound.', from: 'Harmony Walker NOTES, Keyboard NOTES', match: ['harmony:out:notes', 'keyboard:out:notes'] },
+        chip: 'Walker / Keyboard NOTES' }
     ],
     outputs: [
       { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Output (to Poly Synth NOTES)',
@@ -163,6 +193,12 @@ class HarmonyWalkerModule extends ModuleBase {
         chip: 'Osc PITCH' },
       { id: 'gate', label: 'GATE', signal: 'gate', title: 'Gate Output',
         guide: { text: 'Turns on at every chord change and off just before the next one.', to: 'Envelope GATE IN, VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
+        chip: 'Env GATE IN' },
+      { id: 'arp', label: 'ARP', signal: 'cv', title: 'Arpeggio Pitch (Hz)', inline: true,
+        guide: { text: 'The arpeggio: the chord\'s notes one at a time, as a pitch in Hz (Arp Pattern must not be Off).', to: 'Oscillator PITCH, Wavetable Osc PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
+        chip: 'Osc PITCH' },
+      { id: 'arpgate', label: 'ARP GATE', signal: 'gate', title: 'Arpeggio Gate', inline: true,
+        guide: { text: 'On for the first half of every arpeggio note.', to: 'Envelope GATE IN, VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
         chip: 'Env GATE IN' }
     ]
   };
@@ -236,7 +272,7 @@ class HarmonyWalkerModule extends ModuleBase {
   }
 
   shortName(c) {
-    return HW_NAMES[c.root] + (HW_SHORT[c.q] || '');
+    return HW_NAMES[c.root] + (c.q ? HW_SHORT[c.q] : '?');
   }
 
   // Grid points for the chord's notes: the Tonnetz triangle, or for other chords the root's point
@@ -321,9 +357,23 @@ class HarmonyWalkerModule extends ModuleBase {
     this.midOut = this.makeConstant(0);
     this.highOut = this.makeConstant(0);
     this.gateOut = this.makeConstant(0);
+    this.arpOut = this.makeConstant(0);
+    this.arpGateOut = this.makeConstant(0);
+    this.arpPos = 0;
     this.clockIn = this.own(this.audioCtx.createGain());
-    this.inputNodes = { clock: this.clockIn };
-    this.outputNodes = { notes: this.noteBus, low: this.lowOut, mid: this.midOut, high: this.highOut, gate: this.gateOut };
+    // FOLLOW: app.js connects another PolyNoteBus to this object; it keeps the notes held there
+    const self = this;
+    this.followCables = 0;
+    this.followHeld = new Map();
+    this.followIn = {
+      noteOn(note, freq) { self.followHeld.set(note, freq); self.followChanged(); },
+      noteOff(note) { self.followHeld.delete(note); self.followChanged(); },
+      allNotesOff() { self.followHeld.clear(); self.followChanged(); },
+      bend() {}
+    };
+    this.inputNodes = { clock: this.clockIn, follow: this.followIn };
+    this.outputNodes = { notes: this.noteBus, low: this.lowOut, mid: this.midOut, high: this.highOut, gate: this.gateOut,
+      arp: this.arpOut, arpgate: this.arpGateOut };
 
     HarmonyWalkerModule.loadWorklet(this.audioCtx).then(() => {
       if (this.destroyed) return;
@@ -351,6 +401,7 @@ class HarmonyWalkerModule extends ModuleBase {
     else if (src === 'progression') { this.chord = this.progChord(0); this.stepIndex = 0; }
     else if (src === 'markov' || src === 'markov7') { this.degree = 0; this.chord = this.degreeChord(0); }
     else if (src === 'towers') this.chord = this.makeChord(this.base, '7');
+    else if (src === 'upper' && this.lower) this.chord = this.upperChord(this.lower);
     else this.chord = this.makeChord(this.base, this.minorKey ? 'm' : 'M');
     if (src !== 'tonnetz') this.base = 0;   // other sources name absolute pitch classes
     this.points = src === 'tonnetz' ? this.triPoints(this.tri) : this.chordPoints(this.chord, [0, 0]);
@@ -398,7 +449,9 @@ class HarmonyWalkerModule extends ModuleBase {
     }
     if ((id === 'voicing' || id === 'tuning') && this.playing && this.voices && !restart) this.sendChord(this.audioCtx.currentTime, false);
     if (id === 'tuning') this.updateReadout();
-    if (['source', 'tuning', 'movement', 'length', 'progression'].includes(id)) {
+    if (id === 'arpOct' && this.arpNotes && this.lastFreqsAll) this.setArpNotes(this.lastFreqsAll);
+    if (id === 'upper' && this.source() === 'upper' && this.lower && this.followPlaying) this.followChanged();
+    if (['source', 'tuning', 'movement', 'length', 'progression', 'upper', 'arp'].includes(id)) {
       this.updateEnabled();
       this.renderSteps();
     }
@@ -408,16 +461,100 @@ class HarmonyWalkerModule extends ModuleBase {
   updateEnabled() {
     const src = this.source();
     const set = (id, on) => { const el = this.el(`p_${id}`); if (el) el.disabled = !on; };
-    set('movement', src === 'tonnetz');
-    set('length', src === 'tonnetz');
-    set('progression', src === 'progression');
     set('source', this.sys() !== HW_BP);
+    // Rate and Octaves only matter with an Arp Pattern
+    set('arpRate', this.params.arp !== 'off');
+    set('arpOct', this.params.arp !== 'off');
   }
 
   // ---- Voices: each voice moves to the nearest note of the new chord, pulled gently toward the Octave ----
   center() {
     const N = this.sys().n;
-    return N * (this.params.octave + 1) + 6;
+    const c = N * (this.params.octave + 1) + 6;
+    // An upper structure sits above the chord it follows
+    if (this.source() === 'upper' && this.lowerTop) return Math.max(c, this.lowerTop + 8);
+    return c;
+  }
+
+  // ---- Upper structure: follow the chord held at FOLLOW ----
+  // Several note messages arrive at once (one chord change), so the chord is read once they are all in
+  followChanged() {
+    if (this.followQueued) return;
+    this.followQueued = true;
+    Promise.resolve().then(() => {
+      this.followQueued = false;
+      if (this.destroyed || this.source() !== 'upper' || this.userStopped) return;
+      const midis = Array.from(this.followHeld.values()).map(f => Math.round(69 + 12 * Math.log2(f / 440)));
+      if (!midis.length) {
+        // The chord below stopped: so does this one
+        if (this.followPlaying) {
+          this.followPlaying = false;
+          this.playing = false;
+          if (this.timer) clearInterval(this.timer);
+          this.timer = null;
+          this.arpGateOut.offset.cancelScheduledValues(this.audioCtx.currentTime);
+          this.arpGateOut.offset.setValueAtTime(0, this.audioCtx.currentTime);
+          this.noteBus.update([]);
+          this.gateOut.offset.setValueAtTime(0, this.audioCtx.currentTime);
+          this.updatePlayButton();
+        }
+        return;
+      }
+      const lower = HarmonyWalkerModule.identify(midis);
+      const now = this.audioCtx.currentTime;
+      if (this.lowerAt) this.lowerGap = Math.min(16, now - this.lowerAt);
+      this.lowerAt = now;
+      this.lowerTop = Math.max(...midis);
+      const before = this.chord;
+      const beforePts = this.points;
+      const changed = !this.lower || HarmonyWalkerModule.setKey(lower) !== HarmonyWalkerModule.setKey(this.lower) || !this.followPlaying;
+      this.lower = lower;
+      if (!changed) return;
+      this.chord = this.upperChord(lower);
+      if (this.followPlaying && before) {
+        this.history.push(before);
+        this.trail.push(beforePts);
+        if (this.history.length > 8) this.history.shift();
+        if (this.trail.length > 6) this.trail.shift();
+      }
+      this.points = this.chordPoints(this.chord, beforePts ? HarmonyWalkerModule.centroid(beforePts) : [0, 0]);
+      this.lowerPoints = this.chordPoints(lower, HarmonyWalkerModule.centroid(this.points));
+      if (!this.followPlaying) {
+        // Starts by itself with the chord below (its timer only runs the arpeggio)
+        this.followPlaying = true;
+        this.playing = true;
+        this.ensureTimer();
+        this.updatePlayButton();
+      }
+      this.sendChord(now, true);
+    });
+  }
+
+  // The chord's root and kind from its notes (the lowest note is the root if nothing matches)
+  static identify(midis) {
+    const pcs = new Set(midis.map(m => HarmonyWalkerModule.mod(m, 12)));
+    for (const q of HW_FOLLOW_KINDS) {
+      const iv = HW_QUALITIES[q];
+      if (iv.length !== pcs.size) continue;
+      for (const r of pcs) {
+        if (iv.every(x => pcs.has((r + x) % 12))) return { root: r, q, pcs: iv.map(x => (r + x) % 12) };
+      }
+    }
+    const root = HarmonyWalkerModule.mod(Math.min(...midis), 12);
+    return { root, q: null, pcs: Array.from(pcs) };
+  }
+
+  upperChord(lower) {
+    let pick = this.params.upper;
+    const major = ['M', '7', 'maj7', 'aug'].includes(lower.q);
+    if (pick === 'R') return this.makeChord(lower.root + (major ? 9 : 3), major ? 'm' : 'M');
+    if (pick === 'L') return this.makeChord(lower.root + (major ? 4 : 8), major ? 'm' : 'M');
+    if (pick === 'auto' || pick === 'random') {
+      const list = pick === 'auto' ? (HW_UPPER_AUTO[lower.q] || ['II']) : ['II', 'bIII', 'bV', 'bVI', 'VI'];
+      pick = list[Math.floor(Math.random() * list.length)];
+    }
+    const [off, q] = HW_UPPERS[pick] || HW_UPPERS.II;
+    return this.makeChord(lower.root + off, q);
   }
 
   voiceChord(pcs) {
@@ -467,6 +604,10 @@ class HarmonyWalkerModule extends ModuleBase {
     const n = this.voices.slice().sort((a, b) => a - b);
     if (this.params.voicing === 'open' || this.params.voicing === 'wide') n[0] -= N;
     if (this.params.voicing === 'wide') n[n.length - 1] += N;
+    // An upper structure stays above the chord it follows
+    if (this.source() === 'upper' && this.followPlaying && this.lowerTop) {
+      for (let k = 0; k < n.length; k++) while (n[k] <= this.lowerTop) n[k] += N;
+    }
     return n.sort((a, b) => a - b);
   }
 
@@ -520,6 +661,7 @@ class HarmonyWalkerModule extends ModuleBase {
 
   // ---- Playing ----
   chordSeconds() {
+    if (this.followPlaying) return this.lowerGap || 2;   // as long as the chord below lasted last time
     const beat = this.clockLive() ? this.pulseGap * 4 : 60 / this.params.tempo;
     return beat * this.params.every;
   }
@@ -530,19 +672,30 @@ class HarmonyWalkerModule extends ModuleBase {
 
   start() {
     if (this.playing) return;
+    this.userStopped = false;
+    if (this.source() === 'upper' && this.followHeld.size) { this.followPlaying = false; this.followChanged(); return; }
     if (window.synthApp && synthApp.ensureAudioContextRunning) synthApp.ensureAudioContextRunning();
     this.playing = true;
     this.pending = false;
     this.setStartChord();
     this.pulses = 0;
     this.nextTime = this.audioCtx.currentTime + 0.05;
-    this.timer = setInterval(() => this.schedule(), 25);
+    this.ensureTimer();
     this.schedule();
     this.updatePlayButton();
   }
 
+  ensureTimer() {
+    this.arpNext = this.audioCtx.currentTime + 0.05;
+    this.arpPos = 0;
+    if (!this.timer) this.timer = setInterval(() => this.schedule(), 25);
+  }
+
   stop() {
     this.playing = false;
+    // In Upper structure, Stop keeps it quiet while the chord below plays on (until Play)
+    this.userStopped = this.source() === 'upper' && this.followPlaying;
+    this.followPlaying = false;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     clearTimeout(this.noteTimer);
@@ -550,6 +703,8 @@ class HarmonyWalkerModule extends ModuleBase {
     const now = this.audioCtx.currentTime;
     this.gateOut.offset.cancelScheduledValues(now);
     this.gateOut.offset.setValueAtTime(0, now);
+    this.arpGateOut.offset.cancelScheduledValues(now);
+    this.arpGateOut.offset.setValueAtTime(0, now);
     this.updatePlayButton();
     this.renderSteps();
     this.requestDraw();
@@ -557,7 +712,9 @@ class HarmonyWalkerModule extends ModuleBase {
 
   // Own tempo: chords on the audio clock, a little ahead. With a live CLOCK the pulses drive it instead.
   schedule() {
-    if (!this.playing || this.clockLive()) return;
+    if (!this.playing) return;
+    this.scheduleArp();
+    if (this.clockLive() || this.followPlaying) return;
     const now = this.audioCtx.currentTime;
     if (this.nextTime < now - 0.2) this.nextTime = now + 0.02;   // the page was asleep
     if (this.nextTime < now + 0.1) {
@@ -566,10 +723,84 @@ class HarmonyWalkerModule extends ModuleBase {
     }
   }
 
+  // ---- Arpeggiator: the chord's notes one at a time, on the beat grid (Tempo or CLOCK) ----
+  beatSeconds() {
+    return this.clockLive() ? this.pulseGap * 4 : 60 / this.params.tempo;
+  }
+
+  // The order of the notes for a chord of m notes spread over the Arp Octaves (index into that list)
+  arpOrder(m) {
+    const oct = this.params.arpOct;
+    const n = m * oct;
+    const up = Array.from({ length: n }, (_, k) => k);
+    switch (this.params.arp) {
+      case 'down': return up.slice().reverse();
+      case 'updown': return n > 2 ? up.concat(up.slice(1, -1).reverse()) : up;
+      case 'broken': {
+        // 1 3 5 3 in every octave (with 4 notes: 1 3 5 7 5 3)
+        const out = [];
+        for (let o = 0; o < oct; o++) {
+          const b = o * m;
+          for (let k = 0; k < m; k++) out.push(b + k);
+          for (let k = m - 2; k >= 1; k--) out.push(b + k);
+        }
+        return out;
+      }
+      case 'threefour': {
+        // A group of three then a group of four, so the accent keeps shifting against the beat
+        return [0, 1, 2, 0, 1, 2, 3].map(k => k % n);
+      }
+      case 'additive': {
+        // 1 2, 1 2 3, 1 2 3 4 ... up to all the notes, then shorter again
+        const out = [];
+        for (let len = 2; len <= Math.max(2, n); len++) for (let k = 0; k < len; k++) out.push(k % n);
+        for (let len = n - 1; len >= 3; len--) for (let k = 0; k < len; k++) out.push(k);
+        return out;
+      }
+      case 'random': return [-1];
+      default: return up;
+    }
+  }
+
+  scheduleArp() {
+    const now = this.audioCtx.currentTime;
+    if (this.params.arp === 'off' || !this.arpNotes) {
+      this.arpNext = now + 0.02;
+      return;
+    }
+    if (this.arpNext < now - 0.2) this.arpNext = now + 0.02;   // the page was asleep
+    while (this.arpNext < now + 0.1) {
+      const dur = this.beatSeconds() / HW_ARP_RATES[this.params.arpRate];
+      const list = this.arpNotes;
+      const order = this.arpOrder(list.m);
+      const idx = order[0] === -1 ? Math.floor(Math.random() * list.f.length) : order[this.arpPos % order.length];
+      this.arpPos++;
+      const t = this.arpNext;
+      this.arpOut.offset.setValueAtTime(list.f[idx % list.f.length], t);
+      const g = this.arpGateOut.offset;
+      g.setValueAtTime(0, t);
+      g.setValueAtTime(1, t + 0.002);
+      g.setValueAtTime(0, t + dur * 0.5);
+      this.arpNext += dur;
+    }
+  }
+
+  // The notes the arpeggio uses: the chord bottom to top, repeated an octave (a period) higher
+  setArpNotes(freqs) {
+    const S = this.sys();
+    const up = Math.pow(2, S.period / 1200);
+    const f = [];
+    for (let o = 0; o < this.params.arpOct; o++) freqs.forEach(x => f.push(x * Math.pow(up, o)));
+    this.arpNotes = { f, m: freqs.length };
+  }
+
   onClockPulse(time) {
     if (this.lastPulse && time - this.lastPulse < 3) this.pulseGap = time - this.lastPulse;
     this.lastPulse = time;
     if (!this.playing || !this.pulseGap) return;
+    // The arpeggio lines up with the beat on every 4th pulse
+    if (this.pulses % 4 === 0 && this.params.arp !== 'off') this.arpNext = Math.max(time, this.audioCtx.currentTime);
+    if (this.followPlaying) { this.pulses++; return; }
     if (this.pulses % (this.params.every * 4) === 0) this.advance(Math.max(time, this.audioCtx.currentTime));
     this.pulses++;
     this.nextTime = this.audioCtx.currentTime + this.chordSeconds();   // ready if the clock stops
@@ -610,6 +841,7 @@ class HarmonyWalkerModule extends ModuleBase {
       this.chord = this.degreeChord(next);
       return true;
     }
+    if (src === 'upper') return false;   // changes only when the followed chord does
     // Half-step graph: any neighbour except the chord just left
     const graph = HarmonyWalkerModule.graph(src);
     const here = graph.get(HarmonyWalkerModule.setKey(this.chord));
@@ -659,6 +891,8 @@ class HarmonyWalkerModule extends ModuleBase {
       }
     });
     this.lastOut = outs.map(k => freqs[k]);
+    this.lastFreqsAll = freqs;
+    this.setArpNotes(freqs);
     if (gate) {
       const g = this.gateOut.offset;
       g.cancelScheduledValues(t);
@@ -682,6 +916,10 @@ class HarmonyWalkerModule extends ModuleBase {
   }
 
   onInputConnected(key, connected) {
+    if (key === 'follow') {
+      this.followCables = Math.max(0, this.followCables + (connected ? 1 : -1));
+      return;
+    }
     if (key !== 'clock') return;
     this.clockCables = Math.max(0, this.clockCables + (connected ? 1 : -1));
     if (!this.clockCables) this.pulseGap = 0;
@@ -702,10 +940,13 @@ class HarmonyWalkerModule extends ModuleBase {
       <div class="hw-top">
         <button class="action-btn hw-play" id="${this.elId('play')}">Play</button>
         <span class="hw-chord" id="${this.elId('chord')}"></span>
-        ${this.renderPort(this.def.inputs[0], 'in')}
       </div>
       <canvas id="${this.elId('display')}" class="hw-display" width="560" height="320"></canvas>
       <div class="hw-steps" id="${this.elId('steps')}"></div>
+      <div class="ports-row hw-jacks">
+        ${this.def.inputs.map(p => this.renderPort(p, 'in')).join('')}
+        ${this.def.outputs.filter(p => p.inline).map(p => this.renderPort(p, 'out')).join('')}
+      </div>
     `;
   }
 
@@ -744,6 +985,9 @@ class HarmonyWalkerModule extends ModuleBase {
     if (!el || !this.chord) return;
     const prev = this.history.length ? this.history[this.history.length - 1] : null;
     let text = this.playing && prev ? `${this.chordName(prev)} to ${this.chordName(this.chord)}` : this.chordName(this.chord);
+    if (this.source() === 'upper' && this.lower && this.followPlaying) {
+      text = `${this.chordName(this.chord)} over ${this.shortName(this.lower)}`;
+    }
     const t = this.params.tuning;
     if (t !== 'equal' && t !== 'bp') {
       // How far the chord's root sits from the equal-step pitch
@@ -762,10 +1006,19 @@ class HarmonyWalkerModule extends ModuleBase {
     this.updateReadout();
     const play = this.el('play');
     if (play) play.addEventListener('click', () => (this.playing ? this.stop() : this.start()));
+    // Picking a Movement, Steps, Progression or Upper switches Source to the one that uses it
+    const follows = { movement: 'tonnetz', length: 'tonnetz', progression: 'progression', upper: 'upper' };
+    Object.keys(follows).forEach(id => {
+      const ctl = this.el(`p_${id}`);
+      if (!ctl) return;
+      ctl.addEventListener(id === 'length' ? 'input' : 'change', () => {
+        if (this.params.source !== follows[id] && this.sys() !== HW_BP) this.setParam('source', follows[id]);
+      });
+    });
     const steps = this.el('steps');
     if (steps) steps.addEventListener('click', e => {
       const b = e.target.closest('button.hw-step');
-      if (!b || this.source() !== 'tonnetz') return;
+      if (!b || this.source() !== 'tonnetz') return;   // only the Tonnetz row has buttons
       const k = parseInt(b.dataset.step, 10);
       if (k >= this.params.length) this.setParam('length', k + 1);
       this.steps[k] = HW_STEP_CYCLE[(HW_STEP_CYCLE.indexOf(this.steps[k]) + 1) % HW_STEP_CYCLE.length];
@@ -844,6 +1097,9 @@ class HarmonyWalkerModule extends ModuleBase {
 
     // Grid lines and note names
     const lit = new Set(this.points.map(c => c.join(',')));
+    // Upper structure: the followed chord's notes get a thin ring in the text color
+    const below = this.source() === 'upper' && this.followPlaying && this.lowerPoints
+      ? new Set(this.lowerPoints.map(c => c.join(','))) : new Set();
     g.lineWidth = 1.5;
     g.strokeStyle = border;
     for (let j = j0; j <= j1; j++) {
@@ -872,11 +1128,12 @@ class HarmonyWalkerModule extends ModuleBase {
         g.arc(sx(x), sy(y), on ? 27 : 24, 0, Math.PI * 2);
         g.fillStyle = panel;
         g.fill();
-        g.lineWidth = on ? 4 : 1.5;
-        g.strokeStyle = on ? primary : border;
+        const under = !on && below.has(`${i},${j}`);
+        g.lineWidth = on ? 4 : under ? 2.5 : 1.5;
+        g.strokeStyle = on ? primary : under ? text : border;
         g.stroke();
         g.font = `${on ? 'bold ' : ''}25px system-ui, sans-serif`;
-        g.fillStyle = on ? text : muted;
+        g.fillStyle = on || under ? text : muted;
         g.fillText(names[this.pc(i, j)], sx(x), sy(y) + 1);
       }
     }

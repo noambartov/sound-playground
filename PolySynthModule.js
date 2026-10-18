@@ -454,6 +454,20 @@ class PolySynthModule extends ModuleBase {
     const t = ctx.currentTime;
     const v = this.pickVoice(note, t);
     if (!v) return;
+    const glideSec = glide === true ? 0.15 : Number(glide) || 0;
+    // The same note while it is still held, at a new Hz (e.g. Harmony Walker with Glide): legato,
+    // the voice slides from its own pitch to the new one without starting its envelopes again
+    if (v.gate && v.note === note) {
+      v.osc1s.concat(v.osc2s).forEach(o => {
+        o.frequency.cancelScheduledValues(t);
+        o.frequency.setValueAtTime(v.freq, t);
+        if (glideSec > 0) o.frequency.setTargetAtTime(freq, t, glideSec / 3);
+        else o.frequency.setValueAtTime(freq, t);
+      });
+      v.freq = freq;
+      this.lastFreq = freq;
+      return;
+    }
     const p = this.params;
     const a = p.attack / 1000;
     const d = p.decay / 1000;
@@ -478,7 +492,6 @@ class PolySynthModule extends ModuleBase {
     amp.cancelScheduledValues(t);
     if (stolen) amp.setTargetAtTime(0, t, 0.002);
     // Slide: the new note glides in from the last note played (95% of the way after glide seconds)
-    const glideSec = glide === true ? 0.15 : Number(glide) || 0;
     const from = glideSec > 0 && this.lastFreq ? this.lastFreq : null;
     v.osc1s.concat(v.osc2s).forEach(o => {
       o.frequency.cancelScheduledValues(t);

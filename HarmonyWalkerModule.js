@@ -1,7 +1,11 @@
 // HarmonyWalkerModule.js - a harmony engine that plays by itself: press Play and it walks from chord
 // to chord on the Tonnetz (the Neo-Riemannian grid of notes and triads), one P, L or R move per step.
 // P (Parallel) C major <-> C minor, R (Relative) C major <-> A minor, L (Leading-tone) C major <-> E minor:
-// each move changes one note of the triad, so the voices move smoothly. A row of up to 8 steps sets the
+// each move changes one note of the triad, so the voices move smoothly. S (Slide, C major <-> C# minor),
+// N (C major <-> F minor) and H (Hexatonic pole, C major <-> Ab minor) are made of three of those.
+// Tuning: equal temperament, or just intonation where every grid point has its own pure pitch
+// (fifths 3/2, major thirds 5/4), so a walk that comes back to the same chord can arrive a little
+// higher or lower (the pitch drifts). Glide slides the voices from one chord to the next. A row of up to 8 steps sets the
 // movement (ready-made movements in a menu, or tap the steps). The chord goes out on NOTES (a Poly Synth),
 // on LOW / MID / HIGH FREQ (three oscillators) and a GATE on every change. Follows a CLOCK cable
 // (16th-note pulses, architecture.md section 4) or its own Tempo. Built on the shared template (ModuleBase.js).
@@ -13,9 +17,12 @@ const HW_MOVES = {
   lr: ['L', 'R'],
   plr: ['P', 'L', 'R'],
   drift: ['L', 'P', 'R', 'P'],
+  mystery: ['H', 'P'],
+  wander: ['N', 'R', 'S', 'L'],
   random: ['?']
 };
-const HW_STEP_CYCLE = ['P', 'L', 'R', '?', '-'];
+const HW_COMPOUND = { S: ['L', 'P', 'R'], N: ['R', 'L', 'P'], H: ['L', 'P', 'L'] };
+const HW_STEP_CYCLE = ['P', 'L', 'R', 'S', 'N', 'H', '?', '-'];
 const HW_MAX_STEPS = 8;
 const HW_GATE_LEN = 0.85;   // the GATE stays on for this part of each chord
 
@@ -47,7 +54,8 @@ class HarmonyWalkerModule extends ModuleBase {
     params: [
       { id: 'movement', label: 'Movement', kind: 'select', value: 'drift',
         options: [['pl', 'Hexatonic cycle (P L)'], ['pr', 'Octatonic cycle (P R)'], ['lr', 'Chain of thirds (L R)'],
-          ['plr', 'P L R'], ['drift', 'Drift (L P R P)'], ['random', 'Random walk'], ['custom', 'Custom']] },
+          ['plr', 'P L R'], ['drift', 'Drift (L P R P)'], ['mystery', 'Mystery (H P)'], ['wander', 'Wander (N R S L)'],
+          ['random', 'Random walk'], ['custom', 'Custom']] },
       { id: 'length', label: 'Steps', min: 1, max: HW_MAX_STEPS, step: 1, value: 4 },
       { id: 'every', label: 'Change Every', min: 1, max: 16, step: 1, value: 4,
         format: v => `${v} ${v === 1 ? 'beat' : 'beats'}` },
@@ -56,7 +64,11 @@ class HarmonyWalkerModule extends ModuleBase {
         options: HW_NAMES.map((n, i) => [`${i}M`, `${n} major`]).concat(HW_NAMES.map((n, i) => [`${i}m`, `${n} minor`])) },
       { id: 'octave', label: 'Octave', min: 1, max: 6, step: 1, value: 3 },
       { id: 'voicing', label: 'Voicing', kind: 'select', value: 'close',
-        options: [['close', 'Close'], ['open', 'Open (low note down)'], ['wide', 'Wide (low down, high up)']] }
+        options: [['close', 'Close'], ['open', 'Open (low note down)'], ['wide', 'Wide (low down, high up)']] },
+      { id: 'tuning', label: 'Tuning', kind: 'select', value: 'equal',
+        options: [['equal', 'Equal (12-TET)'], ['just', 'Just, drifting'], ['justc', 'Just, centered']] },
+      { id: 'glide', label: 'Glide', min: 0, max: 3000, step: 10, value: 0,
+        format: v => (v > 0 ? `${v} ms` : 'Off') }
     ],
     inputs: [
       { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Input', inline: true,
@@ -116,8 +128,9 @@ class HarmonyWalkerModule extends ModuleBase {
     return `${HW_NAMES[root]} ${t.type === 'M' ? 'major' : 'minor'}`;
   }
 
-  // Each move flips the triangle across one of its edges
+  // Each move flips the triangle across one of its edges (S, N and H are three flips)
   transform(t, move) {
+    if (HW_COMPOUND[move]) return HW_COMPOUND[move].reduce((c, m) => this.transform(c, m), t);
     if (t.type === 'M') {
       if (move === 'P') return { type: 'm', i: t.i, j: t.j - 1 };
       if (move === 'R') return { type: 'm', i: t.i - 1, j: t.j };
@@ -172,6 +185,7 @@ class HarmonyWalkerModule extends ModuleBase {
     this.chord = s.endsWith('m') ? { type: 'm', i: 0, j: -1 } : { type: 'M', i: 0, j: 0 };
     this.trail = [];
     this.voices = null;
+    this.lastFreqs = null;
     this.cam = null;
   }
 
@@ -187,7 +201,8 @@ class HarmonyWalkerModule extends ModuleBase {
       this.updateReadout();
       this.requestDraw();
     }
-    if (id === 'voicing' && this.playing) this.sendChord(this.audioCtx.currentTime, false);
+    if ((id === 'voicing' || id === 'tuning') && this.playing && this.voices) this.sendChord(this.audioCtx.currentTime, false);
+    if (id === 'tuning') this.updateReadout();
     if (id === 'length') this.renderSteps();
   }
 
@@ -234,6 +249,37 @@ class HarmonyWalkerModule extends ModuleBase {
 
   static hz(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
+  }
+
+  // Just intonation: how far grid point (i, j) is from equal temperament, in cents
+  // (i pure fifths 3/2 and j pure major thirds 5/4, against 7i + 4j equal semitones)
+  static justCents(i, j) {
+    return 1200 * (i * Math.log2(1.5) + j * Math.log2(1.25)) - 100 * (7 * i + 4 * j);
+  }
+
+  // The chord's triangle used for tuning: where it is (drifting), or moved by whole note-repeats of
+  // the grid ((0, 3) and (4, -1) give the same notes) to the copy nearest the start (centered)
+  tuningTriangle() {
+    const t = this.chord;
+    if (this.params.tuning !== 'justc') return t;
+    let best = t, bestD = Infinity;
+    for (let a = -6; a <= 6; a++) {
+      for (let b = -6; b <= 6; b++) {
+        const c = { type: t.type, i: t.i + 4 * b, j: t.j + 3 * a - b };
+        const x = c.i + c.j / 2 + 0.5, y = c.j + 0.5;
+        const d = x * x + y * y;
+        if (d < bestD) { bestD = d; best = c; }
+      }
+    }
+    return best;
+  }
+
+  // Hz of each output note: equal temperament, or the just pitch of its grid point
+  noteFreqs(notes) {
+    if (this.params.tuning === 'equal') return notes.map(m => HarmonyWalkerModule.hz(m));
+    const cents = {};
+    this.corners(this.tuningTriangle()).forEach(([i, j]) => { cents[this.pc(i, j)] = HarmonyWalkerModule.justCents(i, j); });
+    return notes.map(m => HarmonyWalkerModule.hz(m) * Math.pow(2, (cents[((m % 12) + 12) % 12] || 0) / 1200));
   }
 
   // ---- Playing ----
@@ -317,7 +363,19 @@ class HarmonyWalkerModule extends ModuleBase {
     const first = !this.voices;
     if (first || gate) this.voiceChord(this.chordPcs(this.chord));
     const notes = this.outputNotes();
-    [this.lowOut, this.midOut, this.highOut].forEach((o, k) => o.offset.setValueAtTime(HarmonyWalkerModule.hz(notes[k]), t));
+    const freqs = this.noteFreqs(notes);
+    const glide = this.params.glide / 1000;
+    [this.lowOut, this.midOut, this.highOut].forEach((o, k) => {
+      if (glide > 0 && !first) {
+        o.offset.cancelScheduledValues(t);
+        o.offset.setValueAtTime(this.lastFreqs ? this.lastFreqs[k] : freqs[k], t);
+        o.offset.setTargetAtTime(freqs[k], t, glide / 3);
+      } else {
+        o.offset.cancelScheduledValues(t);
+        o.offset.setValueAtTime(freqs[k], t);
+      }
+    });
+    this.lastFreqs = freqs;
     if (gate) {
       const g = this.gateOut.offset;
       g.cancelScheduledValues(t);
@@ -330,7 +388,9 @@ class HarmonyWalkerModule extends ModuleBase {
     clearTimeout(this.noteTimer);
     this.noteTimer = setTimeout(() => {
       if (!this.playing) return;
-      this.noteBus.update(notes.map(m => ({ midiNote: m, freq: HarmonyWalkerModule.hz(m) })));
+      // With Glide each voice keeps its own key (low, mid, high), so a Poly Synth slides that voice
+      // to the new note without playing it again; without Glide changed notes are played again
+      this.noteBus.update(notes.map((m, k) => ({ midiNote: glide > 0 ? 1000 + k : m, freq: freqs[k] })), glide);
       this.shownStep = this.stepIndex;
       this.updateReadout();
       this.renderSteps();
@@ -384,7 +444,15 @@ class HarmonyWalkerModule extends ModuleBase {
     const el = this.el('chord');
     if (!el) return;
     const prev = this.trail.length ? this.trail[this.trail.length - 1] : null;
-    el.textContent = this.playing && prev ? `${this.chordName(prev)} to ${this.chordName(this.chord)}` : this.chordName(this.chord);
+    let text = this.playing && prev ? `${this.chordName(prev)} to ${this.chordName(this.chord)}` : this.chordName(this.chord);
+    if (this.params.tuning !== 'equal') {
+      // How far the chord's root sits from equal temperament
+      const t = this.tuningTriangle();
+      const [i, j] = t.type === 'M' ? [t.i, t.j] : [t.i, t.j + 1];
+      const c = Math.round(HarmonyWalkerModule.justCents(i, j));
+      text += ` (${c > 0 ? '+' : ''}${c} c)`;
+    }
+    el.textContent = text;
   }
 
   onMount(card) {

@@ -33,7 +33,7 @@
       a.showNotification('The demo is playing. Master Volume on the Output module sets the loudness, and Stop on the Sequencer stops it.',
         'הדמו מתנגן. Master Volume במודול Output קובע את העוצמה, ו-Stop בסיקוונסר עוצר אותו.');
     }, 300);
-    if (window.presetTips) window.presetTips.show(DEMO_PRESET);
+    if (window.presetTips) window.presetTips.show(DEMO_PRESET, newIds);
   }
 
   let hint = null;

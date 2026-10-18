@@ -11,10 +11,10 @@
 
   const LANG_KEY = 'sp_intro_lang';
   const UI = {
-    en: { count: (i, n) => `Tip ${i} of ${n}`, next: 'Next tip', lang: 'עברית', close: 'Close tips',
+    en: { count: (i, n) => `Tip ${i} of ${n}`, prev: 'Previous tip', next: 'Next tip', lang: 'עברית', close: 'Close tips',
       nextLesson: (n, title) => `That's the lesson. Next up, lesson ${n}: ${title}.`, loadNext: n => `Start lesson ${n}`,
       allDone: 'You finished all six lessons. Open the guide and try the Recipes, from Beginner up.', openGuide: 'Open the guide' },
-    he: { count: (i, n) => `טיפ ${i} מתוך ${n}`, next: 'לטיפ הבא', lang: 'English', close: 'סגירת הטיפים',
+    he: { count: (i, n) => `טיפ ${i} מתוך ${n}`, prev: 'לטיפ הקודם', next: 'לטיפ הבא', lang: 'English', close: 'סגירת הטיפים',
       nextLesson: (n, title) => `סיימתם את השיעור. הבא בתור, שיעור ${n}: ${title}.`, loadNext: n => `לשיעור ${n}`,
       allDone: 'סיימתם את כל ששת השיעורים. פתחו את ספר העזרה ונסו את המתכונים, מהקלים לקשים.', openGuide: 'פתיחת ספר העזרה' }
   };
@@ -50,6 +50,7 @@
   let ring = null;
   let ringTarget = null;
   let presetKey = null;   // the last preset loaded, kept until the canvas is emptied
+  let presetIds = null;   // the module ids that preset added (see tipModules)
   let open = false;
   let index = 0;
 
@@ -99,13 +100,24 @@
     ];
   }
 
+  // The modules the tips may point at: the ones the current preset added (presets are added next to what is
+  // already on the canvas, so another module of the same type may stand alone nearby), else every module
+  function tipModules() {
+    const all = Object.values((window.synthApp && window.synthApp.modules) || {});
+    const own = presetIds ? all.filter(m => presetIds.includes(m.id)) : [];
+    return own.length ? own : all;
+  }
+
   // Finds the element a tip points at (see CANVAS_TIPS for the target forms)
   function resolveTarget(target) {
     if (!target) return null;
-    if (target.indexOf('|') < 0) return document.querySelector(target);
+    if (target.indexOf('|') < 0) {
+      // e.g. .port.connected: inside the preset's own modules first
+      for (const m of tipModules()) { const hit = m.card && m.card.querySelector(target); if (hit) return hit; }
+      return document.querySelector(target);
+    }
     const [type, what] = target.split('|');
-    const app = window.synthApp;
-    const m = app && Object.values(app.modules || {}).find(x => x.type === type);
+    const m = tipModules().find(x => x.type === type) || Object.values((window.synthApp && window.synthApp.modules) || {}).find(x => x.type === type);
     const card = m && m.card;
     if (!card) return null;
     if (what.charAt(0) === '.') {
@@ -125,9 +137,8 @@
   // Every control on the canvas that has a visible name: { name, box, card, module words }
   // box = the smallest group around the name that holds its slider / menu / button
   function canvasControls() {
-    const app = window.synthApp;
     const out = [];
-    Object.values((app && app.modules) || {}).forEach(m => {
+    tipModules().forEach(m => {
       const card = m.card;
       if (!card) return;
       const header = card.querySelector('.node-header');
@@ -149,9 +160,8 @@
 
   // The jacks on the canvas: { name (as printed, upper case), box (the jack with its label), words }
   function canvasJacks() {
-    const app = window.synthApp;
     const out = [];
-    Object.values((app && app.modules) || {}).forEach(m => {
+    tipModules().forEach(m => {
       const card = m.card;
       if (!card) return;
       const header = card.querySelector('.node-header');
@@ -187,8 +197,7 @@
     canvasControls().forEach(c => consider(c, lower, c.name));
     canvasJacks().forEach(c => consider(c, raw, c.name));
     if (best) return best;
-    const app = window.synthApp;
-    const mods = Object.values((app && app.modules) || {}).filter(m => m.card);
+    const mods = tipModules().filter(m => m.card);
     const named = mods.find(m => {
       const header = m.card.querySelector('.node-header');
       const title = (header ? header.textContent : '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 3);
@@ -248,7 +257,7 @@
     const lang = getLang();
     const tips = tipsFor(presetKey, lang);
     if (!tips.length) { hide(); return; }
-    index = index % tips.length;
+    index = ((index % tips.length) + tips.length) % tips.length;
     const ui = UI[lang];
     panel.setAttribute('dir', lang === 'he' ? 'rtl' : 'ltr');
     panel.querySelector('.preset-tips-count').textContent = ui.count(index + 1, tips.length);
@@ -261,6 +270,8 @@
     actionBtn.onclick = action ? action.run : null;
     panel.querySelector('.preset-tips-next').textContent = ui.next;
     panel.querySelector('.preset-tips-next').hidden = tips.length < 2;
+    panel.querySelector('.preset-tips-prev').textContent = ui.prev;
+    panel.querySelector('.preset-tips-prev').hidden = tips.length < 2;
     panel.querySelector('.preset-tips-lang').textContent = ui.lang;
     panel.querySelector('.preset-tips-close').setAttribute('aria-label', ui.close);
     panel.hidden = false;
@@ -291,9 +302,11 @@
       <p class="preset-tips-text"></p>
       <div class="preset-tips-buttons">
         <button type="button" class="tool-btn preset-tips-action" hidden></button>
+        <button type="button" class="tool-btn preset-tips-prev"></button>
         <button type="button" class="tool-btn preset-tips-next"></button>
       </div>`;
     panel.querySelector('.preset-tips-next').addEventListener('click', () => { index++; render(); });
+    panel.querySelector('.preset-tips-prev').addEventListener('click', () => { index--; render(); });
     panel.querySelector('.preset-tips-lang').addEventListener('click', () => setLang(getLang() === 'he' ? 'en' : 'he'));
     panel.querySelector('.preset-tips-close').addEventListener('click', hide);
     // Typing on the panel must not play the Keyboard module
@@ -301,14 +314,15 @@
     document.body.appendChild(panel);
     const layer = document.getElementById('modules-layer');
     if (layer) new MutationObserver(() => {
-      if (window.synthApp && Object.keys(window.synthApp.modules || {}).length === 0) { presetKey = null; hide(); }
+      if (window.synthApp && Object.keys(window.synthApp.modules || {}).length === 0) { presetKey = null; presetIds = null; hide(); }
     }).observe(layer, { childList: true });
   }
 
-  // Called after a preset is loaded (help.js, onboarding.js); key = null shows the canvas tips only
-  function show(key) {
+  // Called after a preset is loaded (help.js, onboarding.js); key = null shows the canvas tips only.
+  // ids = the module ids the preset added (loadPatchData's return), so rings land on the preset's own modules
+  function show(key, ids) {
     if (!panel) build();
-    if (key) presetKey = key;
+    if (key) { presetKey = key; presetIds = Array.isArray(ids) && ids.length ? ids.slice() : null; }
     if (!tooltipsOn()) return;
     open = true;
     index = 0;

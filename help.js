@@ -430,7 +430,7 @@
         if (m.instance.def && !m.instance.playing && typeof m.instance.start === 'function') m.instance.start();
       });
     }, 300);
-    if (window.presetTips) window.presetTips.show(key);
+    if (window.presetTips) window.presetTips.show(key, newIds);
   }
 
   // Lets the tips panel start the next lesson (presetTips.js, the tip after a lesson's steps)

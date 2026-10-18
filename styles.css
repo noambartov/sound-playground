@@ -1427,6 +1427,17 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   white-space: nowrap;
 }
 
+/* Vocoder (VocoderModule.js) */
+.vocoder-display {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 560 / 200;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+}
+
 /* Compressor (CompressorModule.js) */
 .comp-display {
   width: 100%;

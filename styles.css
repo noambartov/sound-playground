@@ -2058,10 +2058,11 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 @media (min-width: 701px) and (min-height: 501px) and (max-width: 1279px) {
   .sidebar { top: 84px; }
 }
-/* iPad portrait (up to 860 px): tighter spacing between toolbar buttons, so the Improbability button
-   and the docked Demo button still fit on one row */
+/* iPad portrait (744-860 px, iPad mini to iPad Pro 11): tighter spacing and button padding in the toolbar,
+   so with the Improbability and docked Demo buttons it still fits on one row (about 680 px wide) */
 @media (min-width: 701px) and (min-height: 501px) and (max-width: 860px) {
-  .toolbar { gap: 6px; padding-left: 10px; padding-right: 10px; }
+  .toolbar { gap: 5px; padding-left: 8px; padding-right: 8px; }
+  .toolbar .tool-btn { padding-left: 7px; padding-right: 7px; }
 }
 
 /* Toolbar groups (View: Theme, Play Mode, Cables; File: Save, Load, Clear), on every screen:

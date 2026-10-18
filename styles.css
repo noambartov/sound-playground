@@ -1635,6 +1635,16 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 
 .hw-step.off { opacity: 0.3; }
 
+.hw-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  cursor: default;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .hw-step.now {
   background: var(--primary-color);
   border-color: var(--primary-color);

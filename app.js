@@ -303,6 +303,11 @@ if (!window.SoundSandboxApp) {
         card.style.left = `${spot.x}px`;
         card.style.top = `${spot.y}px`;
         card.style.visibility = '';
+        // Short pop-in and two amber ring pulses so the new module is easy to spot
+        card.classList.add('module-spawned');
+        card.addEventListener('animationend', (e) => {
+          if (e.target === card && e.animationName === 'module-spawn-ring') card.classList.remove('module-spawned');
+        });
       }
 
       return instance;
@@ -345,15 +350,21 @@ if (!window.SoundSandboxApp) {
       const hits = (x, y) => others.some(o =>
         x < o.x + o.w + gap && x + w + gap > o.x && y < o.y + o.h + gap && y + h + gap > o.y);
 
-      // סריקה במסך הפנוי: משמאל לימין ומלמעלה למטה, בצעדים קטנים
+      // סריקה במסך הפנוי: המקום הפנוי הקרוב ביותר למרכז התצוגה, בצעדים קטנים
       const toWorldX = sx => (sx - this.panX) / s;
       const toWorldY = sy => (sy - this.panY) / s;
       const step = 30;
+      const cx = (free.left + free.right) / 2, cy = (free.top + free.bottom) / 2;
+      const spots = [];
       for (let sy = free.top; sy + h * s <= free.bottom; sy += step) {
         for (let sx = free.left; sx + w * s <= free.right; sx += step) {
-          const x = toWorldX(sx), y = toWorldY(sy);
-          if (!hits(x, y)) return { x, y };
+          spots.push({ sx, sy, d: Math.hypot(sx + w * s / 2 - cx, sy + h * s / 2 - cy) });
         }
+      }
+      spots.sort((a, b) => a.d - b.d);
+      for (const p of spots) {
+        const x = toWorldX(p.sx), y = toWorldY(p.sy);
+        if (!hits(x, y)) return { x, y };
       }
       // אין מקום פנוי במסך: שמים את המודול מימין לכל המודולים ומזיזים את התצוגה כך שיראו אותו
       const maxRight = Math.max(...others.map(o => o.x + o.w));

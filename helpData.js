@@ -210,6 +210,10 @@ window.helpData = {
         summary: "Keeps time: a click on every beat, and a CLOCK output that keeps other modules in step with it.",
         controls: ["Play / Stop. Tap: tap it a few times in time and the tempo follows your taps.", "Tempo: 20 to 300 BPM. Drag the slider, or type a number in the box and press Enter.", "Beats per Bar: how many beats before the count starts again. The lights show the beat, the first one is the accented one.", "Sound: Click, Wood Block or Beep. Volume: how loud the click is.", "Accent: On makes the first beat of every bar louder and higher."],
         tips: ["CLICK into the Output to hear the metronome; it stays silent until a cable is connected.", "CLOCK pulses on every 16th note (four times per beat). Plug it into a module's CLOCK input to follow this tempo, or into an Envelope GATE IN to play a 16th-note pattern.", "An LFO cable dropped on the Tempo slider speeds the metronome up and slows it down by itself."] },
+      { type: "harmony", group: "controllers", name: "Harmony Walker", preset: "demo-harmony",
+        summary: "A harmony engine that plays by itself: press Play and it walks from chord to chord on the Tonnetz, the grid where every note's neighbors sound good with it and every small triangle is a chord.",
+        controls: ["Play / Stop. The line next to it shows the chord change (for example C major to A minor).", "The display: the Tonnetz. Going right is a fifth, going up-right a major third, up-left a minor third. The lit triangle is the chord playing now, the fading ones the chords before it; the grid slides along as the chord moves.", "The step row: up to 8 moves played in turn. P (Parallel) swaps major and minor on the same root, C major to C minor. R (Relative) goes to the relative chord, C major to A minor. L (Leading-tone) goes to the chord a third up, C major to E minor. ? picks a random move, - (dash) stays on the chord. Tap a step to change it.", "Movement: ready-made movements. Hexatonic cycle (P L) circles through 6 chords, Octatonic cycle (P R) through 8, Chain of thirds (L R) wanders through all 24 chords, Drift (L P R P) is slow and cinematic, Random walk picks a different move every time. Changing a step makes it Custom.", "Steps: how many steps of the row are used. Change Every: how many beats each chord lasts. Tempo: the speed (set aside while a cable is in CLOCK).", "Start Chord: where the walk begins (every Play starts there again). Octave: how high the chords sit. Voicing: Close (the three notes together), Open (lowest note an octave down) or Wide (lowest down, highest up)."],
+        tips: ["NOTES into a Poly Synth with a slow Attack and long Release gives a pad that changes by itself. Notes the next chord shares keep sounding, only the changed note moves.", "LOW, MID and HIGH into the PITCH of three Oscillators, and GATE into an Envelope for a VCA, play the chord on separate oscillators.", "A Metronome, Drum Machine or Sequencer CLOCK into CLOCK keeps the chord changes in time with the beat."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "Removes part of the sound: darker, brighter or thinner.",
         controls: ["Type: Lowpass (keeps the lows), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts, 20 Hz to 15 kHz. The middle of the slider is 700 Hz.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
@@ -539,6 +543,10 @@ window.helpData = {
         summary: "שומר על הקצב: קליק בכל פעמה, ויציאת CLOCK שמשאירה מודולים אחרים באותו קצב.",
         controls: ["Play / Stop. Tap: מקישים עליו כמה פעמים בקצב, והטמפו נקבע לפי ההקשות.", "Tempo: מ-20 עד 300 BPM. גוררים את הסליידר, או מקלידים מספר בתיבה ולוחצים Enter.", "Beats per Bar: כמה פעמות עד שהספירה מתחילה מחדש. הנורות מראות את הפעמה, הראשונה היא המודגשת.", "Sound: Click, Wood Block או Beep. Volume: כמה חזק הקליק.", "Accent: במצב On הפעמה הראשונה בכל תיבה חזקה וגבוהה יותר."],
         tips: ["חברו את CLICK ל-Output כדי לשמוע את המטרונום; בלי כבל הוא שקט.", "CLOCK נותן דפיקה בכל תו שש-עשרית (ארבע בכל פעמה). חברו אותו לכניסת CLOCK של מודול כדי שילך לפי הטמפו הזה, או ל-GATE IN של Envelope כדי לנגן תבנית של שש-עשריות.", "כבל LFO שמופל על סליידר ה-Tempo מאיץ ומאט את המטרונום לבד."] },
+      { type: "harmony", group: "controllers", name: "Harmony Walker", preset: "demo-harmony",
+        summary: "מנוע הרמוני שמנגן לבד: לוחצים Play והוא הולך מאקורד לאקורד על ה-Tonnetz, הרשת שבה כל תו מוקף בתווים שנשמעים טוב איתו, וכל משולש קטן הוא אקורד.",
+        controls: ["Play / Stop. השורה לידו מראה את החלפת האקורד (למשל C major to A minor).", "המסך: ה-Tonnetz. ימינה זו קווינטה, למעלה-ימינה טרצה גדולה, למעלה-שמאלה טרצה קטנה. המשולש המואר הוא האקורד שמתנגן עכשיו, הדועכים הם האקורדים שלפניו; הרשת זזה יחד עם האקורד.", "שורת הצעדים: עד 8 מהלכים שמתנגנים אחד אחרי השני. P (Parallel) מחליף מז'ור ומינור על אותו שורש, דו מז'ור לדו מינור. R (Relative) עובר לאקורד המקביל, דו מז'ור ללה מינור. L (Leading-tone) עובר לאקורד שטרצה למעלה, דו מז'ור למי מינור. ? בוחר מהלך אקראי, - (מקף) נשאר על האקורד. נגיעה בצעד משנה אותו.", "Movement: תנועות מוכנות. Hexatonic cycle (P L) מסתובב בין 6 אקורדים, Octatonic cycle (P R) בין 8, Chain of thirds (L R) עובר בכל 24 האקורדים, Drift (L P R P) איטי וקולנועי, Random walk בוחר כל פעם מהלך אחר. שינוי של צעד הופך את זה ל-Custom.", "Steps: כמה צעדים מהשורה בשימוש. Change Every: כמה פעמות כל אקורד נמשך. Tempo: המהירות (מושבת כשיש כבל ב-CLOCK).", "Start Chord: מאיפה ההליכה מתחילה (כל Play מתחיל שם מחדש). Octave: כמה גבוה האקורדים. Voicing: Close (שלושת התווים צמודים), Open (התו הנמוך יורד אוקטבה) או Wide (הנמוך למטה, הגבוה למעלה)."],
+        tips: ["NOTES ל-Poly Synth עם Attack איטי ו-Release ארוך נותן פד שמשתנה לבד. תווים שהאקורד הבא חולק ממשיכים להישמע, רק התו שהשתנה זז.", "LOW, MID ו-HIGH ל-PITCH של שלושה אוסילטורים, ו-GATE ל-Envelope שפותח VCA, מנגנים את האקורד על אוסילטורים נפרדים.", "CLOCK של מטרונום, מכונת תופים או סיקוונסר אל CLOCK שומר על החלפות האקורד בקצב של הביט."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "מוריד חלק מהצליל: כהה יותר, בהיר יותר או דק יותר.",
         controls: ["Type: Lowpass (משאיר נמוכים), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך, מ-20 הרץ עד 15 קילוהרץ. אמצע הסליידר הוא 700 הרץ.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
@@ -710,7 +718,7 @@ window.helpData = {
       "wavetable:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, OUT של אוסילטור" },
       "wavetable:in:pos": { text: "מזיז את Position: מ-0 עד 1 עוברים על כל הטבלה (לפי POS Depth). Envelope גורם לכל תו לעבור בין הגלים.", where: "ENV OUT של Envelope, Y של Ribbon" },
       "wavetable:out:out": { text: "הצליל של אוסילטור הוויב-טייבל.", where: "Filter, VCA, Mixer, Output, Oscilloscope" },
-      "polysynth:in:notes": { text: "כל הקלידים שמחזיקים במקלדת, כל אחד מנוגן בקול משלו. הכבל הזה מעביר תווים, לא צליל.", where: "NOTES של המקלדת" },
+      "polysynth:in:notes": { text: "כל הקלידים שמחזיקים במקלדת (או האקורד של Harmony Walker), כל אחד מנוגן בקול משלו. הכבל הזה מעביר תווים, לא צליל.", where: "NOTES של המקלדת או של Harmony Walker" },
       "polysynth:out:out": { text: "כל הקולות מעורבבים יחד.", where: "Output, IN L של Reverb, Stereo Delay, Mixer, Degrader" },
       "keyboard:out:notes": { text: "כל הקלידים שמחזיקים, לא רק האחרון, כדי שאפשר יהיה לנגן אקורדים. מעביר תווים, לא צליל.", where: "NOTES של Poly Synth" },
       "envelope:in:gate": { text: "מתחיל את המעטפת כשתו מתחיל ומשחרר אותה כשהתו נגמר.", where: "GATE של המקלדת, הסיקוונסר או המצלמה" },
@@ -748,6 +756,12 @@ window.helpData = {
       "delay:out:out_r": { text: "צד ימין: הצליל המקורי ועוד ההדים שלו (לפי Mix).", where: "IN R של Output, IN R של Reverb, Mixer" },
       "metronome:out:click": { text: "צליל הקליק, אחד בכל פעמה, חזק וגבוה יותר בפעמה הראשונה של התיבה (כש-Accent דלוק).", where: "IN של Output, Mixer, Recorder" },
       "metronome:out:clock": { text: "דפיקה קצרה בכל תו שש-עשרית (ארבע בכל פעמה) כל עוד המטרונום מנגן. משאירה מודולים אחרים בקצב שלו, למשל CLOCK של Stereo Delay, או GATE IN של Envelope לתבנית של שש-עשריות.", where: "CLOCK של Stereo Delay, GATE IN של Envelope, CV של VCA" },
+      "harmony:in:clock": { text: "דפיקה בכל תו שש-עשרית. כשיש כאן כבל, ה-Walker הולך לפי הקצב הזה ולא לפי ה-Tempo שלו (Change Every סופר פעמות של 4 דפיקות).", where: "CLOCK של מטרונום, מכונת תופים או סיקוונסר" },
+      "harmony:out:notes": { text: "שלושת התווים של האקורד. תווים שהאקורד הבא חולק ממשיכים להישמע; רק התו שהשתנה מתנגן מחדש. מעביר תווים, לא צליל.", where: "NOTES של Poly Synth" },
+      "harmony:out:low": { text: "התו הנמוך של האקורד, כגובה בהרץ.", where: "PITCH של אוסילטור או Wavetable Osc" },
+      "harmony:out:mid": { text: "התו האמצעי של האקורד, כגובה בהרץ.", where: "PITCH של אוסילטור או Wavetable Osc" },
+      "harmony:out:high": { text: "התו הגבוה של האקורד, כגובה בהרץ.", where: "PITCH של אוסילטור או Wavetable Osc" },
+      "harmony:out:gate": { text: "נדלק בכל החלפת אקורד ונכבה רגע לפני הבאה.", where: "GATE IN של Envelope, CV של VCA" },
       "recorder:in:in": { text: "הצליל שמוקלט לקובץ WAV.", where: "OUT של VCA, Reverb, Mixer, THRU של Output" },
       "recorder:out:out": { text: "מעביר את הצליל הלאה בלי שינוי.", where: "Output" }
     }
@@ -1159,6 +1173,24 @@ window.presetData = {
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
       { fromNode: "dm1", fromPortInfo: { id: "main_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
+    ]
+  },
+  "demo-harmony": {
+    modules: [
+      { id: "hw1", type: "harmony", x: 40, y: 40, state: { movement: "drift", length: 4, every: 4, tempo: 72, start: "0M", octave: 4, voicing: "open" } },
+      { id: "poly1", type: "polysynth", x: 480, y: 40, state: { voices: 8, wave: "sawtooth", detune: 14, cutoff: 38, reso: 2, filterEnv: 25, attack: 1200, decay: 1500, sustain: 80, release: 2500, level: 70 } },
+      { id: "lfo1", type: "lfo", x: 40, y: 760, state: { rate: 0.08, depth: 30 } },
+      { id: "rev1", type: "reverb", x: 820, y: 40, state: { radius: 30, decay: 6, mix: 0.45 } },
+      { id: "out1", type: "output", x: 1200, y: 40, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 820, y: 460, state: {} }
+    ],
+    connections: [
+      { fromNode: "hw1", fromPortInfo: { id: "notes" }, toNode: "poly1", toPortInfo: { id: "notes" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "poly1", toPortInfo: { id: "knob:#polysynth_p_cutoff_poly1", knob: "#polysynth_p_cutoff_poly1" } },
+      { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-metronome": {

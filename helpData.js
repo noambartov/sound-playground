@@ -58,6 +58,7 @@ window.helpData = {
             <li>A cable from an <strong>LFO OUT</strong> (or a <strong>Ribbon</strong> output) can also be dropped on any slider of another module; the slider then moves by itself.</li>
             <li><strong>Cables: Front / Back</strong> in the top bar puts the cables over or under the modules.</li>
             <li><strong>View → Arrange</strong> tidies the whole patch: modules line up left to right in the order the sound flows (controllers and LFOs, then sources, then effects, Output last), with no overlaps, and the view zooms to show them all. Undo puts them back.</li>
+            <li><strong>Improbability</strong> in the top bar is a chaos button, after the Infinite Improbability Drive in <em>The Hitchhiker's Guide to the Galaxy</em>. A tap nudges every slider (and now and then a menu, like a waveform) to a random new value near where it was, so the patch sounds like itself but different. A long press (or Shift+click) throws everything anywhere. If some modules are selected, only they change. Volumes and levels, the Output, Keyboard and Audio In stay as they are, and one Undo puts everything back.</li>
           </ul>
         </div>
         <div class="help-card">
@@ -391,6 +392,7 @@ window.helpData = {
             <li>כבל מ-<strong>LFO OUT</strong> (או מיציאה של ה-<strong>Ribbon</strong>) אפשר להפיל גם על כל סליידר של מודול אחר, והסליידר יזוז לבד.</li>
             <li>הכפתור <strong>Cables: Front / Back</strong> בסרגל העליון שם את הכבלים מעל או מתחת למודולים.</li>
             <li><strong>View ← Arrange</strong> מסדר את כל הפאץ': המודולים עומדים משמאל לימין לפי זרימת הצליל (בקרים ו-LFO, אחר כך מקורות צליל, אחר כך אפקטים, ו-Output בסוף), בלי חפיפות, והתצוגה מתקרבת או מתרחקת כך שכולם נראים. Undo מחזיר אותם למקום.</li>
+            <li><strong>Improbability</strong> בסרגל העליון הוא כפתור כאוס, על שם מנוע אי-הסבירות האינסופית מ<em>המדריך לטרמפיסט בגלקסיה</em>. לחיצה מזיזה כל סליידר (ולפעמים גם תפריט, כמו צורת הגל) לערך אקראי חדש קרוב למקום שבו היה, כך שהפאץ' נשמע כמו עצמו אבל אחר. לחיצה ארוכה (או Shift+קליק) זורקת הכול לכל מקום. אם סימנת כמה מודולים, רק הם משתנים. עוצמות ורמות, ה-Output, הקיבורד וה-Audio In נשארים כמו שהם, ו-Undo אחד מחזיר הכול.</li>
           </ul>
         </div>
         <div class="help-card">

@@ -390,6 +390,7 @@ class HarmonyWalkerModule extends ModuleBase {
 
   // Back to the Start Chord (its root is also the key of Progression and Chance table)
   setStartChord(keepVoices = false) {
+    this.tuneShift = [0, 0];
     const s = String(this.params.start || '0M');
     this.base = HarmonyWalkerModule.mod(parseInt(s, 10) || 0, this.sys().n);
     this.minorKey = s.endsWith('m');
@@ -596,7 +597,16 @@ class HarmonyWalkerModule extends ModuleBase {
       }
     };
     pick(0, []);
-    this.voices = bestSet.notes;
+    // Keep the chord around the Octave: when it has crept more than 4 steps away on average,
+    // its outermost voice jumps a period back (otherwise a walk that keeps moving one way climbs forever)
+    const v = bestSet.notes;
+    for (let k = 0; k < v.length; k++) {
+      const mean = v.reduce((a, b) => a + b, 0) / v.length;
+      if (mean - c > 4) { const x = v.indexOf(Math.max(...v)); v[x] -= N; }
+      else if (c - mean > 4) { const x = v.indexOf(Math.min(...v)); v[x] += N; }
+      else break;
+    }
+    this.voices = v;
   }
 
   outputNotes() {
@@ -636,8 +646,25 @@ class HarmonyWalkerModule extends ModuleBase {
   }
 
   // The grid points used for tuning: where the chord is (drifting), or for Just, centered, the copy
-  // nearest the start (the grid repeats its notes every (0, 3) and (4, -1))
+  // nearest the start (the grid repeats its notes every (0, 3) and (4, -1)). Drifting wanders freely
+  // up to 50 cents, then moves to the copy where the root is nearest its normal pitch.
   tuningPoints() {
+    if (['just', 'edo19', 'edo31'].includes(this.params.tuning) && this.sys() === HW_WEST) {
+      const shifted = sh => this.points.map(([i, j]) => [i + sh[0], j + sh[1]]);
+      let sh = this.tuneShift || [0, 0];
+      if (Math.abs(this.pointCents(...shifted(sh)[0])) > 50) {
+        let best = sh, bestC = Infinity;
+        for (let a = -6; a <= 6; a++) {
+          for (let b = -6; b <= 6; b++) {
+            const s2 = [sh[0] + 4 * b, sh[1] + 3 * a - b];
+            const c = Math.abs(this.pointCents(...shifted(s2)[0]));
+            if (c < bestC - 0.01) { bestC = c; best = s2; }
+          }
+        }
+        this.tuneShift = sh = best;
+      }
+      return shifted(sh);
+    }
     if (this.params.tuning !== 'justc') return this.points;
     if (this.source() !== 'tonnetz') return this.chordPoints(this.chord, [0, 0]);
     let best = this.points, bestD = Infinity;

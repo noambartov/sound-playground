@@ -33,6 +33,7 @@ class MixerModule {
                 panValue: this.channels[ch].panValue,
                 volumeValue: this.channels[ch].volumeValue
             };
+            if (this.channels[ch].label) channelsData[ch].label = this.channels[ch].label;
         });
         return {
             masterVolumeValue: this.masterVolumeValue,
@@ -59,6 +60,7 @@ class MixerModule {
                 if (chData.volumeValue !== undefined) {
                     this.setChannelVolume(ch, chData.volumeValue);
                 }
+                this.channels[ch].label = chData.label || '';
             });
 
             const card = document.getElementById(`module_card_${this.id}`);
@@ -73,9 +75,30 @@ class MixerModule {
                     if (window.synthApp) {
                         window.synthApp.bindPortEvents(card, this.id);
                     }
+                    this.setLabelHints(this.labelHints);
                 }
             }
         }
+    }
+
+    // Channel name box (owner's idea 2026-10-18): a short name typed under "CH n", saved with the patch.
+    setChannelLabel(channelIndex, value) {
+        const ch = this.channels[channelIndex];
+        if (ch) ch.label = String(value || '').slice(0, 12);
+    }
+
+    // Called by the app whenever cables change: an empty box shows the plugged-in module's name, greyed.
+    setLabelHints(hints) {
+        this.labelHints = hints || {};
+        const card = document.getElementById(`module_card_${this.id}`);
+        if (!card) return;
+        card.querySelectorAll('.mixer-ch-label').forEach(input => {
+            input.placeholder = this.labelHints[input.dataset.channel] || 'Name';
+        });
+    }
+
+    escapeAttr(text) {
+        return String(text || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
     }
 
     addChannelData() {
@@ -203,6 +226,10 @@ class MixerModule {
     renderChannelHTML(ch) {
         return `
             <div style="font-weight: 700; font-size: 0.8rem; color: var(--text-color); text-align: center; border-bottom: 1px solid var(--panel-border); width: 100%; padding-bottom: 4px;">CH ${ch}</div>
+            <input type="text" class="mixer-ch-label" data-channel="${ch}" maxlength="12" spellcheck="false" autocomplete="off"
+                value="${this.escapeAttr(this.channels[ch].label)}" placeholder="${this.escapeAttr((this.labelHints || {})[ch] || 'Name')}"
+                aria-label="CH ${ch} name" title="Channel name"
+                oninput="synthApp.getModule('${this.id}').setChannelLabel(${ch}, this.value)">
             
             <div style="display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%;">
                 <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">

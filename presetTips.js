@@ -16,7 +16,7 @@
       allDone: 'You finished all six lessons. Open the guide and try the Recipes, from Beginner up.', openGuide: 'Open the guide' },
     he: { count: (i, n) => `טיפ ${i} מתוך ${n}`, prev: 'לטיפ הקודם', next: 'לטיפ הבא', lang: 'English', close: 'סגירת הטיפים',
       nextLesson: (n, title) => `סיימתם את השיעור. הבא בתור, שיעור ${n}: ${title}.`, loadNext: n => `לשיעור ${n}`,
-      allDone: 'סיימתם את כל ששת השיעורים. פתחו את ספר העזרה ונסו את המתכונים, מהקלים לקשים.', openGuide: 'פתיחת ספר העזרה' }
+      allDone: 'סיימתם את כל ששת השיעורים. פתחו את ספר העזרה ונסו את הפאצ׳ים המוכנים, מהקלים לקשים.', openGuide: 'פתיחת ספר העזרה' }
   };
 
   // target: a CSS selector on the page, or 'module|Label' (the control labelled Label on the first module of that type),

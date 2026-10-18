@@ -83,9 +83,9 @@ class PolySynthModule extends ModuleBase {
       { id: 'level', label: 'Level', min: 0, max: 100, step: 1, value: 70, unit: '%' }
     ],
     inputs: [
-      { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Input (from Keyboard NOTES)',
-        guide: { text: 'All the keys you hold on the Keyboard, each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES', match: ['keyboard:out:notes'] },
-        chip: 'Keyboard NOTES' }
+      { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Input (from Keyboard or Harmony Walker NOTES)',
+        guide: { text: 'All the keys you hold on the Keyboard (or the Harmony Walker chord), each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES, Harmony Walker NOTES', match: ['keyboard:out:notes', 'harmony:out:notes'] },
+        chip: 'Keyboard / Walker NOTES' }
     ],
     outputs: [
       { id: 'out', label: 'OUT', signal: 'audio', title: 'Audio Output',

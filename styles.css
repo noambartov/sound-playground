@@ -1579,6 +1579,68 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 .metro-light.metro-now { background: var(--text-color); }
 .metro-light.metro-first.metro-now { background: var(--primary-color); }
 
+/* Harmony Walker (HarmonyWalkerModule.js) */
+.hw-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hw-play { width: 70px; }
+
+.hw-play.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.hw-chord {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hw-display {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 560 / 320;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+}
+
+.hw-steps {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.hw-step {
+  height: 30px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-sm);
+  background: var(--btn-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.hw-step.off { opacity: 0.3; }
+
+.hw-step.now {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
 /* Wavetable Osc (WavetableModule.js): the stacked-waves display */
 .wt-display {
   width: 100%;

@@ -1182,15 +1182,23 @@ window.presetData = {
   },
   "demo-harmony": {
     modules: [
-      { id: "hw1", type: "harmony", x: 40, y: 40, state: { movement: "drift", length: 4, every: 4, tempo: 72, start: "0M", octave: 4, voicing: "open", tuning: "just", glide: 400 } },
+      { id: "hw1", type: "harmony", x: 40, y: 40, state: { movement: "drift", length: 4, every: 4, tempo: 72, start: "0M", octave: 4, voicing: "open", tuning: "just", glide: 400, arp: "broken", arpRate: "8t", arpOct: 2 } },
       { id: "poly1", type: "polysynth", x: 480, y: 40, state: { voices: 8, wave: "sawtooth", detune: 14, cutoff: 38, reso: 2, filterEnv: 25, attack: 1200, decay: 1500, sustain: 80, release: 2500, level: 70 } },
       { id: "lfo1", type: "lfo", x: 1200, y: 460, state: { rate: 0.08, depth: 30 } },
       { id: "rev1", type: "reverb", x: 820, y: 40, state: { radius: 30, decay: 6, mix: 0.45 } },
       { id: "out1", type: "output", x: 1200, y: 40, state: {} },
-      { id: "scope1", type: "oscilloscope", x: 820, y: 460, state: {} }
+      { id: "scope1", type: "oscilloscope", x: 820, y: 460, state: {} },
+      { id: "osc1", type: "oscillator", x: 480, y: 860, state: { waveform: "triangle", frequency: 440 } },
+      { id: "env1", type: "envelope", x: 820, y: 860, state: { attack: 0.004, decay: 0.18, sustain: 0.15, release: 0.12 } },
+      { id: "vca1", type: "vca", x: 1160, y: 860, state: { gain: 0 } }
     ],
     connections: [
       { fromNode: "hw1", fromPortInfo: { id: "notes" }, toNode: "poly1", toPortInfo: { id: "notes" } },
+      { fromNode: "hw1", fromPortInfo: { id: "arp" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "hw1", fromPortInfo: { id: "arpgate" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "poly1", toPortInfo: { id: "knob:#polysynth_p_cutoff_poly1", knob: "#polysynth_p_cutoff_poly1" } },
       { fromNode: "poly1", fromPortInfo: { id: "out" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
       { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },

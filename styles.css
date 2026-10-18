@@ -2041,6 +2041,11 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 @media (min-width: 701px) and (min-height: 501px) and (max-width: 1279px) {
   .sidebar { top: 84px; }
 }
+/* iPad portrait (up to 860 px): tighter spacing between toolbar buttons, so the Improbability button
+   and the docked Demo button still fit on one row */
+@media (min-width: 701px) and (min-height: 501px) and (max-width: 860px) {
+  .toolbar { gap: 6px; padding-left: 10px; padding-right: 10px; }
+}
 
 /* Toolbar groups (View: Theme, Play Mode, Cables; File: Save, Load, Clear), on every screen:
    each group is one button that opens a small menu. The menu is position: fixed and placed under
@@ -2087,4 +2092,25 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   text-align: center;
   color: var(--muted-text);
   flex-shrink: 0;
+}
+
+/* Improbability button (improbability.js): long press must not open the iOS callout or select text */
+#improbability-btn {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Modules changed by Improbability wobble for a moment (uses `rotate`, so it never fights the card's position) */
+@keyframes improb-shake {
+  0%, 100% { rotate: 0deg; }
+  20% { rotate: -1.5deg; }
+  40% { rotate: 1.5deg; }
+  60% { rotate: -1deg; }
+  80% { rotate: 0.6deg; }
+}
+.module-card.improb-shake { animation: improb-shake 0.45s ease-in-out; }
+@media (prefers-reduced-motion: reduce) {
+  .module-card.improb-shake { animation: none; }
 }

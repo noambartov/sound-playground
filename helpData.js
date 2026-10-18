@@ -343,10 +343,10 @@ window.helpData = {
 ,
   he: {
     title: "המדריך של Sound Playground",
-    searchPlaceholder: "חיפוש מודול, שקע או מתכון...",
+    searchPlaceholder: "חיפוש מודול, שקע או פאצ׳ מוכן...",
     tabs: {
       start: "לומדים",
-      recipes: "מתכונים",
+      recipes: "פאצ׳ים מוכנים",
       modules: "המודולים",
       trouble: "פתרון תקלות",
       shortcuts: "קיצורים"
@@ -373,7 +373,7 @@ window.helpData = {
       progress: (d, n) => `${d} מתוך ${n} נעשו`,
       goodToKnow: "כדאי לדעת",
       whatNext: "מה הלאה?",
-      whatNextText: "נסו את המתכונים, מהקלים לקשים, או פתחו כל מודול בלשונית המודולים כדי לראות את כל השקעים והכפתורים שלו.",
+      whatNextText: "נסו את הפאצ׳ים המוכנים, מהקלים לקשים, או פתחו כל מודול בלשונית המודולים כדי לראות את כל השקעים והכפתורים שלו.",
       levels: ["", "מתחילים", "בינוני", "מתקדם"],
       groups: { sources: "מקורות צליל", controllers: "בקרים", processors: "מעבדים ואפקטים", modulation: "אפנון", output: "יציאה וניטור" }
     },
@@ -405,7 +405,7 @@ window.helpData = {
         </div>
         <div class="help-card">
           <h4>פריסטים נפתחים בשקט</h4>
-          <p>כל פאץ' שנטען (מ<strong>מתכונים</strong> או עם <strong>Load</strong>) נפתח כשהווליום של ה-Output על 0, כדי ששום דבר לא יתנפל עליכם. מרימים את <strong>Master Volume</strong> במודול ה-Output כדי לשמוע.</p>
+          <p>כל פאץ' שנטען (מ<strong>פאצ׳ים מוכנים</strong> או עם <strong>Load</strong>) נפתח כשהווליום של ה-Output על 0, כדי ששום דבר לא יתנפל עליכם. מרימים את <strong>Master Volume</strong> במודול ה-Output כדי לשמוע.</p>
         </div>
         <div class="help-card">
           <h4>לבנות מאפס</h4>

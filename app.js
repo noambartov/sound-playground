@@ -479,6 +479,14 @@ if (!window.SoundSandboxApp) {
       });
       ids.forEach(id => { if (isFinal(byId[id])) rank[id] = maxRank + 1; });
 
+      // With a Mixer in the patch: one row per Mixer channel (see arrangeRows)
+      const gapX = 60, gapY = 24;
+      const size = id => ({ w: byId[id].card.offsetWidth, h: byId[id].card.offsetHeight });
+      const originX = Math.min(...ids.map(id => byId[id].card.offsetLeft));
+      const originY = Math.min(...ids.map(id => byId[id].card.offsetTop));
+      let targets = this.arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY });
+      if (!targets) {
+
       // Columns, ordered by where the cabled neighbours sit (a few back-and-forth passes)
       const used = [...new Set(ids.map(id => rank[id]))].sort((a, b) => a - b);
       let cols = used.map(r => ids.filter(id => rank[id] === r)
@@ -500,8 +508,6 @@ if (!window.SoundSandboxApp) {
       }
 
       // Wrap tall columns so the whole patch keeps roughly the shape of the free screen
-      const gapX = 60, gapY = 24;
-      const size = id => ({ w: byId[id].card.offsetWidth, h: byId[id].card.offsetHeight });
       const free = this.getFreeViewRect();
       const aspect = Math.max(0.3, (free.bottom - free.top) / Math.max(1, free.right - free.left));
       const area = ids.reduce((s, id) => s + (size(id).w + gapX) * (size(id).h + gapY), 0);
@@ -518,17 +524,16 @@ if (!window.SoundSandboxApp) {
       });
 
       // Place the stacks from the patch's current top-left corner, each one centred vertically
-      const originX = Math.min(...ids.map(id => byId[id].card.offsetLeft));
-      const originY = Math.min(...ids.map(id => byId[id].card.offsetTop));
       const stackH = stacks.map(s => s.reduce((t, id) => t + size(id).h, 0) + gapY * (s.length - 1));
       const fullH = Math.max(...stackH);
-      const targets = {};
+      targets = {};
       let x = originX;
       stacks.forEach((s, i) => {
         let y = originY + (fullH - stackH[i]) / 2;
         s.forEach(id => { targets[id] = { x, y: Math.round(y) }; y += size(id).h + gapY; });
         x += Math.max(...s.map(id => size(id).w)) + gapX;
       });
+      }
 
       // Fit the view to the new layout, then let the cards glide there from where they were,
       // redrawing the cables while they move
@@ -547,6 +552,109 @@ if (!window.SoundSandboxApp) {
       };
       requestAnimationFrame(step);
       this.scheduleHistoryCapture();
+    }
+
+    // Arrange by rows: every chain that ends in a Mixer channel gets its own row, in channel order
+    // (lowest Mixer first, then CH 1, CH 2, ...). A module that feeds several rows (clock, LFO,
+    // keyboard) goes to a shared row on top; the Mixer and what comes after it (effects, Output)
+    // sit to the right of the rows; chains that reach no Mixer get a row under them; modules
+    // with no cables a last row. Columns still follow the signal (rank). Returns null without a
+    // Mixer channel in use, so Arrange falls back to plain columns.
+    arrangeRows({ ids, byId, fwd, order, rank, loose, size, originX, originY, gapX, gapY }) {
+      const isMixer = id => byId[id] && byId[id].type === 'mixer';
+      const chOf = info => {
+        if (!info) return null;
+        if (info.channel != null && info.channel !== '') return String(info.channel);
+        const m = String(info.type || info.id || '').match(/^ch_in_(\d+)$/);
+        return m ? m[1] : null;
+      };
+      const lanes = {};
+      ids.forEach(id => { lanes[id] = new Set(); });
+      const outs = {};
+      ids.forEach(id => { outs[id] = []; });
+      this.connections.forEach(c => {
+        if (!byId[c.fromNode] || !byId[c.toNode] || c.fromNode === c.toNode) return;
+        if (!fwd[c.fromNode].includes(c.toNode)) return;
+        outs[c.fromNode].push(c);
+      });
+      // Walk from the end of the chain back to its start, so each target already knows its rows
+      order.slice().reverse().forEach(id => {
+        outs[id].forEach(c => {
+          const ch = isMixer(c.toNode) ? chOf(c.toPortInfo) : null;
+          if (isMixer(c.toNode)) { if (ch) lanes[id].add(`${c.toNode}:${ch}`); }
+          else lanes[c.toNode].forEach(k => lanes[id].add(k));
+        });
+      });
+      const keys = [...new Set(ids.flatMap(id => [...lanes[id]]))];
+      if (!keys.length) return null;
+      keys.sort((a, b) => {
+        const [ma, ca] = a.split(':'), [mb, cb] = b.split(':');
+        return (rank[ma] - rank[mb]) || (byId[ma].card.offsetTop - byId[mb].card.offsetTop) || (ma < mb ? -1 : ma > mb ? 1 : 0) || (+ca - +cb);
+      });
+      const laneIds = keys.map(() => []);
+      const shared = [], bus = [], noMixer = [];
+      ids.forEach(id => {
+        if (loose.includes(id)) return;
+        const l = [...lanes[id]];
+        if (l.length === 1) laneIds[keys.indexOf(l[0])].push(id);
+        else if (l.length > 1) shared.push(id);
+        else bus.push(id);
+      });
+      const laneMax = Math.max(-1, ...laneIds.flat().concat(shared).map(id => rank[id]));
+      // Chains that reach no Mixer and would collide with the rows' columns get their own row
+      const right = [];
+      bus.forEach(id => (rank[id] > laneMax || isMixer(id) ? right : noMixer).push(id));
+
+      // Column x from rank: each column as wide as its widest module
+      const ranks = [...new Set(ids.filter(id => !loose.includes(id)).map(id => rank[id]))].sort((a, b) => a - b);
+      const colX = {};
+      let cx = originX;
+      ranks.forEach(r => {
+        colX[r] = cx;
+        cx += Math.max(...ids.filter(id => !loose.includes(id) && rank[id] === r).map(id => size(id).w)) + gapX;
+      });
+      const byTop = (a, b) => byId[a].card.offsetTop - byId[b].card.offsetTop;
+      const targets = {};
+      const rowGap = 48;
+      // One row: modules in their columns, several in the same column stacked; returns its height
+      const placeRow = (rowIds, y) => {
+        let h = 0;
+        const cells = {};
+        rowIds.forEach(id => { (cells[rank[id]] = cells[rank[id]] || []).push(id); });
+        Object.keys(cells).forEach(r => {
+          let yy = y;
+          cells[r].sort(byTop).forEach(id => { targets[id] = { x: colX[r], y: Math.round(yy) }; yy += size(id).h + gapY; });
+          h = Math.max(h, yy - gapY - y);
+        });
+        return h;
+      };
+      let y = originY;
+      if (shared.length) y += placeRow(shared, y) + rowGap;
+      const lanesTop = y;
+      laneIds.forEach(row => { if (row.length) y += placeRow(row, y) + rowGap; });
+      if (noMixer.length) y += placeRow(noMixer, y) + rowGap;
+      const lanesH = Math.max(0, y - rowGap - lanesTop);
+      // Mixer, effects after it and Output: a column each, centred on the rows
+      const rightCols = {};
+      right.forEach(id => { (rightCols[rank[id]] = rightCols[rank[id]] || []).push(id); });
+      Object.keys(rightCols).forEach(r => {
+        const col = rightCols[r].sort(byTop);
+        const h = col.reduce((t, id) => t + size(id).h, 0) + gapY * (col.length - 1);
+        let yy = lanesTop + Math.max(0, (lanesH - h) / 2);
+        col.forEach(id => { targets[id] = { x: colX[r], y: Math.round(yy) }; yy += size(id).h + gapY; });
+        y = Math.max(y, yy - gapY + rowGap);
+      });
+      // Modules with no cables: one last row, wrapping at the width of the patch
+      const width = Math.max(cx - originX - gapX, 900);
+      let lx = originX, rowH = 0;
+      loose.slice().sort((a, b) => byId[a].card.offsetLeft - byId[b].card.offsetLeft).forEach(id => {
+        const s = size(id);
+        if (lx > originX && lx + s.w > originX + width) { lx = originX; y += rowH + gapY; rowH = 0; }
+        targets[id] = { x: lx, y: Math.round(y) };
+        lx += s.w + gapX;
+        rowH = Math.max(rowH, s.h);
+      });
+      return targets;
     }
 
     bindEvents() {
@@ -607,6 +715,7 @@ if (!window.SoundSandboxApp) {
         }
 
         if (e.key === 'Escape') {
+          this.setFocus(null);
           if (this.activeCable) {
             this.activeCable = null;
             this.drawConnections();
@@ -684,7 +793,8 @@ if (!window.SoundSandboxApp) {
           type: m.type,
           x: parseFloat(m.card.style.left || 0),
           y: parseFloat(m.card.style.top || 0),
-          state
+          state,
+          ...(m.name ? { name: m.name } : {})
         };
       }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       const connections = this.connections.map(c => ({
@@ -767,6 +877,7 @@ if (!window.SoundSandboxApp) {
             }
           }
           if (!entry) this.createModule(m.type, m.id, m.x, m.y, m.state);
+          if (this.modules[m.id] && (this.modules[m.id].name || '') !== (m.name || '')) this.setModuleName(m.id, m.name);
         });
 
         const wantedKeys = new Set(snap.connections.map(c => this.connectionKey(c)));
@@ -841,7 +952,8 @@ if (!window.SoundSandboxApp) {
             type: m.type,
             x: parseFloat(card.style.left || 0),
             y: parseFloat(card.style.top || 0),
-            state: typeof m.instance.getState === 'function' ? m.instance.getState() : {}
+            state: typeof m.instance.getState === 'function' ? m.instance.getState() : {},
+            ...(m.name ? { name: m.name } : {})
           };
         }),
         connections: this.connections
@@ -942,6 +1054,7 @@ if (!window.SoundSandboxApp) {
           const x = m.x == null ? m.x : m.x + dx;
           const y = m.y == null ? m.y : m.y + dy;
           const mod = this.createModule(m.type, id, x, y, modState);
+          if (mod && m.name) this.setModuleName(mod.id || id, m.name);
           newIds.push(mod && mod.id ? mod.id : id);
         });
       }
@@ -1103,6 +1216,7 @@ if (!window.SoundSandboxApp) {
           port.style.setProperty('--cable-color', color);
         });
       });
+      this.updateMixerHints();
     }
 
     getConnectionColor(conn, fromPortEl) {
@@ -1527,6 +1641,7 @@ if (!window.SoundSandboxApp) {
           }
         }
         if (this.selectedConnection) this.selectConnection(null);
+        this.setFocus(null);
 
         if (!e.shiftKey) {
           this.selectedNodeIds.clear();
@@ -1751,7 +1866,10 @@ if (!window.SoundSandboxApp) {
       header.addEventListener('pointerdown', (e) => {
         if (this.isPresentationMode) return;
         if (e.button && e.button !== 0) return;
+        if (e.target.closest('.module-rename-input')) return;
         e.stopPropagation();
+        const isButton = !!e.target.closest('button');
+        let moved = false;
 
         if (!this.selectedNodeIds.has(id) && !e.shiftKey) {
           this.selectedNodeIds.clear();
@@ -1781,6 +1899,10 @@ if (!window.SoundSandboxApp) {
           if (this.isPinching) return;
           const dx = (moveEvent.clientX - startMouseX) / this.scale;
           const dy = (moveEvent.clientY - startMouseY) / this.scale;
+          if (!moved && Math.hypot(moveEvent.clientX - startMouseX, moveEvent.clientY - startMouseY) > 5) {
+            moved = true;
+            this.lastHeaderTap = null;
+          }
 
           this.selectedNodeIds.forEach(nodeId => {
             const card = document.getElementById(`module_card_${nodeId}`);
@@ -1793,8 +1915,9 @@ if (!window.SoundSandboxApp) {
           this.drawConnections();
         };
 
-        const onPointerEnd = () => {
+        const onPointerEnd = (endEvent) => {
           isDragging = false;
+          if (!moved && !isButton && endEvent.type === 'pointerup' && !this.isPinching) this.onHeaderTap(id);
           window.removeEventListener('pointermove', onPointerMove);
           window.removeEventListener('pointerup', onPointerEnd);
           window.removeEventListener('pointercancel', onPointerEnd);
@@ -1803,6 +1926,164 @@ if (!window.SoundSandboxApp) {
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerup', onPointerEnd);
         window.addEventListener('pointercancel', onPointerEnd);
+      });
+    }
+
+    // A tap on a module's title bar lights up its chain (see applyFocus); a second tap
+    // within 400 ms (double tap / double click) renames the module.
+    onHeaderTap(id) {
+      const now = performance.now();
+      const last = this.lastHeaderTap;
+      if (last && last.id === id && now - last.t < 400) {
+        this.lastHeaderTap = null;
+        this.startRename(id);
+        return;
+      }
+      this.lastHeaderTap = { id, t: now };
+      this.setFocus(id);
+    }
+
+    setFocus(id) {
+      if (this.focusId === (id || null)) return;
+      this.focusId = id || null;
+      this.drawConnections();
+    }
+
+    // The module's chain: everything it feeds (downstream), plus everything that feeds the module
+    // or the part of its chain before a Mixer (upstream), so a voice lights up whole (its clock and
+    // envelope too) without the other channels of the same Mixer.
+    getChainIds(id) {
+      const walk = (starts, fromKey, toKey, stop) => {
+        const seen = new Set(starts);
+        const queue = starts.slice();
+        while (queue.length) {
+          const cur = queue.shift();
+          if (stop && stop(cur) && !starts.includes(cur)) continue;
+          this.connections.forEach(c => {
+            if (c[fromKey] !== cur || seen.has(c[toKey]) || !this.modules[c[toKey]]) return;
+            seen.add(c[toKey]);
+            queue.push(c[toKey]);
+          });
+        }
+        return seen;
+      };
+      const isMixer = mid => this.modules[mid] && this.modules[mid].type === 'mixer';
+      const down = walk([id], 'fromNode', 'toNode');
+      const voice = isMixer(id) ? [id] : [...walk([id], 'fromNode', 'toNode', isMixer)].filter(m => !isMixer(m));
+      const up = walk(voice, 'toNode', 'fromNode');
+      return new Set([...down, ...up]);
+    }
+
+    // What a Mixer channel's empty name box suggests: the nearest renamed module up the chain,
+    // else its sound source (a module from the Sound Sources menu), else the module plugged in.
+    getChannelHint(fromId) {
+      const seen = new Set([fromId]);
+      const queue = [fromId];
+      let source = null;
+      while (queue.length) {
+        const cur = queue.shift();
+        const m = this.modules[cur];
+        if (m && m.name) return m.name;
+        if (!source && m) {
+          const btn = document.querySelector(`.add-module-btn[data-type="${m.type}"]`);
+          const group = btn && btn.closest('.sidebar-group');
+          const title = group ? (group.querySelector('.sidebar-group-title') || {}).textContent || '' : '';
+          if (/source/i.test(title)) source = cur;
+        }
+        this.connections.forEach(c => {
+          if (c.toNode !== cur || seen.has(c.fromNode) || !this.modules[c.fromNode] || this.modules[c.fromNode].type === 'mixer') return;
+          seen.add(c.fromNode);
+          queue.push(c.fromNode);
+        });
+      }
+      return this.getModuleName(source || fromId).replace(/\s*\(.*\)\s*$/, '');
+    }
+
+    // Chain highlight: the cards outside the focused module's chain fade (.chain-dimmed);
+    // drawConnections fades their cables. Off when the module has no cables.
+    applyFocus() {
+      let chain = null;
+      if (this.focusId && !this.modules[this.focusId]) this.focusId = null;
+      if (this.focusId && !this.isPresentationMode) {
+        chain = this.getChainIds(this.focusId);
+        if (chain.size < 2) chain = null;
+      }
+      this.focusChain = chain;
+      Object.values(this.modules).forEach(m => {
+        if (m.card) m.card.classList.toggle('chain-dimmed', !!chain && !chain.has(m.id));
+      });
+    }
+
+    // Module name: the first <span> of the title bar. The default title stays in data-default-title.
+    getTitleSpan(id) {
+      const m = this.modules[id];
+      return m && m.card ? m.card.querySelector('.node-header > span') : null;
+    }
+
+    getModuleName(id) {
+      const span = this.getTitleSpan(id);
+      return (this.modules[id] && this.modules[id].name) || (span ? (span.dataset.defaultTitle || span.textContent).trim() : '');
+    }
+
+    setModuleName(id, name) {
+      const m = this.modules[id];
+      const span = this.getTitleSpan(id);
+      if (!m || !span) return;
+      if (span.dataset.defaultTitle === undefined) span.dataset.defaultTitle = span.textContent.trim();
+      const clean = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 32);
+      m.name = clean && clean !== span.dataset.defaultTitle ? clean : '';
+      span.textContent = m.name || span.dataset.defaultTitle;
+      span.classList.toggle('module-renamed', !!m.name);
+      span.title = m.name ? `${span.dataset.defaultTitle} (renamed)` : '';
+      this.updateMixerHints();
+    }
+
+    startRename(id) {
+      const span = this.getTitleSpan(id);
+      if (!span || this.isPresentationMode || span.parentNode.querySelector('.module-rename-input')) return;
+      if (span.dataset.defaultTitle === undefined) span.dataset.defaultTitle = span.textContent.trim();
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'module-rename-input';
+      input.maxLength = 32;
+      input.value = this.getModuleName(id);
+      input.placeholder = span.dataset.defaultTitle;
+      input.setAttribute('aria-label', 'Module name');
+      span.style.display = 'none';
+      span.after(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const finish = (save) => {
+        if (done) return;
+        done = true;
+        if (save) this.setModuleName(id, input.value);
+        input.remove();
+        span.style.display = '';
+        if (save) this.scheduleHistoryCapture();
+      };
+      input.addEventListener('pointerdown', ev => ev.stopPropagation());
+      input.addEventListener('keydown', ev => {
+        ev.stopPropagation();
+        if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+      });
+      input.addEventListener('blur', () => finish(true));
+    }
+
+    // Mixer channel name boxes: an empty box shows (greyed) the name of the module plugged into it
+    updateMixerHints() {
+      Object.values(this.modules).forEach(m => {
+        if (m.type !== 'mixer' || typeof m.instance.setLabelHints !== 'function') return;
+        const hints = {};
+        this.connections.forEach(c => {
+          if (c.toNode !== m.id || !this.modules[c.fromNode]) return;
+          const info = c.toPortInfo || {};
+          const match = String(info.type || info.id || '').match(/^ch_in_(\d+)$/);
+          const ch = info.channel != null && info.channel !== '' ? String(info.channel) : (match ? match[1] : null);
+          if (ch && !hints[ch]) hints[ch] = this.getChannelHint(c.fromNode);
+        });
+        m.instance.setLabelHints(hints);
       });
     }
 
@@ -1830,6 +2111,7 @@ if (!window.SoundSandboxApp) {
         this.selectedConnection = null;
       }
 
+      this.applyFocus();
       if (this.isPresentationMode) return;
 
       // Cables: Front still keeps a cable under a module that is stacked above it: above both of its
@@ -1850,8 +2132,10 @@ if (!window.SoundSandboxApp) {
             const color = this.getConnectionColor(conn, fromPortEl);
 
             const isSelected = conn === this.selectedConnection;
+            const dimmed = this.focusChain && !isSelected && !(this.focusChain.has(conn.fromNode) && this.focusChain.has(conn.toNode));
             const { rects: covers, stubAt } = stack ? this.getCoveringRects(stack, fromCard, toCard, p1, p2) : { rects: [], stubAt: null };
             this.ctx.save();
+            if (dimmed) this.ctx.globalAlpha = 0.12;
             if (covers.length) {
               const w = this.canvas.width / dpr, h = this.canvas.height / dpr;
               covers.forEach(r => {
@@ -1866,6 +2150,7 @@ if (!window.SoundSandboxApp) {
             this.ctx.restore();
             if (stubAt) {
               this.ctx.save();
+              if (dimmed) this.ctx.globalAlpha = 0.12;
               this.ctx.beginPath();
               this.ctx.arc(stubAt.x, stubAt.y, 18, 0, Math.PI * 2);
               this.ctx.clip();

@@ -2148,3 +2148,34 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 @media (prefers-reduced-motion: reduce) {
   .module-card.improb-shake { animation: none; }
 }
+
+/* Patch organizing (2026-10-18): chain highlight, module rename, Mixer channel names */
+.module-card.chain-dimmed { opacity: 0.4; }
+.module-card { transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.2s; }
+.module-card.arranging { transition: left 0.4s ease, top 0.4s ease, opacity 0.2s; }
+.node-header > span.module-renamed { font-style: italic; }
+.module-rename-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--text-color);
+  background: var(--panel-bg);
+  border: 1px solid var(--muted-text);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-right: 8px;
+}
+.mixer-ch-label {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-color);
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 3px 2px;
+}
+.mixer-ch-label::placeholder { color: var(--muted-text); opacity: 0.7; font-weight: 500; }
+.mixer-ch-label:focus { outline: none; border-color: var(--muted-text); }

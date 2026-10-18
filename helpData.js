@@ -57,7 +57,10 @@ window.helpData = {
             <li>To unplug, drag the cable out of its input and let go on empty space. Or click a cable once to select it and again (or press Delete) to remove it.</li>
             <li>A cable from an <strong>LFO OUT</strong> (or a <strong>Ribbon</strong> output) can also be dropped on any slider of another module; the slider then moves by itself.</li>
             <li><strong>Cables: Front / Back</strong> in the top bar puts the cables over or under the modules.</li>
-            <li><strong>View → Arrange</strong> tidies the whole patch: modules line up left to right in the order the sound flows (controllers and LFOs, then sources, then effects, Output last), with no overlaps, and the view zooms to show them all. Undo puts them back.</li>
+            <li><strong>View → Arrange</strong> tidies the whole patch: modules line up left to right in the order the sound flows (controllers and LFOs, then sources, then effects, Output last), with no overlaps, and the view zooms to show them all. With a Mixer in the patch, every Mixer channel gets its own row (CH 1 on top, then CH 2...), modules shared by several channels (keyboard, clock) go in a row above, and the Mixer, effects and Output sit to the right. Undo puts them back.</li>
+            <li><strong>Tap a module's title bar</strong> to light up its chain: everything feeding it and everything it feeds stays bright, the rest fades. Tap the empty canvas (or press Escape) to bring everything back.</li>
+            <li><strong>Double tap a title bar</strong> (double click on a computer) to rename the module, for example "Bass". Enter keeps the name; clearing it brings back the original title. Names are saved with the patch.</li>
+            <li><strong>Name the Mixer channels</strong> in the small box under each CH number. An empty box suggests, in grey, the sound source plugged into that channel.</li>
             <li><strong>Improbability</strong> in the top bar is a chaos button, after the Infinite Improbability Drive in <em>The Hitchhiker's Guide to the Galaxy</em>. A tap nudges every slider (and now and then a menu, like a waveform) to a random new value near where it was, so the patch sounds like itself but different. A long press (or Shift+click) throws everything anywhere. If some modules are selected, only they change. Volumes and levels, the Output, Keyboard and Audio In stay as they are, and one Undo puts everything back.</li>
           </ul>
         </div>
@@ -391,7 +394,10 @@ window.helpData = {
             <li>כדי לנתק, גוררים את הכבל החוצה מהכניסה ועוזבים במקום ריק. או לוחצים על כבל פעם אחת כדי לסמן אותו, ושוב (או Delete) כדי למחוק.</li>
             <li>כבל מ-<strong>LFO OUT</strong> (או מיציאה של ה-<strong>Ribbon</strong>) אפשר להפיל גם על כל סליידר של מודול אחר, והסליידר יזוז לבד.</li>
             <li>הכפתור <strong>Cables: Front / Back</strong> בסרגל העליון שם את הכבלים מעל או מתחת למודולים.</li>
-            <li><strong>View ← Arrange</strong> מסדר את כל הפאץ': המודולים עומדים משמאל לימין לפי זרימת הצליל (בקרים ו-LFO, אחר כך מקורות צליל, אחר כך אפקטים, ו-Output בסוף), בלי חפיפות, והתצוגה מתקרבת או מתרחקת כך שכולם נראים. Undo מחזיר אותם למקום.</li>
+            <li><strong>View ← Arrange</strong> מסדר את כל הפאץ': המודולים עומדים משמאל לימין לפי זרימת הצליל (בקרים ו-LFO, אחר כך מקורות צליל, אחר כך אפקטים, ו-Output בסוף), בלי חפיפות, והתצוגה מתקרבת או מתרחקת כך שכולם נראים. כשיש מיקסר בפאץ', כל ערוץ במיקסר מקבל שורה משלו (CH 1 למעלה, אחריו CH 2...), מודולים שמשותפים לכמה ערוצים (מקלדת, שעון) עולים לשורה מעל, והמיקסר, האפקטים וה-Output עומדים מימין. Undo מחזיר אותם למקום.</li>
+            <li><strong>נגיעה בפס הכותרת של מודול</strong> מדליקה את השרשרת שלו: כל מה שמזין אותו וכל מה שהוא מזין נשאר בהיר, והשאר מתעמעם. נגיעה במשטח הריק (או Escape) מחזירה הכול.</li>
+            <li><strong>נגיעה כפולה בפס הכותרת</strong> (לחיצה כפולה במחשב) משנה את שם המודול, למשל "Bass". Enter שומר; מחיקת השם מחזירה את הכותרת המקורית. השמות נשמרים עם הפאץ'.</li>
+            <li><strong>שמות לערוצי המיקסר</strong>: כותבים בתיבה הקטנה מתחת למספר הערוץ (CH). תיבה ריקה מציעה באפור את מקור הצליל שמחובר לערוץ.</li>
             <li><strong>Improbability</strong> בסרגל העליון הוא כפתור כאוס, על שם מנוע אי-הסבירות האינסופית מ<em>המדריך לטרמפיסט בגלקסיה</em>. לחיצה מזיזה כל סליידר (ולפעמים גם תפריט, כמו צורת הגל) לערך אקראי חדש קרוב למקום שבו היה, כך שהפאץ' נשמע כמו עצמו אבל אחר. לחיצה ארוכה (או Shift+קליק) זורקת הכול לכל מקום. אם סימנת כמה מודולים, רק הם משתנים. עוצמות ורמות, ה-Output, הקיבורד וה-Audio In נשארים כמו שהם, ו-Undo אחד מחזיר הכול.</li>
           </ul>
         </div>

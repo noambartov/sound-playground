@@ -49,11 +49,15 @@ class DrumMachineModule extends ModuleBase {
     width: 760,
     menu: { group: 'Controllers & Sequencing', label: 'Drum Machine' },
     params: [],
-    inputs: DM_ROWS.map(r => ({
+    inputs: [
+      { id: 'clock_in', label: 'CLOCK IN', signal: 'gate', title: 'Clock Input',
+        guide: { text: 'A pulse on every 16th note from another module. With a cable here the Drum Machine moves one step per pulse instead of using its own Tempo, starts from step 1 when that module starts and stops with it. Swing still works.', from: 'Metronome CLOCK, Sequencer CLOCK, another Drum Machine CLOCK', match: ['metronome:out:clock', 'sequencer:out:clock', 'drums:out:clock'] },
+        chip: 'Metronome CLOCK' }
+    ].concat(DM_ROWS.map(r => ({
       id: `${r.key}_in`, label: 'IN', signal: 'audio', inline: true, title: `${r.name} Input`,
       guide: { text: `Any sound to play as the ${r.name} (for example Oscillator OUT, or an Oscillator through a Filter). Plugging a cable in switches this row's Sound to Input: every step opens the incoming sound briefly, shaped by Decay (length) and Tone (brightness).`, from: 'Oscillator OUT, Filter OUT, Granular OUT, Mic', match: ['oscillator:out:default', 'filter:out:default', 'granular:out:out_l', 'audio_in:out:audio', 'vca:out:audio'] },
       chip: 'Osc / Filter'
-    })),
+    }))),
     outputs: [].concat(
       ...DM_ROWS.map(r => [
         { id: `${r.key}_out`, label: 'OUT', signal: 'audio', inline: true, title: `${r.name} Output`,
@@ -71,7 +75,7 @@ class DrumMachineModule extends ModuleBase {
           guide: { text: 'All four drums mixed by their Pan, right side.', to: 'Output IN R, Mixer, Reverb IN R', match: ['output:in:in_r', 'mixer:in:ch_in', 'reverb:in:in_r'] },
           chip: 'Output / Reverb R' },
         { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
-          guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },
+          guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo. While the Drum Machine follows a CLOCK IN cable, this passes those pulses on.', to: 'Stereo Delay CLOCK (with Sync on), Sequencer CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'sequencer:in:clock_in', 'lfo:in:clock', 'harmony:in:clock'] },
           chip: 'Delay CLOCK' }
       ])
   };
@@ -107,7 +111,15 @@ class DrumMachineModule extends ModuleBase {
     this.outputNodes.main_l = this.mainL;
     this.outputNodes.main_r = this.mainR;
     this.clockOut = this.makeConstant(0);
+    this.clockSource = ClockSource.attach(this.clockOut);   // tells CLOCK followers each pulse ahead of time
     this.outputNodes.clock = this.clockOut;
+    // CLOCK IN: with a cable here the steps follow the incoming pulses (clockSync.js)
+    this.follower = new ClockFollower(this.audioCtx, {
+      onPulse: (t, dur, index) => this.followPulse(t, dur, index),
+      onStop: () => this.followStop(),
+      onCablesChanged: () => this.updateClockUi()
+    });
+    this.inputNodes.clock_in = this.follower.input;
 
     this.rows = DM_ROWS.map((r, i) => {
       const row = {
@@ -165,10 +177,11 @@ class DrumMachineModule extends ModuleBase {
   }
 
   start() {
-    if (this.playing) return;
+    if (this.playing || this.follower.connected) return;   // with a CLOCK IN cable the clock starts it
     if (window.synthApp && synthApp.ensureAudioContextRunning) synthApp.ensureAudioContextRunning();
     this.playing = true;
     this.currentStep = 0;
+    this.firstPulse = true;
     this.nextTime = this.audioCtx.currentTime + 0.06;
     this.visualQueue = [];
     this.timer = setInterval(() => this.schedule(), 25);
@@ -182,6 +195,7 @@ class DrumMachineModule extends ModuleBase {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.visualQueue = [];
+    this.clockSource.stop();
     this.setPlayhead(-1);
     this.updatePlayButton();
   }
@@ -191,19 +205,61 @@ class DrumMachineModule extends ModuleBase {
     const ahead = this.audioCtx.currentTime + 0.12;
     while (this.nextTime < ahead) {
       const dur = this.stepDuration();
-      // Swing delays every second 16th by up to half a step
-      const t = this.nextTime + (this.currentStep % 2 === 1 ? (this.swing / 100) * dur * 0.5 : 0);
-      this.rows.forEach(row => {
-        const v = row.steps[this.currentStep];
-        if (v) this.trigger(row, t, v === 2 ? 1 : 0.7, dur);
-      });
-      this.visualQueue.push({ step: this.currentStep, time: t });
-      // CLOCK OUT: a pulse on every (unswung) 16th, half a step long
-      this.clockOut.offset.setValueAtTime(1, this.nextTime);
-      this.clockOut.offset.setValueAtTime(0, this.nextTime + dur * 0.5);
+      this.playStep(this.nextTime, dur, this.firstPulse);
+      this.firstPulse = false;
       this.nextTime += dur;
-      this.currentStep = (this.currentStep + 1) % (this.bars * 16);
     }
+  }
+
+  // One 16th: the hits of the current step, the playhead, the CLOCK OUT pulse; then the next step
+  playStep(time, dur, first) {
+    // Swing delays every second 16th by up to half a step
+    const t = time + (this.currentStep % 2 === 1 ? (this.swing / 100) * dur * 0.5 : 0);
+    this.rows.forEach(row => {
+      const v = row.steps[this.currentStep];
+      if (v) this.trigger(row, t, v === 2 ? 1 : 0.7, dur);
+    });
+    this.visualQueue.push({ step: this.currentStep, time: t });
+    // CLOCK OUT: a pulse on every (unswung) 16th, half a step long
+    this.clockOut.offset.setValueAtTime(1, time);
+    this.clockOut.offset.setValueAtTime(0, time + dur * 0.5);
+    this.clockSource.pulse(time, dur, first);
+    this.currentStep = (this.currentStep + 1) % (this.bars * 16);
+  }
+
+  // ---- Following CLOCK IN ----
+  followPulse(t, dur, index) {
+    if (this.timer) { clearInterval(this.timer); this.timer = null; }   // its own clock gives way
+    const first = index === 0 || !this.playing;
+    if (first) {
+      this.currentStep = 0;
+      this.visualQueue = [];
+    }
+    if (!this.playing) {
+      this.playing = true;
+      this.startVisuals();
+      this.updatePlayButton();
+    }
+    this.playStep(t, dur, first);
+  }
+
+  followStop() {
+    if (!this.playing || this.timer) return;
+    this.stop();
+  }
+
+  // With a CLOCK IN cable, Tempo and Play give way to the clock
+  updateClockUi() {
+    const following = this.follower.connected;
+    if (following && this.timer) this.stop();
+    if (!following && this.playing && !this.timer) this.stop();
+    const slider = this.el('p_tempo');
+    const box = this.el('bpm');
+    const note = this.el('clocknote');
+    if (slider) slider.disabled = following;
+    if (box) box.disabled = following;
+    if (note) note.hidden = !following;
+    this.updatePlayButton();
   }
 
   startVisuals() {
@@ -490,6 +546,7 @@ class DrumMachineModule extends ModuleBase {
         <div class="dm-knob dm-tempo">
           <label class="module-label">Tempo
             <span class="dm-bpm-box"><input type="number" id="${this.elId('bpm')}" class="dm-bpm" min="40" max="240" step="1" value="${this.tempo}"> BPM</span>
+            <span class="dm-clock-note" id="${this.elId('clocknote')}" hidden>from CLOCK IN</span>
           </label>
           <input type="range" id="${this.elId('p_tempo')}" min="40" max="240" step="1" value="${this.tempo}">
         </div>
@@ -619,7 +676,8 @@ class DrumMachineModule extends ModuleBase {
 
   // Called by app.js when a cable is plugged into / pulled out of an IN jack:
   // plugging in switches the row to Input, pulling the last cable out brings back the previous sound
-  onInputConnected(key, connected) {
+  onInputConnected(key, connected, source) {
+    if (key === 'clock_in') { this.follower.cable(connected, source); return; }
     const i = DM_ROWS.findIndex(r => `${r.key}_in` === key);
     if (i < 0) return;
     const row = this.rows[i];
@@ -638,6 +696,8 @@ class DrumMachineModule extends ModuleBase {
     if (!btn) return;
     btn.textContent = this.playing ? 'Stop' : 'Play';
     btn.classList.toggle('active', this.playing);
+    // Following a clock: the clock's own Play / Stop runs the Drum Machine
+    btn.disabled = this.follower.connected;
   }
 
   // ---- State ----
@@ -706,6 +766,7 @@ class DrumMachineModule extends ModuleBase {
 
   destroy() {
     this.stop();
+    this.follower.destroy();
     this.rows.forEach(r => { try { r.level.disconnect(); r.panner.disconnect(); } catch (e) {} });
   }
 }

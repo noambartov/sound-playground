@@ -47,6 +47,15 @@ class SequencerModule {
         this.clockNode = this.ctx.createConstantSource();
         this.clockNode.offset.setValueAtTime(0, this.ctx.currentTime);
         this.clockNode.start();
+        this.clockSource = ClockSource.attach(this.clockNode); // tells CLOCK followers each pulse ahead of time
+        this.firstPulse = false;
+
+        // CLOCK IN: with a cable here the steps follow the incoming pulses (clockSync.js)
+        this.follower = new ClockFollower(this.ctx, {
+            onPulse: (t, dur, index) => this.followPulse(t, dur, index),
+            onStop: () => this.followStop(),
+            onCablesChanged: () => this.updateClockUi()
+        });
     }
 
     // --- State Protocol ---
@@ -94,6 +103,15 @@ class SequencerModule {
         return this.pitchNode;
     }
 
+    getAudioInput(portType) {
+        if (portType === 'clock_in') return this.follower.input;
+        return null;
+    }
+
+    onInputConnected(key, connected, source) {
+        if (key === 'clock_in') this.follower.cable(connected, source);
+    }
+
     ensureAudioRunning() {
         if (this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume().catch(() => {});
@@ -102,19 +120,15 @@ class SequencerModule {
 
     // --- Sequencer Logic & Lookahead Scheduler ---
     togglePlay() {
+        if (this.follower.connected) return; // with a CLOCK IN cable the clock starts and stops it
         this.ensureAudioRunning();
         this.isPlaying = !this.isPlaying;
-        
-        const playBtn = document.getElementById(`seq_play_btn_${this.id}`);
-        if (playBtn) {
-            playBtn.innerText = this.isPlaying ? 'Stop' : 'Play';
-            if (this.isPlaying) playBtn.classList.add('danger-btn');
-            else playBtn.classList.remove('danger-btn');
-        }
+        this.updatePlayButton();
 
         if (this.isPlaying) {
             this.currentStep = -1;
             this.direction = 1;
+            this.firstPulse = true;
             this.nextNoteTime = this.ctx.currentTime + 0.02;
             this.scheduledStepsQueue = [];
 
@@ -122,28 +136,80 @@ class SequencerModule {
             this.lookaheadInterval = setInterval(() => this.scheduler(), 25);
             this.requestUIUpdate();
         } else {
-            if (this.lookaheadInterval) clearInterval(this.lookaheadInterval);
-            if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
-            
-            const now = this.ctx.currentTime;
-            this.gateNode.offset.setValueAtTime(0, now);
-            this.clearStepHighlights();
-            this.scheduledStepsQueue = [];
+            this.halt();
         }
+    }
+
+    // Stops playback (own clock or following) and silences the gate
+    halt() {
+        this.isPlaying = false;
+        if (this.lookaheadInterval) clearInterval(this.lookaheadInterval);
+        this.lookaheadInterval = null;
+        if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
+        this.animFrameId = null;
+        const now = this.ctx.currentTime;
+        this.gateNode.offset.cancelScheduledValues(now);
+        this.gateNode.offset.setValueAtTime(0, now);
+        this.clearStepHighlights();
+        this.scheduledStepsQueue = [];
+        this.clockSource.stop();
+        this.updatePlayButton();
+    }
+
+    updatePlayButton() {
+        const playBtn = document.getElementById(`seq_play_btn_${this.id}`);
+        if (!playBtn) return;
+        playBtn.innerText = this.isPlaying ? 'Stop' : 'Play';
+        if (this.isPlaying) playBtn.classList.add('danger-btn');
+        else playBtn.classList.remove('danger-btn');
+        playBtn.disabled = this.follower.connected;
     }
 
     scheduler() {
         // Schedule all steps that fall within our lookahead window
+        const dur = (60.0 / this.bpm) / 4.0;
         while (this.nextNoteTime < this.ctx.currentTime + this.scheduleAheadTime) {
-            this.scheduleStep(this.nextNoteTime);
             this.advanceStep();
+            this.scheduleStep(this.nextNoteTime, dur, this.firstPulse);
+            this.firstPulse = false;
+            this.nextNoteTime += dur;
         }
     }
 
-    advanceStep() {
-        const secondsPer16th = (60.0 / this.bpm) / 4.0;
-        this.nextNoteTime += secondsPer16th;
+    // ---- Following CLOCK IN ----
+    followPulse(t, dur, index) {
+        if (this.lookaheadInterval) { clearInterval(this.lookaheadInterval); this.lookaheadInterval = null; }
+        const first = index === 0 || !this.isPlaying;
+        if (first) {
+            this.currentStep = -1;
+            this.direction = 1;
+            this.scheduledStepsQueue = [];
+        }
+        if (!this.isPlaying) {
+            this.isPlaying = true;
+            this.updatePlayButton();
+            this.requestUIUpdate();
+        }
+        this.advanceStep();
+        this.scheduleStep(t, dur, first);
+    }
 
+    followStop() {
+        if (this.isPlaying && !this.lookaheadInterval) this.halt();
+    }
+
+    // With a CLOCK IN cable, Tempo and Play give way to the clock
+    updateClockUi() {
+        const following = this.follower.connected;
+        if (this.isPlaying && (following === !!this.lookaheadInterval)) this.halt();
+        const slider = document.querySelector(`#module_card_${this.id} input[oninput*="updateBpm"]`);
+        if (slider) slider.disabled = following;
+        const label = document.getElementById(`seq_bpm_val_${this.id}`);
+        if (label) label.innerText = following ? 'CLOCK IN' : `${this.bpm} BPM`;
+        this.updatePlayButton();
+    }
+
+    advanceStep() {
         const total = this.steps.length;
         if (total === 0) return;
 
@@ -171,11 +237,10 @@ class SequencerModule {
         }
     }
 
-    scheduleStep(time) {
+    scheduleStep(time, stepDurationSec, first = false) {
         if (this.currentStep < 0 || this.currentStep >= this.steps.length) return;
 
         const step = this.steps[this.currentStep];
-        const stepDurationSec = (60.0 / this.bpm) / 4.0;
         const gateDurationSec = stepDurationSec * 0.75;
         const rampTime = 0.002; // 2ms ramp for smooth anti-click transitions
 
@@ -202,6 +267,7 @@ class SequencerModule {
 
         this.clockNode.offset.setValueAtTime(1, time);
         this.clockNode.offset.setValueAtTime(0, time + stepDurationSec * 0.5);
+        this.clockSource.pulse(time, stepDurationSec, first);
 
         // Push to queue for UI sync
         this.scheduledStepsQueue.push({ stepIndex: this.currentStep, time: time });
@@ -308,6 +374,8 @@ class SequencerModule {
 
     cleanup() {
         this.isPlaying = false;
+        this.clockSource.stop();
+        this.follower.destroy();
         if (this.lookaheadInterval) clearInterval(this.lookaheadInterval);
         if (this.animFrameId) cancelAnimationFrame(this.animFrameId);
         try { this.pitchNode.stop(); } catch(e){}
@@ -425,6 +493,14 @@ class SequencerModule {
                             onclick="SequencerModule.addStep('${this.id}')">+ Step</button>
                         <button class="add-module-btn" style="flex: 1; padding: 4px 2px; font-size: 0.65rem; font-weight: 700; text-align: center;" 
                             onclick="SequencerModule.removeStep('${this.id}')">- Step</button>
+                    </div>
+
+                    <!-- CLOCK IN: follow another module's tempo -->
+                    <div style="display: flex; justify-content: center; width: 100%; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 2px;">
+                        <div class="port-group" style="display: flex; align-items: center; gap: 6px;">
+                            <div class="port port-in" data-node-id="${this.id}" data-port-id="clock_in" data-port-type="gate" title="Clock Input"></div>
+                            <span style="font-size: 0.65rem; font-weight: 700;">CLOCK IN</span>
+                        </div>
                     </div>
 
                     <!-- Outputs Section -->

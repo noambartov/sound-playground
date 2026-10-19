@@ -622,11 +622,11 @@ class ChoraleModule extends ModuleBase {
     const shift = 12 * Math.round((70 - mean) / 12);
     const unit = { halves: 8, quarters: 4, eighths: 2, mixed: 4 }[this.params.rhythm] || 4;
     const total = this.melodyLen;
-    // A note on the rhythm's grid starts a new chord; others pass over the chord before
+    // A note on the rhythm's grid, or one at least that long, starts a new chord; others pass over the chord before
     const slots = [];
     mel.forEach(n => {
       const sop = n.midi + shift;
-      if (!slots.length || n.start % unit === 0) slots.push({ start: n.start, sop, notes: [] });
+      if (!slots.length || n.start % unit === 0 || n.len >= unit) slots.push({ start: n.start, sop, notes: [] });
       slots[slots.length - 1].notes.push({ start: n.start, len: n.len, midi: sop });
     });
     slots.forEach((sl, i) => { sl.dur = (i + 1 < slots.length ? slots[i + 1].start : total) - sl.start; });
@@ -663,7 +663,7 @@ class ChoraleModule extends ModuleBase {
     });
     const trans = (a, b) => {
       if (a.deg == null || b.deg == null) return 2;
-      if (a.deg === b.deg) return 2.2;
+      if (a.deg === b.deg) return 4;
       const w = (table[a.deg] || {})[b.deg] || 0;
       return -Math.log(w + 0.03);
     };

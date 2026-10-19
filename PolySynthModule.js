@@ -84,7 +84,7 @@ class PolySynthModule extends ModuleBase {
     ],
     inputs: [
       { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Input (from Keyboard or Harmony Walker NOTES)',
-        guide: { text: 'All the keys you hold on the Keyboard (or the Harmony Walker chord), each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES, Harmony Walker NOTES', match: ['keyboard:out:notes', 'harmony:out:notes'] },
+        guide: { text: 'All the keys you hold on the Keyboard (or the Harmony Walker chord), each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES, Harmony Walker NOTES, Chorale NOTES', match: ['keyboard:out:notes', 'harmony:out:notes', 'chorale:out:notes'] },
         chip: 'Keyboard / Walker NOTES' }
     ],
     outputs: [

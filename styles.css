@@ -1672,6 +1672,55 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: #fff;
 }
 
+/* Chorale (ChoraleModule.js): the piano roll and the jack table */
+.ch-display {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 300;
+  display: block;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  background: var(--subtle-bg, transparent);
+}
+
+.ch-rec.active {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.ch-card .module-toggle-row {
+  flex-wrap: wrap;
+}
+
+.ch-card .module-toggle-row .module-toggle {
+  flex: 1 1 30%;
+  padding: 6px 4px;
+  font-size: 12px;
+}
+
+.ch-outs {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.ch-voice-row {
+  display: grid;
+  grid-template-columns: 64px repeat(3, 1fr);
+  align-items: center;
+  justify-items: end;
+}
+
+.ch-voice-name {
+  justify-self: start;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-text);
+}
+
 /* Wavetable Osc (WavetableModule.js): the stacked-waves display */
 .wt-display {
   width: 100%;

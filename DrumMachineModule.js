@@ -75,7 +75,7 @@ class DrumMachineModule extends ModuleBase {
           guide: { text: 'All four drums mixed by their Pan, right side.', to: 'Output IN R, Mixer, Reverb IN R', match: ['output:in:in_r', 'mixer:in:ch_in', 'reverb:in:in_r'] },
           chip: 'Output / Reverb R' },
         { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
-          guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo. While the Drum Machine follows a CLOCK IN cable, this passes those pulses on.', to: 'Stereo Delay CLOCK (with Sync on), Sequencer CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'sequencer:in:clock_in', 'lfo:in:clock', 'harmony:in:clock'] },
+          guide: { text: 'A pulse on every 16th note while playing (not swung), so other modules can follow this tempo. While the Drum Machine follows a CLOCK IN cable, this passes those pulses on.', to: 'Stereo Delay CLOCK (with Sync on), Sequencer CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'sequencer:in:clock_in', 'lfo:in:clock', 'harmony:in:clock', 'chorale:in:clock'] },
           chip: 'Delay CLOCK' }
       ])
   };

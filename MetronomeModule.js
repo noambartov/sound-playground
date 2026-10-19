@@ -23,7 +23,7 @@ class MetronomeModule extends ModuleBase {
         guide: { text: 'The click sound, one per beat, louder and higher on the first beat of the bar (with Accent on).', to: 'Output IN, Mixer, Recorder', match: ['output:in:in', 'mixer:in:ch_in', 'recorder:in:in', 'reverb:in:in_l'] },
         chip: 'Output / Mixer' },
       { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
-        guide: { text: 'A short pulse on every 16th note (four per beat) while the Metronome plays. One cable to each module\'s CLOCK input keeps them all on the same beat: Drum Machine and Sequencer step with it and start and stop with the Metronome, an LFO with Sync on follows its tempo, the Stereo Delay echoes land in time. Into an Envelope GATE IN it plays a 16th-note pattern.', to: 'Drum Machine CLOCK IN, Sequencer CLOCK IN, LFO CLOCK, Stereo Delay CLOCK, Harmony Walker CLOCK, Envelope GATE IN', match: ['drums:in:clock_in', 'sequencer:in:clock_in', 'lfo:in:clock', 'delay:in:clock', 'harmony:in:clock', 'envelope:in:gate'] },
+        guide: { text: 'A short pulse on every 16th note (four per beat) while the Metronome plays. One cable to each module\'s CLOCK input keeps them all on the same beat: Drum Machine and Sequencer step with it and start and stop with the Metronome, an LFO with Sync on follows its tempo, the Stereo Delay echoes land in time. Into an Envelope GATE IN it plays a 16th-note pattern.', to: 'Drum Machine CLOCK IN, Sequencer CLOCK IN, LFO CLOCK, Stereo Delay CLOCK, Harmony Walker CLOCK, Envelope GATE IN', match: ['drums:in:clock_in', 'sequencer:in:clock_in', 'lfo:in:clock', 'delay:in:clock', 'harmony:in:clock', 'envelope:in:gate', 'chorale:in:clock'] },
         chip: 'any CLOCK in' }
     ]
   };

@@ -24,17 +24,17 @@
     'granular:out:out_l': { name: 'OUT L', signal: 'Audio', text: 'The grain cloud, left side.', to: 'Filter IN, Reverb IN L, VCA IN, Output IN L', match: AUDIO_DESTS },
     'granular:out:out_r': { name: 'OUT R', signal: 'Audio', text: 'The grain cloud, right side.', to: 'Output IN R, Reverb IN R, Mixer IN', match: AUDIO_DESTS.map(k => (k === 'output:in:in' ? 'output:in:in_r' : k)).concat(['reverb:in:in_r']) },
 
-    'audio_in:out:audio': { name: 'OUT', signal: 'Audio', text: 'Live sound from your microphone or sound card.', to: 'Filter IN, Granular IN L, Reverb IN L, VCA IN, Output IN', match: AUDIO_DESTS },
+    'audio_in:out:audio': { name: 'OUT', signal: 'Audio', text: 'Live sound from your microphone or sound card.', to: 'Filter IN, Granular IN L, Reverb IN L, VCA IN, Output IN, Chorale MIC', match: AUDIO_DESTS.concat(['chorale:in:mic']) },
 
     // Controllers
     'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN (shaped notes), or VCA CV (simple on/off notes)', match: ['envelope:in:gate', 'vca:in:cv'] },
-    'keyboard:out:notes': { name: 'NOTES', signal: 'Gate', text: 'Every key you hold, not just the last one, so chords can be played. Carries notes, not sound.', to: 'Poly Synth NOTES', match: ['polysynth:in:notes'] },
+    'keyboard:out:notes': { name: 'NOTES', signal: 'Gate', text: 'Every key you hold, not just the last one, so chords can be played. Carries notes, not sound.', to: 'Poly Synth NOTES, Chorale CHORDS / MELODY', match: ['polysynth:in:notes', 'chorale:in:chords', 'chorale:in:melody'] },
     'keyboard:out:bend': { name: 'BEND', signal: 'CV', text: 'The pitch bend wheel.', to: 'Oscillator FM IN, Filter CUT MOD', match: ['oscillator:in:fm', 'filter:in:cutoff'] },
 
     'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
-    'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on), Drum Machine CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'drums:in:clock_in', 'lfo:in:clock', 'harmony:in:clock'] },
+    'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on), Drum Machine CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'drums:in:clock_in', 'lfo:in:clock', 'harmony:in:clock', 'chorale:in:clock'] },
     'sequencer:in:clock_in': { name: 'CLOCK IN', signal: 'Gate', text: 'A pulse on every 16th note from another module. With a cable here the Sequencer moves one step per pulse instead of using its own Tempo, starts from the first step when that module starts and stops with it.', from: 'Metronome CLOCK, Drum Machine CLOCK', match: ['metronome:out:clock', 'drums:out:clock'] },
 
     'webcam:out:out_x': { name: 'X CV', signal: 'CV', text: 'Where the movement is, left to right.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 1', match: MOD_DESTS },

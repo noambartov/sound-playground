@@ -1526,7 +1526,7 @@ if (!window.SoundSandboxApp) {
         try {
           if (typeof source.connect === 'function') {
             source.connect(target);
-            this.notifyInputConnection(conn.toNode, toPortEl, true);
+            this.notifyInputConnection(conn.toNode, toPortEl, true, source);
           }
         } catch (err) {
           console.error(`[AudioConnect Error]`, err);
@@ -1535,12 +1535,13 @@ if (!window.SoundSandboxApp) {
       this.updatePortConnectedClasses();
     }
 
-    // Lets a module react when a cable is plugged into or pulled out of one of its inputs
-    notifyInputConnection(moduleId, portEl, connected) {
+    // Lets a module react when a cable is plugged into or pulled out of one of its inputs.
+    // source = the output node the cable comes from (a CLOCK input reads its clockSource, clockSync.js)
+    notifyInputConnection(moduleId, portEl, connected, source) {
       const mod = this.getModule(moduleId);
       if (!mod || typeof mod.onInputConnected !== 'function' || !portEl) return;
       const key = portEl.getAttribute('data-port-id') || portEl.getAttribute('data-port-name') || portEl.getAttribute('data-port-type');
-      try { mod.onInputConnected(key, connected); } catch (e) {}
+      try { mod.onInputConnected(key, connected, source); } catch (e) {}
     }
 
     disconnectAudio(conn) {
@@ -1569,7 +1570,7 @@ if (!window.SoundSandboxApp) {
         } catch (err) {
           try { source.disconnect(); } catch (e) {}
         }
-        this.notifyInputConnection(conn.toNode, toPortEl, false);
+        this.notifyInputConnection(conn.toNode, toPortEl, false, source);
       }
       this.updatePortConnectedClasses();
     }

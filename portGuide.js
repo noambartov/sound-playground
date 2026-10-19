@@ -34,7 +34,8 @@
 
     'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
-    'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on)', match: ['delay:in:clock'] },
+    'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on), Drum Machine CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'drums:in:clock_in', 'lfo:in:clock', 'harmony:in:clock'] },
+    'sequencer:in:clock_in': { name: 'CLOCK IN', signal: 'Gate', text: 'A pulse on every 16th note from another module. With a cable here the Sequencer moves one step per pulse instead of using its own Tempo, starts from the first step when that module starts and stops with it.', from: 'Metronome CLOCK, Drum Machine CLOCK', match: ['metronome:out:clock', 'drums:out:clock'] },
 
     'webcam:out:out_x': { name: 'X CV', signal: 'CV', text: 'Where the movement is, left to right.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 1', match: MOD_DESTS },
     'webcam:out:out_y': { name: 'Y CV', signal: 'CV', text: 'Where the movement is, bottom to top.', to: 'Filter CUT MOD, Oscillator FM IN, Granular CV 2', match: MOD_DESTS },
@@ -64,6 +65,7 @@
     'envelope:in:gate': { name: 'GATE IN', signal: 'Gate', text: 'Starts the envelope when a note begins and releases it when the note ends.', from: 'Keyboard GATE, Sequencer GATE, Webcam GATE', match: GATE_SOURCES },
     'envelope:out:env': { name: 'ENV OUT', signal: 'CV', text: 'The Attack / Decay / Sustain / Release shape.', to: 'VCA CV (note volume), Filter CUT MOD (note brightness)', match: ['vca:in:cv', 'filter:in:cutoff', 'granular:in:cv1', 'granular:in:cv2', 'oscilloscope:in:audio'] },
 
+    'lfo:in:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every 16th note. With Sync on, each wave lasts the Length you pick (1/16 to 4 bars) at this tempo, and starts over on the beat.', from: 'Metronome CLOCK, Drum Machine CLOCK, Sequencer CLOCK', match: ['metronome:out:clock', 'drums:out:clock', 'sequencer:out:clock'] },
     'lfo:in:rate': { name: 'RATE IN', signal: 'CV', text: 'Speeds the LFO up and slows it down.', from: 'Another LFO OUT, Webcam X / Y, Envelope ENV OUT', match: MOD_SOURCES },
     'lfo:out:default': { name: 'OUT', signal: 'CV', text: 'A slow repeating wobble. Drop the cable on any slider in another module to move that slider up and down.', to: 'Any slider, Filter CUT MOD (wah), VCA CV (tremolo), Oscillator FM IN (vibrato)', match: MOD_DESTS },
 
@@ -95,6 +97,7 @@
     'sequencer:out:pitch': 'Osc PITCH',
     'sequencer:out:gate': 'Env GATE / VCA CV',
     'sequencer:out:clock': 'Delay CLOCK',
+    'sequencer:in:clock_in': 'Metronome CLOCK',
     'webcam:out:out_x': 'Osc FM / Filter',
     'webcam:out:out_y': 'Osc FM / Filter',
     'webcam:out:out_motion': 'VCA CV / Granular',
@@ -116,6 +119,7 @@
     'envelope:in:gate': 'Keyboard / Seq GATE',
     'envelope:out:env': 'VCA CV / Filter CUT',
     'lfo:in:rate': 'LFO / Webcam',
+    'lfo:in:clock': 'Metronome CLOCK',
     'lfo:out:default': 'any slider / CV in',
     'output:in:in': 'last module / L',
     'output:in:in_r': 'stereo R out',

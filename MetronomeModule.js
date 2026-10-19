@@ -23,8 +23,8 @@ class MetronomeModule extends ModuleBase {
         guide: { text: 'The click sound, one per beat, louder and higher on the first beat of the bar (with Accent on).', to: 'Output IN, Mixer, Recorder', match: ['output:in:in', 'mixer:in:ch_in', 'recorder:in:in', 'reverb:in:in_l'] },
         chip: 'Output / Mixer' },
       { id: 'clock', label: 'CLOCK', signal: 'gate', title: 'Clock Output',
-        guide: { text: 'A short pulse on every 16th note (four per beat) while the Metronome plays. Keeps other modules in time with it, for example the Stereo Delay CLOCK, or an Envelope GATE IN for a 16th-note pattern.', to: 'Stereo Delay CLOCK, Envelope GATE IN, VCA CV', match: ['delay:in:clock', 'envelope:in:gate', 'vca:in:cv'] },
-        chip: 'CLOCK in / Env GATE' }
+        guide: { text: 'A short pulse on every 16th note (four per beat) while the Metronome plays. One cable to each module\'s CLOCK input keeps them all on the same beat: Drum Machine and Sequencer step with it and start and stop with the Metronome, an LFO with Sync on follows its tempo, the Stereo Delay echoes land in time. Into an Envelope GATE IN it plays a 16th-note pattern.', to: 'Drum Machine CLOCK IN, Sequencer CLOCK IN, LFO CLOCK, Stereo Delay CLOCK, Harmony Walker CLOCK, Envelope GATE IN', match: ['drums:in:clock_in', 'sequencer:in:clock_in', 'lfo:in:clock', 'delay:in:clock', 'harmony:in:clock', 'envelope:in:gate'] },
+        chip: 'any CLOCK in' }
     ]
   };
 
@@ -38,6 +38,8 @@ class MetronomeModule extends ModuleBase {
 
     this.clickOut = this.own(this.audioCtx.createGain());
     this.clockOut = this.makeConstant(0);
+    this.clockSource = ClockSource.attach(this.clockOut);   // tells CLOCK followers each pulse ahead of time
+    this.firstPulse = false;
     this.outputNodes = { click: this.clickOut, clock: this.clockOut };
   }
 
@@ -64,6 +66,7 @@ class MetronomeModule extends ModuleBase {
     if (window.synthApp && synthApp.ensureAudioContextRunning) synthApp.ensureAudioContextRunning();
     this.playing = true;
     this.step = 0;
+    this.firstPulse = true;
     this.nextTime = this.audioCtx.currentTime + 0.06;
     this.visualQueue = [];
     this.timer = setInterval(() => this.schedule(), 25);
@@ -80,6 +83,7 @@ class MetronomeModule extends ModuleBase {
     const now = this.audioCtx.currentTime;
     this.clockOut.offset.cancelScheduledValues(now);
     this.clockOut.offset.setValueAtTime(0, now);
+    this.clockSource.stop();
     this.setLight(-1);
     this.updatePlayButton();
   }
@@ -93,6 +97,8 @@ class MetronomeModule extends ModuleBase {
       // CLOCK: 1 for half a 16th note
       this.clockOut.offset.setValueAtTime(1, t);
       this.clockOut.offset.setValueAtTime(0, t + dur * 0.5);
+      this.clockSource.pulse(t, dur, this.firstPulse);
+      this.firstPulse = false;
       if (this.step % 4 === 0) {
         const beat = this.step / 4;
         this.playClick(t, beat === 0 && this.params.accent && this.params.beats > 1);
@@ -235,6 +241,7 @@ class MetronomeModule extends ModuleBase {
     this.playing = false;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    this.clockSource.stop();
   }
 }
 

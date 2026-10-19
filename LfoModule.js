@@ -1,3 +1,6 @@
+// Sync lengths: one wave cycle in 16th notes (a bar = 4 beats = 16)
+const LFO_LENGTHS = [['1', '1/16'], ['2', '1/8'], ['4', '1/4'], ['8', '1/2'], ['16', '1 Bar'], ['32', '2 Bars'], ['64', '4 Bars']];
+
 class LfoModule {
   constructor(id, audioCtx) {
     this.id = id;
@@ -6,6 +9,15 @@ class LfoModule {
     this.waveform = 'sine';
     this.rate = 2.0;
     this.depth = 50;
+    this.sync = false;       // Sync on + a CLOCK cable: the wave lasts `length` 16ths of the clock
+    this.length = '16';
+    this.clockDur = 0;       // seconds per 16th of the CLOCK, 0 = no clock yet
+
+    // CLOCK input (clockSync.js)
+    this.follower = new ClockFollower(audioCtx, {
+      onPulse: (t, dur, index) => this.clockPulse(t, dur, index),
+      onCablesChanged: n => { if (!n) { this.clockDur = 0; this.applyRate(); } this.updateSyncUi(); }
+    });
 
     this.oscNode = null;
     this.depthGainNode = null;
@@ -19,7 +31,9 @@ class LfoModule {
     return {
       waveform: this.waveform,
       rate: this.rate,
-      depth: this.depth
+      depth: this.depth,
+      sync: this.sync,
+      length: this.length
     };
   }
 
@@ -28,6 +42,9 @@ class LfoModule {
     if (state.waveform !== undefined) this.setWaveform(state.waveform);
     if (state.depth !== undefined) this.setDepth(state.depth);
     if (state.rate !== undefined) this.setRate(state.rate);
+    if (state.length !== undefined && LFO_LENGTHS.some(l => l[0] === String(state.length))) this.length = String(state.length);
+    if (state.sync !== undefined) this.sync = !!state.sync;
+    this.applyRate();
 
     if (this.card) {
       const waveSelect = this.card.querySelector(`#lfo_wave_${this.id}`);
@@ -44,6 +61,10 @@ class LfoModule {
 
       const rateLabel = this.card.querySelector(`#val_rate_${this.id}`);
       if (rateLabel) rateLabel.innerText = `${this.rate.toFixed(1)} Hz`;
+
+      const lengthSelect = this.card.querySelector(`#lfo_length_${this.id}`);
+      if (lengthSelect) lengthSelect.value = this.length;
+      this.updateSyncUi();
 
       this.drawWaveform();
     }
@@ -64,23 +85,104 @@ class LfoModule {
     this.createSource();
   }
 
-  createSource() {
+  // A new oscillator from the start of its wave. at = audio time to swap (a clock pulse), default now.
+  createSource(at) {
     const now = this.ctx.currentTime;
+    const when = Math.max(now, at || 0);
     if (this.oscNode) {
+      const old = this.oscNode;
       try {
-        this.oscNode.stop(now + 0.005);
-        this.oscNode.disconnect();
+        if (at) {
+          old.stop(when);
+          old.onended = () => { try { old.disconnect(); } catch (e) {} };
+        } else {
+          old.stop(now + 0.005);
+          old.disconnect();
+        }
       } catch (e) {}
     }
 
     this.oscNode = this.ctx.createOscillator();
     this.oscNode.type = this.waveform;
-    this.oscNode.frequency.setValueAtTime(this.rate, now);
+    this.oscNode.frequency.setValueAtTime(this.currentRate(), now);
 
     this.rateGainNode.connect(this.oscNode.frequency);
     this.oscNode.connect(this.depthGainNode);
     this.oscNode.connect(this.analyser);
-    this.oscNode.start(now);
+    this.oscNode.start(when);
+  }
+
+  // ---- Sync ----
+  syncActive() {
+    return this.sync && this.clockDur > 0 && this.follower.connected;
+  }
+
+  // Hz: from the clock while synced, otherwise the Rate slider
+  currentRate() {
+    return this.syncActive() ? 1 / (parseInt(this.length, 10) * this.clockDur) : this.rate;
+  }
+
+  applyRate(at) {
+    if (!this.oscNode) return;
+    const now = this.ctx.currentTime;
+    const f = this.oscNode.frequency;
+    if (at && at > now) {
+      f.setValueAtTime(this.currentRate(), at);
+    } else {
+      f.cancelScheduledValues(now);
+      f.setTargetAtTime(this.currentRate(), now, 0.005);
+    }
+  }
+
+  clockPulse(t, dur, index) {
+    const changed = Math.abs(dur - this.clockDur) > 1e-4;
+    this.clockDur = dur;
+    if (!this.sync) return;
+    // The wave starts over on the clock's start and then every cycle (at least every beat),
+    // so it stays lined up with the beat even after tempo changes
+    const len = parseInt(this.length, 10);
+    const every = len >= 4 ? len : 4;
+    if (index % every === 0) this.createSource(t);
+    else if (changed) this.applyRate(t);
+  }
+
+  getAudioInput(portType) {
+    if (portType === 'clock') return this.follower.input;
+    return null;
+  }
+
+  onInputConnected(key, connected, source) {
+    if (key === 'clock') this.follower.cable(connected, source);
+  }
+
+  setSync(on) {
+    this.sync = !!on;
+    this.applyRate();
+    this.updateSyncUi();
+  }
+
+  setLength(v) {
+    if (!LFO_LENGTHS.some(l => l[0] === String(v))) return;
+    this.length = String(v);
+    this.applyRate();
+  }
+
+  // Sync on: the Length menu replaces the Rate slider
+  updateSyncUi() {
+    if (!this.card) return;
+    const btn = this.card.querySelector(`#lfo_syncmode_${this.id}`);
+    if (btn) {
+      btn.classList.toggle('active', this.sync);
+      btn.textContent = `Sync: ${this.sync ? 'On' : 'Off'}`;
+    }
+    const rateBox = this.card.querySelector(`#lfo_rate_box_${this.id}`);
+    const lengthBox = this.card.querySelector(`#lfo_length_box_${this.id}`);
+    const before = this.card.offsetHeight;
+    if (rateBox) rateBox.hidden = this.sync;
+    if (lengthBox) lengthBox.hidden = !this.sync;
+    const hint = this.card.querySelector(`#lfo_sync_hint_${this.id}`);
+    if (hint) hint.textContent = this.follower.connected ? 'Follows CLOCK' : 'Plug a CLOCK cable in';
+    if (this.card.offsetHeight !== before && window.synthApp && synthApp.updateCables) synthApp.updateCables();
   }
 
   static sliderToRate(val) {
@@ -108,11 +210,7 @@ class LfoModule {
 
   setRate(r) {
     this.rate = parseFloat(r);
-    const now = this.ctx.currentTime;
-    if (this.oscNode) {
-      this.oscNode.frequency.cancelScheduledValues(now);
-      this.oscNode.frequency.setTargetAtTime(this.rate, now, 0.005);
-    }
+    this.applyRate();
     this.drawWaveform();
   }
 
@@ -171,9 +269,16 @@ class LfoModule {
           </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" id="lfo_rate_box_${this.id}"${this.sync ? ' hidden' : ''}>
           <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Rate: <span id="val_rate_${this.id}">${this.rate.toFixed(1)} Hz</span></label>
           <input type="range" id="lfo_rate_${this.id}" min="0" max="1000" value="${initialSliderVal}">
+        </div>
+
+        <div class="control-group" id="lfo_length_box_${this.id}"${this.sync ? '' : ' hidden'}>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Length <span id="lfo_sync_hint_${this.id}" style="font-weight: 400; color: var(--muted-text);">Plug a CLOCK cable in</span></label>
+          <select id="lfo_length_${this.id}" class="control-select">
+            ${LFO_LENGTHS.map(([v, l]) => `<option value="${v}" ${v === this.length ? 'selected' : ''}>${l}</option>`).join('')}
+          </select>
         </div>
 
         <div class="control-group">
@@ -181,14 +286,19 @@ class LfoModule {
           <input type="range" id="lfo_depth_${this.id}" min="0" max="100" value="${this.depth}">
         </div>
 
+        <button id="lfo_syncmode_${this.id}" class="action-btn module-toggle${this.sync ? ' active' : ''}">Sync: ${this.sync ? 'On' : 'Off'}</button>
         <button id="lfo_sync_${this.id}" class="action-btn">Reset Phase</button>
 
-        <div class="ports-row" style="display: flex; justify-content: space-around; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
-          <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
+        <div class="ports-row" style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">
+          <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;">
             <div class="port port-in" data-node-id="${this.id}" data-port-type="rate" title="Rate Input"></div>
             <span>RATE IN</span>
           </div>
-          <div class="port-group" style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;">
+          <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;">
+            <div class="port port-in" data-node-id="${this.id}" data-port-id="clock" data-port-type="gate" title="Clock Input"></div>
+            <span>CLOCK</span>
+          </div>
+          <div class="port-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;">
             <span>OUT</span>
             <div class="port port-out" data-node-id="${this.id}" title="LFO Output"></div>
           </div>
@@ -227,6 +337,12 @@ class LfoModule {
     if (syncBtn) {
       syncBtn.addEventListener('click', () => this.resetPhase());
     }
+
+    const syncModeBtn = card.querySelector(`#lfo_syncmode_${this.id}`);
+    if (syncModeBtn) syncModeBtn.addEventListener('click', () => this.setSync(!this.sync));
+    const lengthSelect = card.querySelector(`#lfo_length_${this.id}`);
+    if (lengthSelect) lengthSelect.addEventListener('change', (e) => this.setLength(e.target.value));
+    this.updateSyncUi();
 
     this.startPreviewLoop();
   }
@@ -291,6 +407,7 @@ class LfoModule {
 
   cleanup() {
     this.previewRunning = false;
+    this.follower.destroy();
     if (this.oscNode) {
       try { this.oscNode.stop(); this.oscNode.disconnect(); } catch (e) {}
     }

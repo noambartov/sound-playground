@@ -981,11 +981,10 @@ class ChoraleModule extends ModuleBase {
 
   followPulse(t, dur, index) {
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
-    if (index === 0 || !this.playing) {
-      if (this.rec) this.finishRec();
-      this.beginPlay();
-    }
     this.pulseDur = dur;
+    // While recording, the clock only sets the grid; playing starts on the first pulse after Done
+    if (this.rec) return;
+    if (index === 0 || !this.playing) this.beginPlay();
     this.playTick(t, dur);
   }
 

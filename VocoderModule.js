@@ -154,8 +154,8 @@ class VocoderModule extends ModuleBase {
     ],
     inputs: [
       { id: 'carrier', label: 'CARRIER', signal: 'audio', title: 'Carrier Input',
-        guide: { text: 'The sound that gets shaped: it gives the notes. A bright, steady sound works best (a sawtooth Oscillator, a Poly Synth chord).', from: 'Oscillator OUT (sawtooth), Poly Synth OUT, Wavetable Osc OUT, VCA OUT',
-          match: ['oscillator:out:default', 'polysynth:out:out', 'wavetable:out:out', 'vca:out:audio', 'filter:out:default', 'mixer:out:out_l'] },
+        guide: { text: 'The sound that gets shaped: it gives the notes. A bright, steady sound works best (a sawtooth Oscillator, a Poly Synth chord).', from: 'Oscillator OUT (sawtooth), Poly Synth OUT, Wavetable Osc OUT, VCA OUT, Chorale VOICE',
+          match: ['oscillator:out:default', 'polysynth:out:out', 'wavetable:out:out', 'vca:out:audio', 'filter:out:default', 'mixer:out:out_l', 'chorale:out:s_voice', 'chorale:out:a_voice', 'chorale:out:t_voice', 'chorale:out:b_voice'] },
         chip: 'Synth / Oscillator' },
       { id: 'modulator', label: 'MOD', signal: 'audio', title: 'Modulator Input',
         guide: { text: 'The sound that does the shaping: its vowels and rhythm are put onto the carrier. A voice from the Mic is the classic; drums or a Vocal wavetable work too.', from: 'Mic / Audio In OUT, Wavetable Osc OUT (Vocal table), Drum Machine MAIN L',

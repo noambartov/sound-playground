@@ -180,7 +180,7 @@ class HarmonyWalkerModule extends ModuleBase {
     ],
     outputs: [
       { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Output (to Poly Synth NOTES)',
-        guide: { text: 'The notes of the chord (three, or four for seventh chords). Notes the next chord shares keep sounding; only changed notes are played again. Carries notes, not sound.', to: 'Poly Synth NOTES', match: ['polysynth:in:notes'] },
+        guide: { text: 'The notes of the chord (three, or four for seventh chords). Notes the next chord shares keep sounding; only changed notes are played again. Carries notes, not sound.', to: 'Poly Synth NOTES, Chorale CHORDS', match: ['polysynth:in:notes', 'chorale:in:chords'] },
         chip: 'Poly Synth NOTES' },
       { id: 'low', label: 'LOW', signal: 'cv', title: 'Lowest Note (Hz)',
         guide: { text: 'The lowest note of the chord, as a pitch in Hz.', to: 'Oscillator PITCH, Wavetable Osc PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },

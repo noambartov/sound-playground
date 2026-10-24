@@ -1399,6 +1399,20 @@ if (!window.SoundSandboxApp) {
               const currentCRect = this.canvasContainer.getBoundingClientRect();
               this.activeCable.currentX = moveEvent.clientX - currentCRect.left;
               this.activeCable.currentY = moveEvent.clientY - currentCRect.top;
+              // Phone: the cable end jumps onto the nearest jack it can plug into, which lights up
+              if (moveEvent.pointerType === 'touch' && this.isPhone()) {
+                const snap = this.findCableSnapPort(moveEvent.clientX, moveEvent.clientY);
+                if (snap !== this.activeCable.snapPort) {
+                  if (this.activeCable.snapPort) this.activeCable.snapPort.classList.remove('port-snap-target');
+                  if (snap) snap.classList.add('port-snap-target');
+                  this.activeCable.snapPort = snap;
+                }
+                if (snap) {
+                  const c = this.getPortCenter(snap);
+                  this.activeCable.currentX = c.x;
+                  this.activeCable.currentY = c.y;
+                }
+              }
               this.drawConnections();
             }
           };
@@ -1411,7 +1425,11 @@ if (!window.SoundSandboxApp) {
             }
 
             const rawTarget = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
-            const targetPort = rawTarget ? rawTarget.closest('.port') : null;
+            let targetPort = rawTarget ? rawTarget.closest('.port') : null;
+            const snapPort = this.activeCable && this.activeCable.snapPort;
+            if (snapPort) snapPort.classList.remove('port-snap-target');
+            // Phone: a cable let go near a jack plugs into it (the jack that was lit while dragging)
+            if (!targetPort && snapPort && snapPort.isConnected) targetPort = snapPort;
 
             if (targetPort && this.activeCable) {
               const targetNodeId = targetPort.getAttribute('data-node-id') || targetPort.closest('.module-card')?.id.replace('module_card_', '');
@@ -1626,6 +1644,26 @@ if (!window.SoundSandboxApp) {
           const info = getPinchInfo();
           pinch = { ...info, scale: this.scale, panX: this.panX, panY: this.panY };
         }
+      }, true);
+
+      // Phone: jacks are tiny on a small screen, so a finger that lands near one (not on a slider,
+      // menu or button) picks up a cable from the nearest visible jack.
+      this.canvasContainer.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch' || !this.isPhone() || this.isPinching || touchPoints.size > 1) return;
+        if (this.isPresentationMode || !e.isTrusted) return;
+        const t = e.target;
+        if (!t.closest || t.closest('.port') || !t.closest('#workspace-viewport')) return;
+        if (t.closest('input, select, button, textarea, a, [contenteditable="true"]')) return;
+        const port = this.findPhonePortNear(e.clientX, e.clientY, 22);
+        if (!port) return;
+        e.preventDefault();
+        e.stopPropagation();
+        port.dispatchEvent(new PointerEvent('pointerdown', {
+          bubbles: true, cancelable: true, composed: true,
+          pointerId: e.pointerId, pointerType: e.pointerType, isPrimary: e.isPrimary,
+          clientX: e.clientX, clientY: e.clientY, screenX: e.screenX, screenY: e.screenY,
+          button: 0, buttons: 1, shiftKey: e.shiftKey
+        }));
       }, true);
 
       this.canvasContainer.addEventListener('pointerdown', (e) => {
@@ -2152,6 +2190,41 @@ if (!window.SoundSandboxApp) {
       });
     }
 
+    // Phone: the visible jack nearest to a screen point, within `radius` screen pixels.
+    // `accept` (optional) filters the jacks. A jack hidden under another module never counts.
+    findPhonePortNear(clientX, clientY, radius, accept) {
+      let best = null, bestDist = radius;
+      document.querySelectorAll('#workspace-viewport .module-card .port').forEach(port => {
+        if (accept && !accept(port)) return;
+        const r = port.getBoundingClientRect();
+        if (!r.width) return;
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const d = Math.hypot(clientX - cx, clientY - cy);
+        if (d > bestDist) return;
+        const hit = document.elementFromPoint(cx, cy);
+        if (!hit || hit.closest('.module-card') !== port.closest('.module-card')) return;
+        best = port;
+        bestDist = d;
+      });
+      return best;
+    }
+
+    // Phone: the jack the cable being dragged would plug into (other module, other direction), or null
+    findCableSnapPort(clientX, clientY) {
+      const cable = this.activeCable;
+      if (!cable) return null;
+      // Over a slider an LFO cable can drive, the slider wins
+      const under = document.elementFromPoint(clientX, clientY);
+      if (under && under.closest && under.closest('input[type="range"].knob-droppable')) return null;
+      const fromIsOut = cable.fromPortType === 'out';
+      return this.findPhonePortNear(clientX, clientY, 30, port => {
+        const isOut = port.classList.contains('port-out') || port.classList.contains('output-port');
+        if (isOut === fromIsOut) return false;
+        const card = port.closest('.module-card');
+        return !!card && card.id !== `module_card_${cable.fromNode}`;
+      });
+    }
+
     getPortCenter(portEl) {
       const cRect = this.canvasContainer.getBoundingClientRect();
       const pRect = portEl.getBoundingClientRect();
@@ -2474,11 +2547,14 @@ if (!window.SoundSandboxApp) {
 
     // Toolbar groups (View, File): each group is one button that opens a small menu under it
     // (position: fixed, kept on screen). Tapping a choice or anywhere else closes it.
+    // Phone: the open menu is moved to <body>, because iPhone Safari clips a fixed menu inside the
+    // sideways-scrolling toolbar (the menu stayed invisible); it goes back into its group when it closes.
     initToolbarGroups() {
       const groups = Array.from(document.querySelectorAll('.toolbar .tb-group'));
+      const itemsOf = new Map(groups.map(g => [g, g.querySelector('.tb-group-items')]));
       const place = (group) => {
         const toggle = group.querySelector('.tb-group-toggle');
-        const items = group.querySelector('.tb-group-items');
+        const items = itemsOf.get(group);
         if (!toggle || !items) return;
         const r = toggle.getBoundingClientRect();
         const toolbar = group.closest('.toolbar');
@@ -2491,12 +2567,26 @@ if (!window.SoundSandboxApp) {
         group.classList.toggle('open', open);
         const toggle = group.querySelector('.tb-group-toggle');
         if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        const items = itemsOf.get(group);
+        if (items) {
+          if (open && this.isPhone()) {
+            document.body.appendChild(items);
+            items.classList.add('tb-menu-floating');
+          } else if (items.parentNode !== group) {
+            items.classList.remove('tb-menu-floating');
+            group.appendChild(items);
+          }
+        }
         if (open) place(group);
       };
       const closeAll = () => groups.forEach(g => { if (g.classList.contains('open')) setOpen(g, false); });
       const toolbarEl = document.querySelector('.toolbar');
       if (toolbarEl) toolbarEl.addEventListener('scroll', closeAll);
-      window.addEventListener('resize', closeAll);
+      // Phone: Safari's address bar showing or hiding resizes the window; keep the menu open, just re-place it
+      window.addEventListener('resize', () => {
+        if (this.isPhone()) groups.forEach(g => { if (g.classList.contains('open')) place(g); });
+        else closeAll();
+      });
       groups.forEach(group => {
         const toggle = group.querySelector('.tb-group-toggle');
         if (toggle) {
@@ -2506,7 +2596,7 @@ if (!window.SoundSandboxApp) {
             setOpen(group, open);
           });
         }
-        const items = group.querySelector('.tb-group-items');
+        const items = itemsOf.get(group);
         if (items) {
           items.addEventListener('click', (e) => {
             if (e.target.closest('.tool-btn')) setOpen(group, false);
@@ -2514,7 +2604,11 @@ if (!window.SoundSandboxApp) {
         }
       });
       document.addEventListener('pointerdown', (e) => {
-        groups.forEach(g => { if (g.classList.contains('open') && !g.contains(e.target)) setOpen(g, false); });
+        groups.forEach(g => {
+          if (!g.classList.contains('open')) return;
+          const items = itemsOf.get(g);
+          if (!g.contains(e.target) && !(items && items.contains(e.target))) setOpen(g, false);
+        });
       }, true);
     }
 

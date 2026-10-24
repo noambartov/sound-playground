@@ -2040,6 +2040,15 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   }
   .sidebar.phone-collapsed h3::after { content: "Show"; }
   .sidebar.phone-collapsed > :not(h3) { display: none !important; }
+
+  /* Jack labels sit under the cables (above the modules), so a cable is never hidden behind a label */
+  #port-chip-layer { z-index: 29; }
+
+  /* The jack a dragged cable will plug into when the finger lets go (app.js findCableSnapPort) */
+  body.cable-dragging .port.port-snap-target {
+    background: var(--text-color);
+    box-shadow: 0 0 0 3px var(--panel-bg), 0 0 0 7px var(--text-color);
+  }
 }
 
 /* Tips panel while a preset plays (presetTips.js), bottom left; full width at the bottom on narrow screens */
@@ -2150,7 +2159,8 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   box-shadow: var(--shadow-sm);
   touch-action: manipulation;
 }
-.tb-group.open .tb-group-items { display: flex; }
+.tb-group.open .tb-group-items,
+.tb-group-items.tb-menu-floating { display: flex; }
 .tb-group-items .tool-btn { white-space: nowrap; text-align: left; }
 
 /* Ring around what the current tip talks about (presetTips.js) */

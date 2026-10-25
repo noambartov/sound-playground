@@ -102,8 +102,6 @@
       return;
     }
     if (typeof app.scheduleHistoryCapture === 'function') app.scheduleHistoryCapture();
-    const power = (100000 + Math.floor(Math.random() * 900000)).toLocaleString('en-US');
-    app.showNotification(`${infinite ? 'Infinite improbability' : 'Improbability'} factor: 2 to the power of ${power} to one against. Undo puts everything back.`);
   }
 
   function init() {

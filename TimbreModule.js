@@ -282,10 +282,24 @@ class TimbreModule extends ModuleBase {
     await new Promise(r => setTimeout(r, 30));   // let the status line show before the work starts
     try {
       const data = await file.arrayBuffer();
-      const buf = await new Promise((ok, fail) => {
-        const p = this.audioCtx.decodeAudioData(data, ok, fail);
-        if (p && typeof p.then === 'function') p.then(ok, fail);
-      });
+      // The browser's own decoder first (on a copy: it empties the buffer it gets), then the shared
+      // fallback for uncompressed WAV / AIFF / CAF (GranularModule.decodePcm, e.g. Logic samples in Chrome)
+      let buf = null;
+      try {
+        buf = await new Promise((ok, fail) => {
+          const p = this.audioCtx.decodeAudioData(data.slice(0), ok, fail);
+          if (p && typeof p.then === 'function') p.then(ok, fail);
+        });
+      } catch (e) {
+        buf = typeof GranularModule !== 'undefined' ? GranularModule.decodePcm(data, this.audioCtx) : null;
+      }
+      if (!buf) {
+        const why = typeof GranularModule !== 'undefined' ? GranularModule.unreadableReason(data, file.name) : null;
+        this.status('error', why || `${file.name} could not be read. Try WAV, AIFF, CAF, MP3 or M4A.`,
+          why ? (why.includes('.exs') ? 'זה קובץ כלי של Logic ‏(‎.exs‎), לא צליל. בחרו אחד מקובצי הדגימות שלו (‎.aif‎, ‎.wav‎ או ‎.caf‎).' : 'קובץ ה-‎.caf‎ הזה דחוס ב-Apple Lossless, שהדפדפן הזה לא קורא. פתחו את האתר ב-Safari, או ייצאו את הדגימה כ-WAV או AIFF.')
+            : 'לא ניתן לקרוא את הקובץ. נסו WAV,‏ AIFF,‏ CAF,‏ MP3 או M4A.');
+        return;
+      }
       const mono = new Float32Array(buf.length);
       for (let c = 0; c < buf.numberOfChannels; c++) {
         const d = buf.getChannelData(c);
@@ -306,7 +320,7 @@ class TimbreModule extends ModuleBase {
         this.status('ok', `Learned ${note}. To hear it, plug TIMBRE into the Mixer TIMBRE input.`, `נלמד ${note}. כדי לשמוע, חברו את TIMBRE לכניסה TIMBRE של המיקסר.`);
       }
     } catch (e) {
-      this.status('error', 'This file could not be read. Try a WAV, MP3 or M4A file.', 'לא ניתן לקרוא את הקובץ. נסו קובץ WAV,‏ MP3 או M4A.');
+      this.status('error', `${file.name} could not be read. Try WAV, AIFF, CAF, MP3 or M4A.`, 'לא ניתן לקרוא את הקובץ. נסו WAV,‏ AIFF,‏ CAF,‏ MP3 או M4A.');
     }
   }
 
@@ -322,7 +336,7 @@ class TimbreModule extends ModuleBase {
         <button class="action-btn" id="${this.elId('load')}" title="Load a recording of one note and learn its recipe">Load Sample</button>
       </div>
       <div class="timbre-status" id="${this.elId('status')}" role="status" hidden></div>
-      <input type="file" id="${this.elId('file')}" accept="audio/*,.wav,.mp3,.m4a,.aif,.aiff,.flac,.ogg" hidden>`;
+      <input type="file" id="${this.elId('file')}" accept="${typeof GranularModule !== 'undefined' ? GranularModule.FILE_ACCEPT : 'audio/*'}" hidden>`;
   }
 
   onMount() {

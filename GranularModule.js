@@ -391,14 +391,15 @@ class GranularModule {
       decoded = GranularModule.decodePcm(data, this.audioCtx);
     }
     if (!decoded) {
-      notify(`${file.name} could not be opened. Try MP3, WAV, M4A, AAC, OGG, FLAC or AIFF.`);
+      notify(GranularModule.unreadableReason(data, file.name) || `${file.name} could not be opened. Try MP3, WAV, M4A, AAC, OGG, FLAC or AIFF.`);
       return;
     }
     this.setBuffer(decoded);
   }
 
-  // Fallback for uncompressed WAV / AIFF / AIFF-C that the browser cannot decode itself
-  // (e.g. AIFF in Chrome and Firefox). Returns an AudioBuffer or null.
+  // Fallback for uncompressed WAV / AIFF / AIFF-C / CAF that the browser cannot decode itself
+  // (e.g. AIFF and CAF in Chrome and Firefox; Logic's sample folders are full of both).
+  // Returns an AudioBuffer or null. Shared by Granular, Sampler and Timbre.
   static decodePcm(data, ctx) {
     try {
       const v = new DataView(data);
@@ -436,7 +437,7 @@ class GranularModule {
               const comp = tag(o + 26);
               if (comp === 'sowt') little = true;
               else if (comp === 'fl32' || comp === 'FL32') isFloat = true;
-              else if (comp !== 'NONE') return null;
+              else if (comp !== 'NONE' && comp !== 'twos') return null;
             }
           } else if (id === 'SSND') {
             offset = o + 16 + v.getUint32(o + 8, false);
@@ -444,6 +445,27 @@ class GranularModule {
           o += 8 + size + (size & 1);
         }
         if (offset !== undefined && frames) frames = Math.min(frames, Math.floor((v.byteLength - offset) / (channels * bits / 8)));
+      } else if (head === 'caff') {
+        // Core Audio Format: 'desc' (float64 rate, format id, flags, bytes per packet, ..., channels,
+        // bits) and 'data' (4-byte edit count, then interleaved samples); only uncompressed 'lpcm'
+        for (let o = 8; o + 12 <= v.byteLength;) {
+          const id = tag(o), hi = v.getUint32(o + 4, false), lo = v.getUint32(o + 8, false);
+          const size = hi === 0xFFFFFFFF ? v.byteLength - o - 12 : hi * 4294967296 + lo;
+          if (id === 'desc') {
+            if (tag(o + 20) !== 'lpcm') return null;
+            rate = Math.round(v.getFloat64(o + 12, false));
+            const flags = v.getUint32(o + 24, false);
+            isFloat = !!(flags & 1);
+            little = !!(flags & 2);
+            channels = v.getUint32(o + 36, false);
+            bits = v.getUint32(o + 40, false);
+          } else if (id === 'data') {
+            offset = o + 16;
+            frames = channels && bits ? Math.floor(Math.min(size - 4, v.byteLength - offset) / (channels * bits / 8)) : 0;
+          }
+          o += 12 + size;
+        }
+        if (isFloat && bits !== 32) return null;
       } else {
         return null;
       }
@@ -473,6 +495,27 @@ class GranularModule {
     } catch (err) {
       return null;
     }
+  }
+
+  // Why a file could not be opened, in words for the user (null = no specific reason known)
+  static unreadableReason(data, name) {
+    const ext = String(name || '').split('.').pop().toLowerCase();
+    if (ext === 'exs') return 'This is a Logic instrument file (.exs), not a sound. Pick one of its sample files instead (.aif, .wav or .caf).';
+    try {
+      const v = new DataView(data);
+      const tag = o => String.fromCharCode(v.getUint8(o), v.getUint8(o + 1), v.getUint8(o + 2), v.getUint8(o + 3));
+      if (tag(0) === 'caff') {
+        for (let o = 8; o + 12 <= v.byteLength;) {
+          const size = v.getUint32(o + 4, false) * 4294967296 + v.getUint32(o + 8, false);
+          if (tag(o) === 'desc' && tag(o + 20) === 'alac') {
+            return 'This .caf file is Apple Lossless, which this browser cannot read. Open the site in Safari, or export the sample as WAV or AIFF.';
+          }
+          if (size <= 0) break;
+          o += 12 + size;
+        }
+      }
+    } catch (e) {}
+    return null;
   }
 
   setBuffer(buffer) {

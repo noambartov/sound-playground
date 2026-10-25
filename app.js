@@ -1151,6 +1151,7 @@ if (!window.SoundSandboxApp) {
             }
           });
 
+          this.separateOverlaps(newIds);
           this.updatePortConnectedClasses();
           this.resizeCanvas();
           this.fitToModules(add ? newIds : null);
@@ -1164,6 +1165,31 @@ if (!window.SoundSandboxApp) {
 
       this.closeModal();
       return newIds;
+    }
+
+    // No module may open hidden under another one (owner's request 2026-10-25): after a patch is
+    // loaded, each new card (left to right, then top to bottom) that overlaps a card already in
+    // place moves right, 30 px past that card, until it sits on free space. Its row stays the same.
+    // Cards that only sit close together are left alone.
+    separateOverlaps(ids) {
+      const GAP = 30;
+      const rect = card => ({ l: card.offsetLeft, t: card.offsetTop, r: card.offsetLeft + card.offsetWidth, b: card.offsetTop + card.offsetHeight });
+      const hits = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+      const fresh = new Set(ids);
+      const placed = Object.values(this.modules).filter(m => m.card && !fresh.has(m.id)).map(m => rect(m.card));
+      const cards = ids.map(id => this.modules[id] && this.modules[id].card).filter(Boolean)
+        .sort((a, b) => (a.offsetLeft - b.offsetLeft) || (a.offsetTop - b.offsetTop));
+      cards.forEach(card => {
+        let r = rect(card);
+        for (let guard = 0; guard < 200; guard++) {
+          const blocker = placed.find(p => hits(r, p));
+          if (!blocker) break;
+          const dx = blocker.r + GAP - r.l;
+          r = { l: r.l + dx, t: r.t, r: r.r + dx, b: r.b };
+        }
+        if (r.l !== card.offsetLeft) card.style.left = `${r.l}px`;
+        placed.push(r);
+      });
     }
 
     closeModal() {

@@ -67,6 +67,7 @@ class MixerModule {
                 volumeValue: this.channels[ch].volumeValue
             };
             if (this.channels[ch].label) channelsData[ch].label = this.channels[ch].label;
+            if (this.channels[ch].muted) channelsData[ch].muted = true;
         });
         return {
             masterVolumeValue: this.masterVolumeValue,
@@ -94,6 +95,7 @@ class MixerModule {
                     this.setChannelVolume(ch, chData.volumeValue);
                 }
                 this.channels[ch].label = chData.label || '';
+                this.setChannelMute(ch, !!chData.muted);
             });
 
             const card = document.getElementById(`module_card_${this.id}`);
@@ -139,13 +141,15 @@ class MixerModule {
         const ch = this.channelCount;
 
         const inputGain = this.ctx.createGain();
+        const muteGain = this.ctx.createGain();
         const channelGain = this.ctx.createGain();
         const directOutGain = this.ctx.createGain();
 
         const leftGain = this.ctx.createGain();
         const rightGain = this.ctx.createGain();
 
-        inputGain.connect(channelGain);
+        inputGain.connect(muteGain);
+        muteGain.connect(channelGain);
         channelGain.connect(directOutGain);
         channelGain.connect(leftGain);
         channelGain.connect(rightGain);
@@ -155,6 +159,8 @@ class MixerModule {
 
         this.channels[ch] = {
             inputNode: inputGain,
+            muteNode: muteGain,
+            muted: false,
             gainNode: channelGain,
             directOutNode: directOutGain,
             leftGain: leftGain,
@@ -229,6 +235,22 @@ class MixerModule {
         }
     }
 
+    // Mute (owner's request 2026-10-25): silences the channel (to the master and DIR OUT)
+    // without moving its fader, so Timbre recipes and the volume stay as they are.
+    setChannelMute(channelIndex, on) {
+        const ch = this.channels[channelIndex];
+        if (!ch || !ch.muteNode) return;
+        ch.muted = !!on;
+        ch.muteNode.gain.setTargetAtTime(ch.muted ? 0 : 1, this.ctx.currentTime, 0.01);
+        const btn = document.getElementById(`mix_mute_${this.id}_${channelIndex}`);
+        if (btn) btn.classList.toggle('active', ch.muted);
+    }
+
+    toggleChannelMute(channelIndex) {
+        const ch = this.channels[channelIndex];
+        if (ch) this.setChannelMute(channelIndex, !ch.muted);
+    }
+
     setMasterVolume(value) {
         this.masterVolumeValue = parseFloat(value);
         const now = this.ctx.currentTime;
@@ -294,6 +316,10 @@ class MixerModule {
                     oninput="synthApp.getModule('${this.id}').setChannelVolume(${ch}, this.value)">
                 <span class="mixer-vol-val" id="mix_vol_val_${this.id}_${ch}" data-entry="scale:100;unit:" title="Tap to type a volume (0-100)">${Math.round(this.channels[ch].volumeValue * 100)}</span>
             </div>
+
+            <button id="mix_mute_${this.id}_${ch}" class="action-btn module-toggle mixer-mute${this.channels[ch].muted ? ' active' : ''}"
+                title="Silence this channel (the fader stays where it is)"
+                onclick="synthApp.getModule('${this.id}').toggleChannelMute(${ch})">Mute</button>
         `;
     }
 

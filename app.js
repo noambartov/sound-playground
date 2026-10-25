@@ -2205,7 +2205,11 @@ if (!window.SoundSandboxApp) {
           const info = c.toPortInfo || {};
           const match = String(info.type || info.id || '').match(/^ch_in_(\d+)$/);
           const ch = info.channel != null && info.channel !== '' ? String(info.channel) : (match ? match[1] : null);
-          if (ch && !hints[ch]) hints[ch] = this.getChannelHint(c.fromNode);
+          if (!ch || hints[ch]) return;
+          // A source can name the channel by the jack it comes from (Harmonics: Fundamental, Octave, Fifth...)
+          const src = this.modules[c.fromNode].instance;
+          const own = src && typeof src.getMixerHint === 'function' ? src.getMixerHint(c.fromPortInfo || {}) : null;
+          hints[ch] = own || this.getChannelHint(c.fromNode);
         });
         m.instance.setLabelHints(hints);
       });

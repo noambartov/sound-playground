@@ -952,7 +952,8 @@ body.presentation-mode .port,
 body.presentation-mode .delete-module-btn,
 body.presentation-mode .close-btn,
 body.presentation-mode .sidebar,
-body.presentation-mode #selection-box {
+body.presentation-mode #selection-box,
+body.presentation-mode #delete-selected-btn {
   display: none !important;
   pointer-events: none;
 }
@@ -2397,3 +2398,24 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   min-width: 24px;
   text-align: center;
 }
+
+/* Group delete button: floats at the bottom centre while 2+ modules are selected */
+#delete-selected-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 900;
+  padding: 12px 24px;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: var(--danger-color);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  touch-action: manipulation;
+}
+#delete-selected-btn:hover { filter: brightness(1.08); }

@@ -2419,3 +2419,10 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   touch-action: manipulation;
 }
 #delete-selected-btn:hover { filter: brightness(1.08); }
+
+/* Mixer channel Mute (MixerModule.js): full strip width, under the VOL number */
+.mixer-mute {
+  width: 100%;
+  padding: 3px 4px;
+  font-size: 0.7rem;
+}

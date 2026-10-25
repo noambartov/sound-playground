@@ -6,6 +6,8 @@
 
 const HARM_COUNT = 8;
 const HARM_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+// Interval names of the partials, shown as Mixer channel names (greyed hint) for H1-H8
+const HARM_INTERVALS = ['Fundamental', 'Octave', 'Fifth', '2 Octaves', 'Major 3rd', 'Fifth', 'Minor 7th', '3 Octaves'];
 const HARM_LEVEL = 0.3;   // each sine's output level, so 8 partials at full fader stay below clipping
 
 class HarmonicsModule extends ModuleBase {
@@ -31,6 +33,12 @@ class HarmonicsModule extends ModuleBase {
       chip: `Mixer CH ${i + 1}`
     }))
   };
+
+  // Mixer channel hint (app.js updateMixerHints): the interval of the partial on that cable
+  getMixerHint(portInfo) {
+    const m = String(portInfo.id || portInfo.type || '').match(/^h(\d+)$/);
+    return m ? HARM_INTERVALS[parseInt(m[1], 10) - 1] || null : null;
+  }
 
   static noteName(midi) {
     const m = Math.round(midi);

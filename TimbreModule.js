@@ -138,67 +138,65 @@ const TimbreAnalysis = {
     for (let t = minTau; t < maxTau; t++) {
       if (cm[t] < 0.15) { while (t + 1 < maxTau && cm[t + 1] < cm[t]) t++; tau = t; break; }
     }
-    if (tau < 0) return 0;
+    if (tau < 0) {
+      // No dip under 0.15 (a breathy voice): take the deepest dip if it is still fairly clear
+      let best = minTau;
+      for (let t = minTau; t < maxTau; t++) if (cm[t] < cm[best]) best = t;
+      if (cm[best] > 0.35) return 0;
+      tau = best;
+    }
     const a = cm[tau - 1], b = cm[tau], c = cm[tau + 1];
     const shift = (a - 2 * b + c) ? 0.5 * (a - c) / (a - 2 * b + c) : 0;
     return sr / (tau + shift);
   },
 
   // { f0, levels[16] } (loudest partial = 1) or { error: '...' }
+  // { f0, levels[16] } (loudest partial = 1) or { error: '...' }. Built for real voices and
+  // instruments too: each short frame is measured against its own pitch, so vibrato and small
+  // pitch drift do not smear the high partials; frames without a clear pitch are skipped.
   analyze(x, sr) {
     const region = this.steadyRegion(x, sr);
-    if (!region) return { error: 'The sample is silent or too short. Use a single note of at least a quarter second.' };
-    // Pitch: median of up to 5 frames across the steady part
+    if (!region) return { error: 'The sample is silent or too short. Use one held note of at least a quarter second.' };
+    const N = 4096, hop = 2048;
+    const binHz = sr / N;
+    const hann = new Float32Array(N);
+    for (let i = 0; i < N; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+    const sum = new Float64Array(16);
     const f0s = [];
-    for (let k = 0; k < 5; k++) {
-      const at = Math.round(region.start + (region.end - region.start - 4200) * k / 4);
-      if (at < region.start) continue;
-      const f = this.yin(x, at, sr);
-      if (f) f0s.push(f);
+    let harmE = 0, totalE = 0;
+    const last = Math.max(region.start, Math.min(region.end, x.length) - N);
+    for (let at = region.start; at <= last && f0s.length < 40; at += hop) {
+      const f0 = this.yin(x, at + N / 2 - 1024, sr);
+      if (!f0) continue;
+      const re = new Float32Array(N), im = new Float32Array(N);
+      for (let i = 0; i < N; i++) re[i] = (x[at + i] || 0) * hann[i];
+      this.fft(re, im);
+      const pow = new Float32Array(N / 2);
+      for (let i = 0; i < N / 2; i++) pow[i] = re[i] * re[i] + im[i] * im[i];
+      // Partial n = the energy within +-max(2 bins, 3.5% of n x f0, at most 0.45 f0) of n x f0
+      const lv = [];
+      for (let n = 1; n <= 16; n++) {
+        const fc = n * f0;
+        if (fc > sr * 0.45) { lv.push(0); continue; }
+        const half = Math.max(2, Math.min(0.035 * fc, 0.45 * f0) / binHz);
+        let e = 0;
+        for (let i = Math.max(1, Math.floor(fc / binHz - half)); i <= Math.ceil(fc / binHz + half) && i < N / 2; i++) e += pow[i];
+        lv.push(e);
+        harmE += e;
+      }
+      for (let i = Math.round(30 / binHz); i < Math.min(N / 2, Math.round(16.5 * f0 / binHz)); i++) totalE += pow[i];
+      lv.forEach((e, k) => { sum[k] += e; });
+      f0s.push(f0);
     }
-    if (f0s.length < 2) return { error: 'No clear note found. Use one note of a single instrument (not a chord or a noise).' };
+    if (f0s.length < 2) return { error: 'No clear note found. Use one held note of a single voice or instrument (not a chord, speech or noise).' };
+    // A chord or noise puts much of its energy between the partials
+    if (!totalE || harmE / totalE < 0.3) return { error: 'No clear note found. Use one held note of a single voice or instrument (not a chord, speech or noise).' };
     f0s.sort((p, q) => p - q);
     const f0 = f0s[Math.floor(f0s.length / 2)];
-    // Spectrum: average of Hann-windowed 8192-sample frames across the steady part
-    const N = 8192;
-    const mag = new Float32Array(N / 2);
-    let frames = 0;
-    for (let at = region.start; at + N <= region.end || (frames === 0 && at + N <= x.length); at += N / 2) {
-      const re = new Float32Array(N), im = new Float32Array(N);
-      for (let i = 0; i < N; i++) re[i] = x[at + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)));
-      this.fft(re, im);
-      for (let i = 0; i < N / 2; i++) mag[i] += Math.hypot(re[i], im[i]);
-      frames++;
-      if (frames >= 8) break;
-    }
-    if (!frames) return { error: 'The sample is too short. Use a single note of at least a quarter second.' };
-    const binHz = sr / N;
-    const levels = [];
-    let harmE = 0;
-    for (let n = 1; n <= 16; n++) {
-      const fc = n * f0;
-      if (fc > sr * 0.45) { levels.push(0); continue; }
-      const half = Math.max(2, Math.min(0.04 * fc, 0.45 * f0) / binHz);
-      // The strongest bin near n x f0, measured as the energy of it and its 2 neighbours each side
-      // (so a partial that falls between two bins reads the same as one on a bin)
-      let pk = -1;
-      for (let i = Math.max(1, Math.floor(fc / binHz - half)); i <= Math.ceil(fc / binHz + half) && i < N / 2; i++) if (pk < 0 || mag[i] > mag[pk]) pk = i;
-      let e = 0;
-      for (let i = pk - 2; i <= pk + 2; i++) if (i > 0 && i < N / 2) e += mag[i] * mag[i];
-      levels.push(Math.sqrt(e));
-    }
-    // How much of the sound sits on the partials (a chord or noise spreads it elsewhere)
-    let totalE = 0;
-    const top = Math.min(N / 2 - 1, Math.round(16.5 * f0 / binHz));
-    for (let i = Math.round(30 / binHz); i <= top; i++) totalE += mag[i] * mag[i];
-    for (let n = 1; n <= 16; n++) {
-      const c = Math.round(n * f0 / binHz);
-      for (let i = c - 3; i <= c + 3; i++) if (i > 0 && i <= top) harmE += mag[i] * mag[i];
-    }
-    if (!totalE || harmE / totalE < 0.35) return { error: 'No clear note found. Use one note of a single instrument (not a chord or a noise).' };
+    const levels = Array.from(sum, e => Math.sqrt(e));
     const max = Math.max(...levels);
     // Partials 1 and 2 both missing: the 'fundamental' is a common divisor of several notes (a chord)
-    if (levels[0] < 0.05 * max && levels[1] < 0.05 * max) return { error: 'No clear note found. Use one note of a single instrument (not a chord or a noise).' };
+    if (levels[0] < 0.05 * max && levels[1] < 0.05 * max) return { error: 'No clear note found. Use one held note of a single voice or instrument (not a chord, speech or noise).' };
     return { f0, levels: levels.map(v => Math.round(v / max * 1000) / 1000) };
   }
 };
@@ -267,10 +265,21 @@ class TimbreModule extends ModuleBase {
   }
 
   // Load Sample: decode the file, analyze it, and on success make it the chosen recipe
+  // What happened is shown in the status line under the buttons (red for a problem) and as a
+  // notice at the bottom of the screen, so a sample never fails silently (owner's report 2026-10-25).
+  status(kind, en, he) {
+    const line = this.el('status');
+    if (line) {
+      line.textContent = en;
+      line.className = `timbre-status timbre-status-${kind}`;
+      line.hidden = false;
+    }
+    if (kind !== 'busy' && window.synthApp) window.synthApp.showNotification(`Timbre: ${en}`, he ? `Timbre: ${he}` : undefined);
+  }
+
   async loadSample(file) {
-    const text = this.el('text');
-    const say = msg => { if (text) text.textContent = msg; };
-    say('Analyzing...');
+    this.status('busy', `Analyzing "${file.name}"...`);
+    await new Promise(r => setTimeout(r, 30));   // let the status line show before the work starts
     try {
       const data = await file.arrayBuffer();
       const buf = await new Promise((ok, fail) => {
@@ -283,12 +292,21 @@ class TimbreModule extends ModuleBase {
         for (let i = 0; i < d.length; i++) mono[i] += d[i] / buf.numberOfChannels;
       }
       const r = TimbreAnalysis.analyze(mono, buf.sampleRate);
-      if (r.error) { say(r.error); return; }
+      if (r.error) {
+        this.status('error', r.error, 'לא נמצא תו ברור בדגימה. השתמשו בתו אחד מוחזק של קול או כלי אחד (לא אקורד, דיבור או רעש), לפחות רבע שנייה.');
+        return;
+      }
       this.setSample({ name: file.name.replace(/\.[^.]+$/, ''), f0: r.f0, levels: r.levels });
       this.setParam('preset', 'sample');   // draws the bars and moves the Mixer faders
       if (window.synthApp) window.synthApp.scheduleHistoryCapture();
+      const note = `${TimbreModule.noteOf(r.f0)}, ${r.f0.toFixed(1)} Hz`;
+      if (this.bus.sinks.size) {
+        this.status('ok', `Learned ${note}. Sent to the Mixer: play the Keyboard to hear it.`, `נלמד ${note}. נשלח למיקסר: נגנו במקלדת כדי לשמוע.`);
+      } else {
+        this.status('ok', `Learned ${note}. To hear it, plug TIMBRE into the Mixer TIMBRE input.`, `נלמד ${note}. כדי לשמוע, חברו את TIMBRE לכניסה TIMBRE של המיקסר.`);
+      }
     } catch (e) {
-      say('This file could not be read. Try a WAV, MP3 or M4A file.');
+      this.status('error', 'This file could not be read. Try a WAV, MP3 or M4A file.', 'לא ניתן לקרוא את הקובץ. נסו קובץ WAV,‏ MP3 או M4A.');
     }
   }
 
@@ -303,6 +321,7 @@ class TimbreModule extends ModuleBase {
         <button class="action-btn" id="${this.elId('apply')}" title="Move the Mixer faders back to this recipe">Apply to Mixer</button>
         <button class="action-btn" id="${this.elId('load')}" title="Load a recording of one note and learn its recipe">Load Sample</button>
       </div>
+      <div class="timbre-status" id="${this.elId('status')}" role="status" hidden></div>
       <input type="file" id="${this.elId('file')}" accept="audio/*,.wav,.mp3,.m4a,.aif,.aiff,.flac,.ogg" hidden>`;
   }
 

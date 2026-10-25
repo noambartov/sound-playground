@@ -1286,6 +1286,24 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   flex: 1;
 }
 
+.timbre-status {
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.timbre-status-busy {
+  color: var(--muted-text);
+}
+
+.timbre-status-ok {
+  color: var(--primary-color);
+}
+
+.timbre-status-error {
+  color: var(--danger-color);
+}
+
 .timbre-text {
   font-size: 11px;
   line-height: 1.4;

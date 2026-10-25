@@ -201,7 +201,7 @@ class SamplerModule extends ModuleBase {
       decoded = GranularModule.decodePcm(data, this.audioCtx);
     }
     if (!decoded) {
-      notify(`${file.name} could not be opened. Try MP3, WAV, M4A, AAC, OGG, FLAC or AIFF.`);
+      notify(GranularModule.unreadableReason(data, file.name) || `${file.name} could not be opened. Try MP3, WAV, M4A, AAC, OGG, FLAC, AIFF or CAF.`);
       return;
     }
     this.allNotesOff(true);

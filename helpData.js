@@ -1174,11 +1174,11 @@ window.presetData = {
     modules: [
       { id: "kb1", type: "keyboard", x: 40, y: 60, state: {} },
       { id: "harm1", type: "harmonics", x: 40, y: 560, state: { note: 48 } },
-      { id: "tim1", type: "timbre", x: 470, y: 60, state: { preset: "clarinet" } },
+      { id: "tim1", type: "timbre", x: 700, y: 60, state: { preset: "clarinet" } },
       { id: "mix1", type: "mixer", x: 440, y: 560, state: { masterVolumeValue: 0.8, channels: {
         "1": { volumeValue: 1, panValue: 0 }, "2": { volumeValue: 0.04, panValue: 0 }, "3": { volumeValue: 0.75, panValue: 0 }, "4": { volumeValue: 0.04, panValue: 0 },
         "5": { volumeValue: 0.5, panValue: 0 }, "6": { volumeValue: 0.04, panValue: 0 }, "7": { volumeValue: 0.35, panValue: 0 }, "8": { volumeValue: 0.02, panValue: 0 } } } },
-      { id: "env1", type: "envelope", x: 830, y: 60, state: { attack: 0.06, decay: 0.2, sustain: 0.8, release: 0.35 } },
+      { id: "env1", type: "envelope", x: 1000, y: 60, state: { attack: 0.06, decay: 0.2, sustain: 0.8, release: 0.35 } },
       { id: "vca1", type: "vca", x: 1500, y: 560, state: { gain: 0 } },
       { id: "out1", type: "output", x: 1840, y: 560, state: {} },
       { id: "scope1", type: "oscilloscope", x: 1840, y: 840, state: {} }

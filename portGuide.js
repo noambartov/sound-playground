@@ -27,7 +27,7 @@
     'audio_in:out:audio': { name: 'OUT', signal: 'Audio', text: 'Live sound from your microphone or sound card.', to: 'Filter IN, Granular IN L, Reverb IN L, VCA IN, Output IN, Chorale MIC', match: AUDIO_DESTS.concat(['chorale:in:mic']) },
 
     // Controllers
-    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
+    'keyboard:out:freq': { name: 'FREQ', signal: 'CV', text: 'The pitch of the key you play.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch', 'harmonics:in:pitch'] },
     'keyboard:out:gate': { name: 'GATE', signal: 'Gate', text: 'On while a key is held, off when you let go.', to: 'Envelope GATE IN (shaped notes), or VCA CV (simple on/off notes)', match: ['envelope:in:gate', 'vca:in:cv'] },
     'keyboard:out:notes': { name: 'NOTES', signal: 'Gate', text: 'Every key you hold, not just the last one, so chords can be played. Carries notes, not sound.', to: 'Poly Synth NOTES, Chorale CHORDS / MELODY', match: ['polysynth:in:notes', 'chorale:in:chords', 'chorale:in:melody'] },
     'keyboard:out:bend': { name: 'BEND', signal: 'CV', text: 'The pitch bend wheel.', to: 'Oscillator FM IN, Filter CUT MOD', match: ['oscillator:in:fm', 'filter:in:cutoff'] },
@@ -51,7 +51,8 @@
     'vca:in:cv': { name: 'CV', signal: 'CV', text: 'Opens the volume. From an Envelope each note fades in and out; from an LFO you get tremolo.', from: 'Envelope ENV OUT, LFO OUT, Keyboard / Sequencer GATE', match: MOD_SOURCES.concat(['keyboard:out:gate', 'sequencer:out:gate']) },
     'vca:out:audio': { name: 'OUT', signal: 'Audio', text: 'The sound after the volume control.', to: 'Reverb IN L, Mixer IN, Output IN, Recorder IN', match: AUDIO_DESTS },
 
-    'mixer:in:ch_in': { name: 'IN', signal: 'Audio', text: 'One channel of the mixer. Each channel has its own level and pan.', from: 'Any audio OUT', match: AUDIO_SOURCES },
+    'mixer:in:ch_in': { name: 'IN', signal: 'Audio', text: 'One channel of the mixer. Each channel has its own level and pan.', from: 'Any audio OUT', match: AUDIO_SOURCES.concat(['harmonics:out:h1', 'harmonics:out:h2', 'harmonics:out:h3', 'harmonics:out:h4', 'harmonics:out:h5', 'harmonics:out:h6', 'harmonics:out:h7', 'harmonics:out:h8']) },
+    'mixer:in:timbre': { name: 'TIMBRE', signal: 'CV', text: 'A recipe of fader levels from the Timbre module. Picking an instrument there moves the faders of channels 1-8 here (channels are added if needed); you can still move them by hand afterwards. Carries settings, not sound.', from: 'Timbre TIMBRE OUT', match: ['timbre:out:timbre'] },
     'mixer:out:ch_out': { name: 'DIR OUT', signal: 'Audio', text: 'This channel alone, after its level knob.', to: 'Reverb IN, Filter IN, Oscilloscope IN', match: AUDIO_DESTS },
     'mixer:out:out_l': { name: 'OUT L', signal: 'Audio', text: 'All channels mixed, left side.', to: 'Output IN L, Reverb IN L, Recorder IN', match: AUDIO_DESTS },
     'mixer:out:out_r': { name: 'OUT R', signal: 'Audio', text: 'All channels mixed, right side.', to: 'Output IN R, Reverb IN R', match: AUDIO_DESTS.map(k => (k === 'output:in:in' ? 'output:in:in_r' : k)).concat(['reverb:in:in_r']) },
@@ -109,6 +110,7 @@
     'vca:in:cv': 'Env / LFO / Gate',
     'vca:out:audio': 'Reverb / Output',
     'mixer:in:ch_in': 'any audio',
+    'mixer:in:timbre': 'Timbre',
     'mixer:out:ch_out': 'this channel only',
     'mixer:out:out_l': 'Output / Reverb',
     'mixer:out:out_r': 'Output R / Reverb R',

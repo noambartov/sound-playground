@@ -24,6 +24,39 @@ class MixerModule {
         this.channelCount = 0;
 
         this.addChannelData();
+
+        // TIMBRE input (TimbreModule.js): not sound but a list of levels for faders 1, 2, 3, ...
+        this.timbreInput = { setTimbreLevels: levels => this.applyTimbreLevels(levels) };
+    }
+
+    // Moves the channel faders to a Timbre recipe (adding channels if the recipe has more).
+    // The sound changes at once; the faders on the card glide there so the change can be seen.
+    applyTimbreLevels(levels) {
+        if (!Array.isArray(levels)) return;
+        while (this.channelCount < levels.length) this.addChannelUI();
+        const card = document.getElementById(`module_card_${this.id}`);
+        const glides = [];
+        levels.forEach((v, i) => {
+            const ch = i + 1;
+            const level = Math.round(Math.max(0, Math.min(1, v)) * 100) / 100;
+            this.setChannelVolume(ch, level);
+            const slider = card ? card.querySelector(`input[type="range"][oninput*="setChannelVolume(${ch},"]`) : null;
+            if (slider) glides.push({ slider, from: parseFloat(slider.value) || 0, to: level });
+        });
+        cancelAnimationFrame(this.timbreGlide);
+        const start = performance.now();
+        const step = now => {
+            const t = Math.min(1, (now - start) / 350);
+            const e = 1 - Math.pow(1 - t, 3);
+            glides.forEach(g => { g.slider.value = String(g.from + (g.to - g.from) * e); });
+            if (t < 1) { this.timbreGlide = requestAnimationFrame(step); return; }
+            // Last frame: a real input event, so anything showing the fader's number updates too
+            glides.forEach(g => {
+                g.slider.value = String(g.to);
+                g.slider.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        };
+        this.timbreGlide = requestAnimationFrame(step);
     }
 
     getState() {
@@ -155,6 +188,7 @@ class MixerModule {
     }
 
     getAudioInput(portType, channelIndex) {
+        if (portType === 'timbre') return this.timbreInput;
         if (channelIndex && this.channels[channelIndex]) {
             return this.channels[channelIndex].inputNode;
         }
@@ -292,6 +326,11 @@ class MixerModule {
                                 <span style="font-size: 0.65rem; font-weight: 700;">OUT R</span>
                                 <div class="port port-out" data-node-id="${this.id}" data-port-type="out_r" title="Right Output"></div>
                             </div>
+                        </div>
+
+                        <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px; margin-bottom: 10px;">
+                            <span style="font-size: 0.65rem; font-weight: 700;">TIMBRE</span>
+                            <div class="port port-in" data-node-id="${this.id}" data-port-type="timbre" title="Timbre Input (sets the channel faders)"></div>
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center;">

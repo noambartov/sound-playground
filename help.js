@@ -83,6 +83,15 @@
       /* Modules tab: list on the side, detail panel */
       #help-modal .book-modules { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }
       #help-modal .book-mod-list { display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; }
+      /* Modules tab: the module list and the module page scroll on their own. */
+      #help-modal #help-tab-content.is-split { overflow: hidden; display: flex; flex-direction: column; }
+      #help-modal .is-split .book-modules { flex: 1; min-height: 0; align-items: stretch; }
+      #help-modal .is-split .book-mod-list,
+      #help-modal .is-split .book-mod-page {
+        position: static; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
+      }
+      #help-modal .is-split .book-mod-list { padding-inline-end: 4px; }
       #help-modal .book-mod-group { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-text); margin: 10px 0 4px; }
       #help-modal .book-mod-group:first-child { margin-top: 0; }
       #help-modal .book-mod-btn {
@@ -135,7 +144,11 @@
         #help-modal .modal-content { padding: 14px; height: 92vh; max-height: 92vh; }
         #help-modal .book-grid { grid-template-columns: 1fr; }
         #help-modal .book-modules { grid-template-columns: 1fr; }
-        #help-modal .book-mod-list { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; }
+        #help-modal .book-mod-list { position: static; flex-direction: row; flex-wrap: wrap; gap: 4px; align-content: flex-start; }
+        #help-modal .is-split .book-modules { grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
+        /* Phone: the module list is one row that scrolls sideways above the module page. */
+        #help-modal .is-split .book-mod-list { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; }
+        #help-modal .is-split .book-mod-btn { flex: 0 0 auto; white-space: nowrap; }
         #help-modal .book-mod-group { display: none; }
         #help-modal .book-mod-btn { border-color: var(--panel-border); }
       }
@@ -232,7 +245,7 @@
     const current = mods.find(m => m.type === activeModule);
     return `<div class="book-modules">
       <nav class="book-mod-list">${listHTML}</nav>
-      <div>${current ? moduleDetailHTML(current, ui) : ''}</div>
+      <div class="book-mod-page">${current ? moduleDetailHTML(current, ui) : ''}</div>
     </div>`;
   }
 
@@ -373,8 +386,23 @@
     else if (activeTab === 'recipes') html = recipesTabHTML(data);
     else if (activeTab === 'start') html = learnTabHTML(data);
     else html = `<div class="book-stack">${data.sections[activeTab] || ''}</div>`;
+    // Keep the module list where the reader left it when they pick another module.
+    const oldList = contentArea.querySelector('.book-mod-list');
+    const listScroll = oldList ? [oldList.scrollTop, oldList.scrollLeft] : null;
     contentArea.innerHTML = html;
     contentArea.scrollTop = 0;
+    contentArea.classList.toggle('is-split', !query && activeTab === 'modules');
+    const newList = contentArea.querySelector('.book-mod-list');
+    if (newList) {
+      if (listScroll) [newList.scrollTop, newList.scrollLeft] = listScroll;
+      // Make sure the chosen module's button is visible in the list.
+      const act = newList.querySelector('.book-mod-btn.active');
+      if (act) {
+        const a = act.getBoundingClientRect(), l = newList.getBoundingClientRect();
+        if (a.top < l.top || a.bottom > l.bottom) newList.scrollTop += a.top - l.top - 8;
+        if (a.left < l.left || a.right > l.right) newList.scrollLeft += a.left - l.left - 8;
+      }
+    }
     bindContent(contentArea);
   }
 

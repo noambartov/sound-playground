@@ -211,27 +211,27 @@ class GranularModule {
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Position: <span id="pos_val_${this.id}">${Math.round(this.position * 100)}%</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Position: <span id="pos_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.position * 100)}%</span></label>
             <input type="range" id="pos_slider_${this.id}" min="0" max="1" step="0.01" value="${this.position}">
           </div>
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Size: <span id="size_val_${this.id}">${Math.round(this.grainSize * 1000)}ms</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Size: <span id="size_val_${this.id}" data-entry="unit:ms">${Math.round(this.grainSize * 1000)}ms</span></label>
             <input type="range" id="size_slider_${this.id}" min="10" max="500" step="1" value="${Math.round(this.grainSize * 1000)}">
           </div>
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Density: <span id="dens_val_${this.id}">${this.density}/s</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Density: <span id="dens_val_${this.id}" data-entry="unit:/s">${this.density}/s</span></label>
             <input type="range" id="dens_slider_${this.id}" min="1" max="100" step="1" value="${this.density}">
           </div>
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Pitch: <span id="pitch_val_${this.id}">${this.pitch.toFixed(2)}x</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Pitch: <span id="pitch_val_${this.id}" data-entry="unit:x">${this.pitch.toFixed(2)}x</span></label>
             <input type="range" id="pitch_slider_${this.id}" min="0.25" max="4" step="0.01" value="${this.pitch}">
           </div>
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Spray: <span id="spray_val_${this.id}">${Math.round(this.spray * 100)}%</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Spray: <span id="spray_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.spray * 100)}%</span></label>
             <input type="range" id="spray_slider_${this.id}" min="0" max="1" step="0.01" value="${this.spray}">
           </div>
           <div class="control-group">
-            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Reverse: <span id="rev_val_${this.id}">${Math.round(this.reverseProb * 100)}%</span></label>
+            <label style="font-size: 10px; font-weight: 600; display: flex; justify-content: space-between;">Reverse: <span id="rev_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.reverseProb * 100)}%</span></label>
             <input type="range" id="rev_slider_${this.id}" min="0" max="1" step="0.01" value="${this.reverseProb}">
           </div>
         </div>

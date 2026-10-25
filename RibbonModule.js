@@ -11,7 +11,8 @@ class RibbonModule extends ModuleBase {
     width: 300,
     menu: { group: 'Controllers & Sequencing', label: 'Ribbon' },
     params: [
-      { id: 'base', label: 'Base Note', min: 24, max: 72, step: 1, value: 48, format: v => RibbonModule.noteName(v) },
+      { id: 'base', label: 'Base Note', min: 24, max: 72, step: 1, value: 48, format: v => RibbonModule.noteName(v),
+        entry: { unit: '', step: 1, format: v => RibbonModule.noteName(v), parse: t => RibbonModule.parseNote(t) } },
       { id: 'range', label: 'Range', min: 1, max: 5, step: 1, value: 2, format: v => `${v} oct` },
       { id: 'glide', label: 'Glide', min: 0, max: 500, step: 5, value: 20, unit: 'ms' },
       { id: 'cvRange', label: 'Y / Press Range', min: 1, max: 2000, step: 1, value: 1, format: v => `x ${v}` },
@@ -37,6 +38,16 @@ class RibbonModule extends ModuleBase {
   static noteName(midi) {
     const m = Math.round(midi);
     return `${RIBBON_NOTES[m % 12]}${Math.floor(m / 12) - 1}`;
+  }
+
+  // A typed note: a name with octave ("C3", "F#2", "Bb4") or a MIDI number ("48")
+  static parseNote(text) {
+    const t = String(text).trim();
+    if (/^\d+(\.\d+)?$/.test(t)) return Math.round(parseFloat(t));
+    const m = t.match(/^([a-gA-G])\s*([#b]?)\s*(-?\d)$/);
+    if (!m) return NaN;
+    const pc = RIBBON_NOTES.indexOf(m[1].toUpperCase()) + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+    return (parseInt(m[3], 10) + 1) * 12 + pc;
   }
 
   static midiToHz(midi) {

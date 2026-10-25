@@ -494,7 +494,7 @@ class DrumMachineModule extends ModuleBase {
   // ---- UI ----
   slider(id, label, min, max, step, value, fmt) {
     return `<div class="dm-knob">
-        <label class="module-label">${label}: <span id="${this.elId(`v_${id}`)}">${fmt(value)}</span></label>
+        <label class="module-label">${label}: <span id="${this.elId(`v_${id}`)}" data-entry="">${fmt(value)}</span></label>
         <input type="range" id="${this.elId(`p_${id}`)}" min="${min}" max="${max}" step="${step}" value="${value}">
       </div>`;
   }

@@ -185,6 +185,13 @@ class LfoModule {
     if (this.card.offsetHeight !== before && window.synthApp && synthApp.updateCables) synthApp.updateCables();
   }
 
+  // Typing an exact rate into the readout (valueEntry.js)
+  getEntry(key) {
+    if (key !== 'rate') return null;
+    return { unit: 'Hz', step: 0.1, decimals: 2, toSlider: LfoModule.rateToSlider, fromSlider: LfoModule.sliderToRate,
+      get: () => LfoModule.rateToSlider(this.rate) };
+  }
+
   static sliderToRate(val) {
     const minR = 0.1;
     const maxR = 20.0;
@@ -270,7 +277,7 @@ class LfoModule {
         </div>
 
         <div class="control-group" id="lfo_rate_box_${this.id}"${this.sync ? ' hidden' : ''}>
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Rate: <span id="val_rate_${this.id}">${this.rate.toFixed(1)} Hz</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Rate: <span id="val_rate_${this.id}" data-entry="@rate">${this.rate.toFixed(1)} Hz</span></label>
           <input type="range" id="lfo_rate_${this.id}" min="0" max="1000" value="${initialSliderVal}">
         </div>
 
@@ -282,7 +289,7 @@ class LfoModule {
         </div>
 
         <div class="control-group">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Depth: <span id="val_depth_${this.id}">${Math.round(this.depth)}%</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Depth: <span id="val_depth_${this.id}" data-entry="unit:%">${Math.round(this.depth)}%</span></label>
           <input type="range" id="lfo_depth_${this.id}" min="0" max="100" value="${this.depth}">
         </div>
 

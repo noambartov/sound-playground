@@ -45,7 +45,7 @@ class AudioInputModule {
         </div>
 
         <div class="control-group">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Input Level: <span id="val_gain_${this.id}">${Math.round(this.gainVal * 100)}%</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Input Level: <span id="val_gain_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.gainVal * 100)}%</span></label>
           <input type="range" id="gain_${this.id}" min="0" max="1.5" step="0.02" value="${this.gainVal}">
         </div>
 

@@ -170,7 +170,7 @@ class StereoDelayModule extends ModuleBase {
   cellSlider(col, p) {
     const v = this.colValue(col, p[0]);
     return `<div class="sd-cell">
-        <span class="sd-readout" id="${this.elId(`v_${p[0]}_${col}`)}">${p[7](v)}</span>
+        <span class="sd-readout" id="${this.elId(`v_${p[0]}_${col}`)}" data-entry="">${p[7](v)}</span>
         <input type="range" id="${this.elId(`p_${p[0]}_${col}`)}" min="${p[2]}" max="${p[3]}" step="${p[4]}" value="${v}" aria-label="${p[1]} ${col === 'B' ? 'Both' : col}">
       </div>`;
   }

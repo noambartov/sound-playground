@@ -103,7 +103,7 @@ class WebcamModule {
         <div class="control-group">
           <div style="display: flex; justify-content: space-between; font-size: 11px;">
             <label>Sens (Thresh)</label>
-            <span id="val_threshold_${this.id}">${this.threshold}</span>
+            <span id="val_threshold_${this.id}" data-entry="">${this.threshold}</span>
           </div>
           <input type="range" min="5" max="100" value="${this.threshold}" oninput="WebcamModule.updateParam('${this.id}', 'threshold', this.value)">
         </div>
@@ -112,7 +112,7 @@ class WebcamModule {
         <div class="control-group">
           <div style="display: flex; justify-content: space-between; font-size: 11px;">
             <label>Smoothing</label>
-            <span id="val_smoothing_${this.id}">${this.smoothing.toFixed(2)}</span>
+            <span id="val_smoothing_${this.id}" data-entry="">${this.smoothing.toFixed(2)}</span>
           </div>
           <input type="range" min="0.01" max="0.4" step="0.01" value="${this.smoothing}" oninput="WebcamModule.updateParam('${this.id}', 'smoothing', this.value)">
         </div>
@@ -121,7 +121,7 @@ class WebcamModule {
         <div class="control-group">
           <div style="display: flex; justify-content: space-between; font-size: 11px;">
             <label>CV Depth (Hz)</label>
-            <span id="val_cvDepth_${this.id}">${this.cvDepth}</span>
+            <span id="val_cvDepth_${this.id}" data-entry="unit:Hz">${this.cvDepth}</span>
           </div>
           <input type="range" min="100" max="3000" step="50" value="${this.cvDepth}" oninput="WebcamModule.updateParam('${this.id}', 'cvDepth', this.value)">
         </div>

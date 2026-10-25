@@ -471,7 +471,7 @@ class SequencerModule {
                     <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: var(--muted-text);">
                             <span>TEMPO</span>
-                            <span id="seq_bpm_val_${this.id}">${this.bpm} BPM</span>
+                            <span id="seq_bpm_val_${this.id}" data-entry="unit:BPM">${this.bpm} BPM</span>
                         </div>
                         <input type="range" min="30" max="300" step="1" value="${this.bpm}" style="width: 100%; accent-color: var(--muted-text);"
                             oninput="SequencerModule.updateBpm('${this.id}', this.value)">
@@ -481,7 +481,7 @@ class SequencerModule {
                     <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 700; color: var(--muted-text);">
                             <span>OCTAVE</span>
-                            <span id="seq_oct_val_${this.id}">${this.octaveRange} OCT</span>
+                            <span id="seq_oct_val_${this.id}" data-entry="unit:OCT">${this.octaveRange} OCT</span>
                         </div>
                         <input type="range" min="1" max="7" step="1" value="${this.octaveRange}" style="width: 100%; accent-color: var(--muted-text);"
                             oninput="SequencerModule.setOctave('${this.id}', this.value)">

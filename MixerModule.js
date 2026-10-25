@@ -190,6 +190,8 @@ class MixerModule {
         if (ch && ch.gainNode) {
             ch.volumeValue = parseFloat(value);
             ch.gainNode.gain.setTargetAtTime(ch.volumeValue, this.ctx.currentTime, 0.015);
+            const readout = document.getElementById(`mix_vol_val_${this.id}_${channelIndex}`);
+            if (readout) readout.textContent = Math.round(ch.volumeValue * 100);
         }
     }
 
@@ -198,6 +200,8 @@ class MixerModule {
         const now = this.ctx.currentTime;
         this.leftMaster.gain.setTargetAtTime(this.masterVolumeValue, now, 0.015);
         this.rightMaster.gain.setTargetAtTime(this.masterVolumeValue, now, 0.015);
+        const readout = document.getElementById(`mix_master_val_${this.id}`);
+        if (readout) readout.textContent = Math.round(this.masterVolumeValue * 100);
     }
 
     addChannelUI() {
@@ -254,6 +258,7 @@ class MixerModule {
                 <input type="range" min="0" max="1" step="0.01" value="${this.channels[ch].volumeValue}"
                     style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: var(--muted-text);"
                     oninput="synthApp.getModule('${this.id}').setChannelVolume(${ch}, this.value)">
+                <span class="mixer-vol-val" id="mix_vol_val_${this.id}_${ch}" data-entry="scale:100;unit:" title="Tap to type a volume (0-100)">${Math.round(this.channels[ch].volumeValue * 100)}</span>
             </div>
         `;
     }
@@ -294,6 +299,7 @@ class MixerModule {
                             <input type="range" min="0" max="1" step="0.01" value="${this.masterVolumeValue}"
                                 style="writing-mode: vertical-lr; direction: rtl; height: 80px; width: 14px; cursor: pointer; accent-color: var(--muted-text);"
                                 oninput="synthApp.getModule('${this.id}').setMasterVolume(this.value)">
+                            <span class="mixer-vol-val" id="mix_master_val_${this.id}" data-entry="scale:100;unit:" title="Tap to type a volume (0-100)">${Math.round(this.masterVolumeValue * 100)}</span>
                         </div>
                     </div>
 

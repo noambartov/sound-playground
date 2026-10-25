@@ -117,7 +117,7 @@ class DegraderModule extends ModuleBase {
     width: 220,
     menu: { group: 'Processors & Effects', label: 'Degrader' },
     params: [
-      { id: 'amount', label: 'Degrade', min: 0, max: 100, step: 1, value: 50, format: v => `${v}% ${DegraderModule.stageName(v)}` }
+      { id: 'amount', label: 'Degrade', min: 0, max: 100, step: 1, value: 50, format: v => `${v}% ${DegraderModule.stageName(v)}`, entry: { unit: '%' } }
     ],
     inputs: [
       { id: 'in', label: 'IN', signal: 'audio', title: 'Audio Input',

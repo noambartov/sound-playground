@@ -130,7 +130,7 @@ class OutputModule {
             <div class="node-body" style="padding: 14px; display: flex; flex-direction: column; gap: 12px;">
                 <div class="ctrl-row">
                     <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">
-                        Master Volume: <span id="vol_val_${this.id}">${Math.round(currentVol * 100)}%</span>
+                        Master Volume: <span id="vol_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(currentVol * 100)}%</span>
                     </label>
                     <input type="range" min="0" max="1" step="0.01" value="${currentVol}" 
                         oninput="synthApp.getModule('${this.id}').setVolume(this.value); document.getElementById('vol_val_${this.id}').innerText = Math.round(this.value * 100) + '%';">

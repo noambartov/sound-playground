@@ -285,7 +285,7 @@ class EnvelopeModule {
                     <!-- Attack -->
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
                         <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">ATTACK</span>
-                        <span id="env_a_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.attack)}</span>
+                        <span id="env_a_val_${this.id}" data-entry="scale:1000;unit:ms;prop:attack" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.attack)}</span>
                         <input type="range" min="0.001" max="2" step="0.005" value="${this.attack}"
                             style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setAttack(this.value)">
@@ -294,7 +294,7 @@ class EnvelopeModule {
                     <!-- Decay -->
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
                         <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">DECAY</span>
-                        <span id="env_d_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.decay)}</span>
+                        <span id="env_d_val_${this.id}" data-entry="scale:1000;unit:ms;prop:decay" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.decay)}</span>
                         <input type="range" min="0.001" max="2" step="0.005" value="${this.decay}"
                             style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setDecay(this.value)">
@@ -303,7 +303,7 @@ class EnvelopeModule {
                     <!-- Sustain -->
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
                         <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">SUSTAIN</span>
-                        <span id="env_s_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${Math.round(this.sustain * 100)}%</span>
+                        <span id="env_s_val_${this.id}" data-entry="scale:100;unit:%;prop:sustain" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${Math.round(this.sustain * 100)}%</span>
                         <input type="range" min="0" max="1" step="0.01" value="${this.sustain}"
                             style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setSustain(this.value)">
@@ -312,7 +312,7 @@ class EnvelopeModule {
                     <!-- Release -->
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; background: var(--subtle-bg); padding: 6px 2px; border-radius: 6px; border: 1px solid var(--panel-border);">
                         <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-color);">RELEASE</span>
-                        <span id="env_r_val_${this.id}" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.release)}</span>
+                        <span id="env_r_val_${this.id}" data-entry="scale:1000;unit:ms;prop:release" style="font-size: 0.6rem; font-weight: 600; color: var(--muted-text);">${this.formatTime(this.release)}</span>
                         <input type="range" min="0.001" max="5" step="0.01" value="${this.release}"
                             style="writing-mode: vertical-lr; direction: rtl; height: 75px; width: 12px; cursor: pointer; accent-color: var(--muted-text);"
                             oninput="synthApp.getModule('${this.id}').setRelease(this.value)">

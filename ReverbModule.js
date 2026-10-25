@@ -193,28 +193,28 @@ class ReverbModule {
       <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div class="control-group">
-            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Radius: <span id="val_radius_${this.id}">${this.radius}m</span></label>
+            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Radius: <span id="val_radius_${this.id}" data-entry="unit:m">${this.radius}m</span></label>
             <input type="range" min="1" max="50" step="1" value="${this.radius}" oninput="ReverbModule.updateParam('${this.id}', 'radius', this.value)">
           </div>
 
           <div class="control-group">
-            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Decay: <span id="val_decay_${this.id}">${this.decay}s</span></label>
+            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Decay: <span id="val_decay_${this.id}" data-entry="unit:s">${this.decay}s</span></label>
             <input type="range" min="0.2" max="12" step="0.1" value="${this.decay}" oninput="ReverbModule.updateParam('${this.id}', 'decay', this.value)">
           </div>
 
           <div class="control-group">
-            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Damping: <span id="val_damping_${this.id}">${this.damping}Hz</span></label>
+            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Damping: <span id="val_damping_${this.id}" data-entry="unit:Hz">${this.damping}Hz</span></label>
             <input type="range" min="500" max="16000" step="100" value="${this.damping}" oninput="ReverbModule.updateParam('${this.id}', 'damping', this.value)">
           </div>
 
           <div class="control-group">
-            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Warp: <span id="val_warp_${this.id}">${this.warp}%</span></label>
+            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Warp: <span id="val_warp_${this.id}" data-entry="unit:%">${this.warp}%</span></label>
             <input type="range" min="0" max="100" step="1" value="${this.warp}" oninput="ReverbModule.updateParam('${this.id}', 'warp', this.value)">
           </div>
         </div>
 
         <div class="control-group">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Mix: <span id="val_mix_${this.id}">${Math.round(this.mix * 100)}%</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Mix: <span id="val_mix_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.mix * 100)}%</span></label>
           <input type="range" min="0" max="1" step="0.01" value="${this.mix}" oninput="ReverbModule.updateParam('${this.id}', 'mix', this.value)">
         </div>
 

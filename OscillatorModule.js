@@ -295,6 +295,13 @@ class OscillatorModule {
     }
   }
 
+  // Typing an exact frequency into the readout (valueEntry.js): Hz, 1 Hz per arrow step
+  getEntry(key) {
+    if (key !== 'freq') return null;
+    return { unit: 'Hz', step: 1, decimals: 2, toSlider: OscillatorModule.freqToSlider, fromSlider: OscillatorModule.sliderToFreq,
+      get: () => OscillatorModule.freqToSlider(this.currentFreq) };
+  }
+
   renderHTML() {
     return `
       <div class="node-header">
@@ -313,17 +320,17 @@ class OscillatorModule {
         </div>
 
         <div class="control-group">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Frequency: <span id="freq_val_${this.id}">${Math.round(this.currentFreq)} Hz</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Frequency: <span id="freq_val_${this.id}" data-entry="@freq">${Math.round(this.currentFreq)} Hz</span></label>
           <input type="range" id="osc_freq_${this.id}" min="0" max="1" step="0.001" value="${OscillatorModule.freqToSlider(this.currentFreq)}">
         </div>
 
         <div class="control-group" id="pwm_container_${this.id}" style="display: ${this.currentType === 'square' ? 'flex' : 'none'};">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Pulse Width: <span id="pw_val_${this.id}">${Math.round(this.pulseWidth * 100)}%</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Pulse Width: <span id="pw_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.pulseWidth * 100)}%</span></label>
           <input type="range" id="osc_pw_${this.id}" min="0.05" max="0.95" step="0.01" value="${this.pulseWidth}">
         </div>
 
         <div class="control-group" id="saw_container_${this.id}" style="display: ${this.currentType === 'sawtooth' ? 'flex' : 'none'};">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Slope: <span id="rise_val_${this.id}">${OscillatorModule.riseLabel(this.sawRise)}</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Slope: <span id="rise_val_${this.id}" data-entry="scale:100;unit:% rise">${OscillatorModule.riseLabel(this.sawRise)}</span></label>
           <input type="range" id="osc_rise_${this.id}" min="0" max="1" step="0.01" value="${this.sawRise}">
           <button id="osc_flip_${this.id}" class="action-btn module-toggle osc-flip${this.sawFlip ? ' active' : ''}" title="Turn the wave upside down">Flip: ${this.sawFlip ? 'On' : 'Off'}</button>
         </div>

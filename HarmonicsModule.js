@@ -16,7 +16,8 @@ class HarmonicsModule extends ModuleBase {
     menu: { group: 'Sound Sources', label: 'Harmonics' },
     params: [
       { id: 'note', label: 'Fundamental', min: 24, max: 84, step: 1, value: 48,
-        format: v => `${HarmonicsModule.noteName(v)} (${HarmonicsModule.midiToHz(v).toFixed(1)} Hz)` }
+        format: v => `${HarmonicsModule.noteName(v)} (${HarmonicsModule.midiToHz(v).toFixed(1)} Hz)`,
+        entry: { unit: '', step: 1, format: v => HarmonicsModule.noteName(v), parse: t => RibbonModule.parseNote(t) } }
     ],
     inputs: [
       { id: 'pitch', label: 'PITCH', signal: 'cv', title: 'Pitch Input (fundamental)',

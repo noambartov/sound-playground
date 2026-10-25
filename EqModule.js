@@ -10,6 +10,8 @@ const EQ_FMAX = 20000;
 const eqFreq = pos => EQ_FMIN * Math.pow(EQ_FMAX / EQ_FMIN, pos / 100);
 const eqPos = f => 100 * Math.log(f / EQ_FMIN) / Math.log(EQ_FMAX / EQ_FMIN);
 const eqHz = f => (f >= 1000 ? `${(f / 1000).toFixed(f >= 10000 ? 0 : 1)} kHz` : `${Math.round(f)} Hz`);
+// Typing a frequency in Hz into a readout (valueEntry.js)
+const EQ_ENTRY = { unit: 'Hz', decimals: 0, fromSlider: eqFreq, toSlider: eqPos };
 const eqDb = v => `${v > 0 ? '+' : ''}${v} dB`;
 const EQ_RANGE = 18;   // the display shows -18..+18 dB
 
@@ -28,18 +30,18 @@ class EqModule extends ModuleBase {
     width: 400,
     menu: { group: 'Processors & Effects', label: 'EQ' },
     params: [
-      { id: 'low_freq', label: 'Low Freq', min: 0, max: 100, step: 0.1, value: +eqPos(100).toFixed(1), format: v => eqHz(eqFreq(v)) },
+      { id: 'low_freq', label: 'Low Freq', min: 0, max: 100, step: 0.1, value: +eqPos(100).toFixed(1), format: v => eqHz(eqFreq(v)), entry: EQ_ENTRY },
       { id: 'low_gain', label: 'Low Gain', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb },
-      { id: 'm1_freq', label: 'Mid 1 Freq', min: 0, max: 100, step: 0.1, value: +eqPos(400).toFixed(1), format: v => eqHz(eqFreq(v)) },
+      { id: 'm1_freq', label: 'Mid 1 Freq', min: 0, max: 100, step: 0.1, value: +eqPos(400).toFixed(1), format: v => eqHz(eqFreq(v)), entry: EQ_ENTRY },
       { id: 'm1_gain', label: 'Mid 1 Gain', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb },
       { id: 'm1_q', label: 'Mid 1 Q', min: 0.3, max: 10, step: 0.1, value: 1 },
-      { id: 'm2_freq', label: 'Mid 2 Freq', min: 0, max: 100, step: 0.1, value: +eqPos(2500).toFixed(1), format: v => eqHz(eqFreq(v)) },
+      { id: 'm2_freq', label: 'Mid 2 Freq', min: 0, max: 100, step: 0.1, value: +eqPos(2500).toFixed(1), format: v => eqHz(eqFreq(v)), entry: EQ_ENTRY },
       { id: 'm2_gain', label: 'Mid 2 Gain', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb },
       { id: 'm2_q', label: 'Mid 2 Q', min: 0.3, max: 10, step: 0.1, value: 1 },
-      { id: 'high_freq', label: 'High Freq', min: 0, max: 100, step: 0.1, value: +eqPos(8000).toFixed(1), format: v => eqHz(eqFreq(v)) },
+      { id: 'high_freq', label: 'High Freq', min: 0, max: 100, step: 0.1, value: +eqPos(8000).toFixed(1), format: v => eqHz(eqFreq(v)), entry: EQ_ENTRY },
       { id: 'high_gain', label: 'High Gain', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb },
-      { id: 'lowcut', label: 'Low Cut', min: 0, max: 60, step: 0.1, value: 0, format: v => (v <= 0 ? 'Off' : eqHz(eqFreq(v))) },
-      { id: 'highcut', label: 'High Cut', min: 40, max: 100, step: 0.1, value: 100, format: v => (v >= 100 ? 'Off' : eqHz(eqFreq(v))) },
+      { id: 'lowcut', label: 'Low Cut', min: 0, max: 60, step: 0.1, value: 0, format: v => (v <= 0 ? 'Off' : eqHz(eqFreq(v))), entry: EQ_ENTRY },
+      { id: 'highcut', label: 'High Cut', min: 40, max: 100, step: 0.1, value: 100, format: v => (v >= 100 ? 'Off' : eqHz(eqFreq(v))), entry: EQ_ENTRY },
       { id: 'output', label: 'Output', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb }
     ],
     inputs: [
@@ -152,7 +154,7 @@ class EqModule extends ModuleBase {
       if (!p) return '<span></span>';
       const v = this.params[id];
       return `<div class="eq-cell">
-          <span class="eq-readout" id="${this.elId(`v_${id}`)}">${this.formatParam(p, v)}</span>
+          <span class="eq-readout" id="${this.elId(`v_${id}`)}"${this.entryAttr(p)}>${this.formatParam(p, v)}</span>
           <input type="range" id="${this.elId(`p_${id}`)}" min="${p.min}" max="${p.max}" step="${p.step}" value="${v}" aria-label="${p.label}">
         </div>`;
     };

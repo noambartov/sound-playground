@@ -140,6 +140,13 @@ class FilterModule {
         }
     }
 
+    // Typing an exact cutoff into the readout (valueEntry.js)
+    getEntry(key) {
+        if (key !== 'cutoff') return null;
+        return { unit: 'Hz', decimals: 0, toSlider: f => this.freqToSlider(f), fromSlider: v => this.sliderToFreq(v),
+            get: () => this.freqToSlider(this.currentFreq) };
+    }
+
     renderHTML() {
         const currentSliderVal = this.freqToSlider(this.currentFreq);
         const displayFreq = Math.round(this.currentFreq);
@@ -166,19 +173,19 @@ class FilterModule {
                 </div>
 
                 <div class="control-group">
-                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Cutoff: <span><span id="cutoff_val_${this.id}">${displayFreq >= 1000 ? (displayFreq/1000).toFixed(1)+'k' : displayFreq}</span> Hz</span></label>
+                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Cutoff: <span data-entry="@cutoff"><span id="cutoff_val_${this.id}">${displayFreq >= 1000 ? (displayFreq/1000).toFixed(1)+'k' : displayFreq}</span> Hz</span></label>
                     <input type="range" min="0" max="1" step="0.001" value="${currentSliderVal}" 
                         oninput="synthApp.getModule('${this.id}').setCutoffFromSlider(this.value)">
                 </div>
 
                 <div class="control-group">
-                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Resonance (Q): <span id="q_val_${this.id}">${parseFloat(this.filterNode.Q.value).toFixed(1)}</span></label>
+                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Resonance (Q): <span id="q_val_${this.id}" data-entry="">${parseFloat(this.filterNode.Q.value).toFixed(1)}</span></label>
                     <input type="range" min="0.1" max="12" step="0.1" value="${this.filterNode.Q.value}" 
                         oninput="synthApp.getModule('${this.id}').setResonance(this.value); document.getElementById('q_val_${this.id}').innerText = parseFloat(this.value).toFixed(1);">
                 </div>
 
                 <div class="control-group">
-                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Mod Depth: <span id="mod_val_${this.id}">${Math.round(this.modDepth)}Hz</span></label>
+                    <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Mod Depth: <span id="mod_val_${this.id}" data-entry="unit:Hz">${Math.round(this.modDepth)}Hz</span></label>
                     <input type="range" min="0" max="10000" step="50" value="${this.modDepth}" 
                         oninput="synthApp.getModule('${this.id}').setModDepth(this.value)">
                 </div>

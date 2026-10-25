@@ -68,7 +68,7 @@ class VcaModule {
       </div>
       <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">
         <div class="control-group">
-          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Initial Gain: <span id="vca_val_${this.id}">${Math.round(this.gainNode.gain.value * 100)}%</span></label>
+          <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Initial Gain: <span id="vca_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(this.gainNode.gain.value * 100)}%</span></label>
           <input type="range" id="vca_gain_${this.id}" min="0" max="1" step="0.01" value="${this.gainNode.gain.value}">
         </div>
 

@@ -115,6 +115,26 @@ class ModuleBase {
     return `${value}${p.unit ? ' ' + p.unit : ''}`;
   }
 
+  // Tapping a slider's readout opens a box to type an exact value (valueEntry.js).
+  // A param can tune the box with entry: { unit, step, decimals, toSlider, fromSlider, format, parse },
+  // or switch it off with entry: false.
+  entryAttr(p) {
+    return p && p.entry !== false ? ` data-entry="@${p.id}"` : '';
+  }
+
+  getEntry(id) {
+    const p = this.paramDef(id);
+    if (!p || p.entry === false) return null;
+    const e = p.entry || {};
+    let unit = p.unit || '';
+    if (!unit && p.format) {
+      // The words around the number in the readout, e.g. "ms" in "150 ms"
+      const sample = this.formatParam(p, p.max);
+      if (/\d/.test(sample)) unit = sample.replace(/^[^\d+\-.]*/, '').replace(/[+\-]?\d+(\.\d+)?/, '').trim();
+    }
+    return Object.assign({ unit, get: () => this.params[id] }, e);
+  }
+
   // Sets a control's value, updates its readout and (unless it came from that control) its widget
   setParam(id, value, fromControl = false) {
     const p = this.paramDef(id);
@@ -168,7 +188,7 @@ class ModuleBase {
         </div>`;
     }
     return `<div class="control-group">
-        <label class="module-label">${p.label}: <span id="${this.elId(`v_${p.id}`)}">${this.formatParam(p, v)}</span></label>
+        <label class="module-label">${p.label}: <span id="${this.elId(`v_${p.id}`)}"${this.entryAttr(p)}>${this.formatParam(p, v)}</span></label>
         <input type="range" id="${this.elId(`p_${p.id}`)}" min="${p.min}" max="${p.max}" step="${p.step || 1}" value="${v}">
       </div>`;
   }

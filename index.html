@@ -23,7 +23,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.45">
+  <link rel="stylesheet" href="styles.css?v=3.46">
 </head>
 <body class="light-theme">
 
@@ -121,6 +121,9 @@
     </div>
   </main>
 
+  <!-- Group delete: shown while 2+ modules are selected (touch-friendly twin of the Delete key) -->
+  <button id="delete-selected-btn" type="button" style="display: none;">Delete modules</button>
+
   <!-- Dynamic Bilingual Help Modal / Manual & Presets -->
   <div id="help-modal" class="help-modal-overlay modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
     <div class="help-modal-container modal-content">
@@ -193,7 +196,7 @@
 
   <!-- Main Application -->
   <script src="modulation.js?v=2"></script>
-  <script src="app.js?v=39"></script>
+  <script src="app.js?v=40"></script>
   <script src="improbability.js?v=2"></script>
   <script src="presetTips.js?v=7"></script>
   <script src="onboarding.js?v=6"></script>

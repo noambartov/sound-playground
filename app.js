@@ -967,6 +967,7 @@ if (!window.SoundSandboxApp) {
     // Deleting modules by hand (× or Delete key), behind the same short master fade
     removeModules(ids) {
       this.withAudioFade(() => ids.forEach(id => { if (this.modules[id]) this.deleteNode(id); }));
+      this.updateDeleteSelectedButton();
     }
 
     clearWorkspace() {
@@ -978,6 +979,7 @@ if (!window.SoundSandboxApp) {
       this.connections = [];
       this.selectedNodeIds.clear();
       this.selectedConnection = null;
+      this.updateDeleteSelectedButton();
       this.updatePortConnectedClasses();
       this.drawConnections();
     }
@@ -1894,6 +1896,25 @@ if (!window.SoundSandboxApp) {
           else card.classList.remove('selected');
         }
       });
+      this.updateDeleteSelectedButton();
+    }
+
+    // "Delete N modules" button at the bottom centre, visible only while 2+ modules are selected.
+    updateDeleteSelectedButton() {
+      const btn = this.deleteSelectedBtn || (this.deleteSelectedBtn = document.getElementById('delete-selected-btn'));
+      if (!btn) return;
+      if (!btn.dataset.wired) {
+        btn.dataset.wired = '1';
+        btn.addEventListener('click', () => {
+          const ids = Array.from(this.selectedNodeIds).filter(id => this.modules[id]);
+          this.selectedNodeIds.clear();
+          this.removeModules(ids);
+          this.updateSelectionUI();
+        });
+      }
+      const count = Array.from(this.selectedNodeIds).filter(id => this.modules[id]).length;
+      btn.textContent = `Delete ${count} modules`;
+      btn.style.display = count >= 2 ? 'block' : 'none';
     }
 
     // The module the user touches last is drawn above all others, so a moved module

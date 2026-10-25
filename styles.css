@@ -1177,6 +1177,88 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: #fff;
 }
 
+/* Harmonics (HarmonicsModule.js): one row per partial, its jack at the end of the row */
+.harm-head,
+.harm-row {
+  display: grid;
+  grid-template-columns: 30px 1fr 44px 40px 64px;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.harm-head {
+  color: var(--muted-text);
+  font-weight: 600;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 4px;
+}
+
+.harm-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.harm-n,
+.harm-note {
+  font-weight: 700;
+}
+
+.harm-cents {
+  color: var(--muted-text);
+  text-align: right;
+}
+
+.harm-jack .port-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Timbre (TimbreModule.js): the recipe as 8 bars, partial 1 on the left */
+.timbre-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 90px;
+  padding: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md, 8px);
+}
+
+.timbre-bar {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted-text);
+}
+
+.timbre-fill {
+  width: 100%;
+  min-height: 1px;
+  background: var(--primary-color);
+  border-radius: 3px 3px 0 0;
+  transition: height 0.35s ease-out;
+}
+
+.timbre-text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted-text);
+  min-height: 2.8em;
+}
+
 /* Ribbon */
 .ribbon-strip {
   width: 100%;

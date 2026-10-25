@@ -1221,7 +1221,23 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-weight: 700;
 }
 
-/* Timbre (TimbreModule.js): the recipe as 8 bars, partial 1 on the left */
+/* Harmonics Partials buttons (8 / 12 / 16) */
+.harm-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.harm-count .module-label {
+  flex: 1;
+}
+
+.harm-count-btn {
+  min-width: 40px;
+  padding: 4px 8px;
+}
+
+/* Timbre (TimbreModule.js): the recipe as 8, 12 or 16 bars, partial 1 on the left */
 .timbre-bars {
   display: flex;
   align-items: flex-end;
@@ -1243,6 +1259,14 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   font-size: 10px;
   font-weight: 700;
   color: var(--muted-text);
+}
+
+.timbre-bars-many {
+  gap: 2px;
+}
+
+.timbre-bars-many .timbre-bar {
+  font-size: 9px;
 }
 
 .timbre-fill {

@@ -1192,6 +1192,53 @@ if (!window.SoundSandboxApp) {
       });
     }
 
+    // A module grew (Harmonics got more partials, the Mixer more channels): every card it now
+    // covers glides right or down (whichever is the shorter move) to 30 px past it, and a card
+    // moved this way pushes on in turn. The grown cards themselves stay put. If a grown card is
+    // then partly off screen, the view zooms out to show the whole patch (owner's request 2026-10-25).
+    makeRoomFor(ids) {
+      const GAP = 30;
+      const rect = c => ({ l: parseFloat(c.style.left || c.offsetLeft), t: parseFloat(c.style.top || c.offsetTop), w: c.offsetWidth, h: c.offsetHeight });
+      const hits = (a, b) => a.l < b.l + b.w && a.l + a.w > b.l && a.t < b.t + b.h && a.t + a.h > b.t;
+      const fixed = new Set(ids.map(id => this.modules[id] && this.modules[id].card).filter(Boolean));
+      const pos = new Map();
+      Object.values(this.modules).forEach(m => { if (m.card) pos.set(m.card, rect(m.card)); });
+      const queue = Array.from(fixed);
+      const moved = new Set();
+      for (let guard = 0; queue.length && guard < 500; guard++) {
+        const g = pos.get(queue.shift());
+        pos.forEach((r, card) => {
+          if (fixed.has(card) || r === g || !hits(g, r)) return;
+          const dx = g.l + g.w + GAP - r.l, dy = g.t + g.h + GAP - r.t;
+          if (dx <= dy) r.l += dx; else r.t += dy;
+          moved.add(card);
+          queue.push(card);
+        });
+      }
+      moved.forEach(card => {
+        void card.offsetLeft;
+        card.classList.add('arranging');
+        card.style.left = `${Math.round(pos.get(card).l)}px`;
+        card.style.top = `${Math.round(pos.get(card).t)}px`;
+      });
+      const until = performance.now() + 450;
+      const step = () => {
+        this.drawConnections();
+        if (performance.now() < until) { requestAnimationFrame(step); return; }
+        moved.forEach(card => card.classList.remove('arranging'));
+        // Zoom out when a grown card no longer fits in the free part of the screen
+        const c = this.canvasContainer.getBoundingClientRect();
+        const free = this.getFreeViewRect();
+        const hidden = Array.from(fixed).some(card => {
+          const r = card.getBoundingClientRect();
+          return r.left - c.left < free.left || r.top - c.top < free.top || r.right - c.left > free.right || r.bottom - c.top > free.bottom;
+        });
+        if (hidden) { this.fitToModules(); this.drawConnections(); }
+      };
+      requestAnimationFrame(step);
+      this.scheduleHistoryCapture();
+    }
+
     closeModal() {
       const modals = document.querySelectorAll('.modal, #help-modal, #preset-modal, .modal-overlay, [data-modal]');
       modals.forEach(modal => {

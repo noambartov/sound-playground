@@ -26,18 +26,62 @@ class MixerModule {
         this.addChannelData();
 
         // TIMBRE input (TimbreModule.js): not sound but a list of levels for faders 1, 2, 3, ...
-        this.timbreInput = { setTimbreLevels: levels => this.applyTimbreLevels(levels) };
+        // A TimbreBus attaches itself on connect, so the Timbre card can show as many bars as
+        // there are partials here (partialCount) and the Mixer can read the recipe (timbreLevels).
+        this.timbreBuses = new Set();
+        this.timbreCount = 8;
+        this.timbreInput = {
+            setTimbreLevels: levels => this.applyTimbreLevels(levels),
+            attachBus: bus => { this.timbreBuses.add(bus); },
+            detachBus: bus => { this.timbreBuses.delete(bus); },
+            partialCount: () => this.partialCount()
+        };
     }
 
-    // Moves the channel faders to a Timbre recipe (adding channels if the recipe has more).
-    // The sound changes at once; the faders on the card glide there so the change can be seen.
+    // How many partials this Mixer plays: the largest Partials setting (8 / 12 / 16) of the
+    // Harmonics modules cabled into it, 8 without any.
+    partialCount() {
+        const app = window.synthApp;
+        let n = 0;
+        if (app) app.connections.forEach(c => {
+            if (c.toNode !== this.id) return;
+            const mod = app.modules[c.fromNode];
+            if (mod && mod.type === 'harmonics' && mod.instance) n = Math.max(n, mod.instance.count || 8);
+        });
+        return n || 8;
+    }
+
+    // Run on every cable change (setLabelHints): a Timbre card redraws when the count changed
+    refreshTimbreCount() {
+        const n = this.partialCount();
+        if (n === this.timbreCount) return;
+        this.timbreCount = n;
+        this.timbreBuses.forEach(b => b.changed());
+    }
+
+    // New partial channels (Harmonics got more partials): their faders start at the recipe of
+    // the Timbre plugged into TIMBRE, or at 0 (silent until raised) without one.
+    setNewPartialFaders(list) {
+        const bus = this.timbreBuses.values().next().value;
+        const levels = bus ? bus.getLevels() : [];
+        this.glideFaders(list.map(e => ({ ch: e.ch, level: levels[e.partial - 1] || 0 })));
+        this.refreshTimbreCount();
+    }
+
+    // Moves the channel faders to a Timbre recipe, as many partials as this Mixer plays
+    // (adding channels if needed).
     applyTimbreLevels(levels) {
         if (!Array.isArray(levels)) return;
-        while (this.channelCount < levels.length) this.addChannelUI();
+        this.glideFaders(levels.slice(0, this.partialCount()).map((level, i) => ({ ch: i + 1, level })));
+    }
+
+    // Sets channel volumes at once; the faders on the card glide there so the change can be seen.
+    glideFaders(list) {
+        if (!list.length) return;
+        while (this.channelCount < Math.max(...list.map(e => e.ch))) this.addChannelUI();
         const card = document.getElementById(`module_card_${this.id}`);
         const glides = [];
-        levels.forEach((v, i) => {
-            const ch = i + 1;
+        list.forEach(({ ch, level: v }) => {
             const level = Math.round(Math.max(0, Math.min(1, v)) * 100) / 100;
             this.setChannelVolume(ch, level);
             const slider = card ? card.querySelector(`input[type="range"][oninput*="setChannelVolume(${ch},"]`) : null;
@@ -125,6 +169,7 @@ class MixerModule {
     // Called by the app whenever cables change: an empty box shows the plugged-in module's name, greyed.
     setLabelHints(hints) {
         this.labelHints = hints || {};
+        this.refreshTimbreCount();
         const card = document.getElementById(`module_card_${this.id}`);
         if (!card) return;
         card.querySelectorAll('.mixer-ch-label').forEach(input => {

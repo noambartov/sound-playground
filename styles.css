@@ -1277,6 +1277,15 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   transition: height 0.35s ease-out;
 }
 
+.timbre-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.timbre-btns .action-btn {
+  flex: 1;
+}
+
 .timbre-text {
   font-size: 11px;
   line-height: 1.4;

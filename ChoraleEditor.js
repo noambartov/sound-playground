@@ -14,6 +14,12 @@ const CHE_X0 = 44;                // the note-name strip on the left
 const CHE_MAX_LEN = 1024;         // 64 bars
 const CHE_LEN_NAMES = { 1: '1/16', 2: '1/8', 3: 'dotted 1/8', 4: '1/4', 6: 'dotted 1/4', 8: '1/2', 12: 'dotted 1/2', 16: 'whole', 24: 'dotted whole' };
 const CHE_TOOLS = { arrow: 'Arrow', pencil: 'Pencil', eraser: 'Eraser' };
+// The tool buttons are simple line drawings (the owner asked for icons here; the name stays as a tooltip)
+const CHE_TOOL_ICONS = {
+  arrow: '<path d="M6 3 L6 18 L10 14 L13 21 L15.5 20 L12.5 13 L18 13 Z"/>',
+  pencil: '<path d="M4 20 L5 15 L16 4 L20 8 L9 19 Z"/><path d="M14 6 L18 10"/><path d="M5 15 L9 19"/>',
+  eraser: '<path d="M3 15 L12 6 L19 13 L12 20 L8 20 Z"/><path d="M7.5 10.5 L14.5 17.5"/><path d="M12 20 L21 20"/>'
+};
 
 class ChoraleEditor {
   constructor(mod) {
@@ -200,7 +206,8 @@ class ChoraleEditor {
 
   build() {
     const voices = [3, 2, 1, 0].map(k => `<button class="action-btn che-btn che-voice" data-v="${k}">${CH_VOICE_NAMES[k]}</button>`).join('');
-    const tools = Object.keys(CHE_TOOLS).map(t => `<button class="action-btn che-btn che-tool" data-tool="${t}">${CHE_TOOLS[t]}</button>`).join('');
+    const tools = Object.keys(CHE_TOOLS).map(t => `<button class="action-btn che-btn che-tool" data-tool="${t}" title="${CHE_TOOLS[t]}" aria-label="${CHE_TOOLS[t]}">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">${CHE_TOOL_ICONS[t]}</svg></button>`).join('');
     const el = document.createElement('div');
     el.className = 'che-overlay';
     el.innerHTML = `

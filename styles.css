@@ -1919,6 +1919,15 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   touch-action: manipulation;
 }
 
+.che-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+}
+
+.che-tool svg { display: block; }
+
 .che-btn.active {
   background: var(--primary-color);
   border-color: var(--primary-color);

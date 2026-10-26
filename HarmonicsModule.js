@@ -183,6 +183,11 @@ class HarmonicsModule extends ModuleBase {
   setCount(n, fromUser) {
     const app = window.synthApp;
     const old = this.count;
+    const partialOf = c => { const m = String((c.fromPortInfo || {}).id || '').match(/^h(\d+)$/); return m ? parseInt(m[1], 10) : 0; };
+    // Partials no longer shown lose their cables, while their jacks are still on the card
+    // (the audio is unplugged through the jack, so it must exist when the cable is removed)
+    const mine = app ? app.connections.filter(c => c.fromNode === this.id && partialOf(c)) : [];
+    if (fromUser && app) mine.filter(c => partialOf(c) > n).forEach(c => app.deleteConnection(c));
     this.count = n;
     if (this.card) {
       this.card.querySelectorAll('.harm-count-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.count, 10) === n));
@@ -192,11 +197,7 @@ class HarmonicsModule extends ModuleBase {
       this.updateDisplay();
     }
     if (!fromUser || !app) return;
-    const partialOf = c => { const m = String((c.fromPortInfo || {}).id || '').match(/^h(\d+)$/); return m ? parseInt(m[1], 10) : 0; };
     const channelOf = c => { const i = c.toPortInfo || {}; const m = String(i.type || '').match(/^ch_in_(\d+)$/); return parseInt(i.channel || (m && m[1]), 10) || 0; };
-    const mine = app.connections.filter(c => c.fromNode === this.id && partialOf(c));
-    // Partials no longer shown lose their cables
-    mine.filter(c => partialOf(c) > n).forEach(c => app.deleteConnection(c));
     // Mixers fed by this module, and the channel H1 would sit in (from any partial's cable)
     const mixers = new Map();
     mine.filter(c => partialOf(c) <= old).forEach(c => {

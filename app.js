@@ -904,6 +904,14 @@ if (!window.SoundSandboxApp) {
           if (!wanted[id] || wanted[id].type !== this.modules[id].type) this.deleteNode(id);
         });
 
+        // Cables that go away are unplugged first, while every jack is still on its card
+        // (a module whose new state has fewer jacks, e.g. Harmonics back to 8, would otherwise
+        // leave the cable's sound plugged in, or unplug the wrong jack)
+        const wantedKeys = new Set(snap.connections.map(c => this.connectionKey(c)));
+        this.connections.slice().forEach(c => {
+          if (!wantedKeys.has(this.connectionKey(c))) this.deleteConnection(c);
+        });
+
         snap.modules.forEach(m => {
           let entry = this.modules[m.id];
           if (entry) {
@@ -923,10 +931,6 @@ if (!window.SoundSandboxApp) {
           if (this.modules[m.id] && (this.modules[m.id].name || '') !== (m.name || '')) this.setModuleName(m.id, m.name);
         });
 
-        const wantedKeys = new Set(snap.connections.map(c => this.connectionKey(c)));
-        this.connections.slice().forEach(c => {
-          if (!wantedKeys.has(this.connectionKey(c))) this.deleteConnection(c);
-        });
         const existing = {};
         this.connections.forEach(c => { existing[this.connectionKey(c)] = c; });
         this.connections = snap.connections.map(c => {

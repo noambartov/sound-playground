@@ -169,6 +169,7 @@ class ChoraleModule extends ModuleBase {
     this.fixedOriginal = null;   // the algorithm's piece before the edits (Reset)
     this.undoStack = [];
     this.muted = [false, false, false, false];
+    this.solo = null;        // a voice heard alone (Edit's Solo)
 
     // ---- The choir: per voice two detuned saws with vibrato, three formant filters, an envelope ----
     this.bus = this.own(ctx.createGain());
@@ -303,7 +304,7 @@ class ChoraleModule extends ModuleBase {
 
   rewrite() {
     if (this.params.source === 'melody') this.harmonized = null;
-    // An edited piece stays as it is until New (in Edit) or a new recording
+    // An edited piece stays as it is until Original (in Edit) or a new recording
     if (this.fixed && this.params.source !== 'chords') {
       this.updateEnabled();
       this.updateReadout();
@@ -1051,7 +1052,7 @@ class ChoraleModule extends ModuleBase {
           });
           list.forEach(e => {
             if (e.start >= tk && e.start < tk + 1) {
-              const m = this.muted[k] ? null : this.resolve(e.midi, k);
+              const m = this.isSilent(k) ? null : this.resolve(e.midi, k);
               this.setVoice(k, m, t + (e.start - tk) * dur, false, true);
             }
           });
@@ -1313,6 +1314,17 @@ class ChoraleModule extends ModuleBase {
     this.fixed = null;
     this.fixedOriginal = null;
     if (this.editor) this.editor.close();
+  }
+
+  // Mute / Solo (in Edit): a silent voice sings nothing on the choir, its jacks or NOTES
+  isSilent(k) {
+    return this.muted[k] || (this.solo != null && this.solo !== k);
+  }
+
+  voicesChanged() {
+    if (!this.playing) return;
+    const t = this.audioCtx.currentTime;
+    for (let k = 0; k < 4; k++) if (this.isSilent(k)) this.setVoice(k, null, t, true);
   }
 
   openEditor() {
@@ -1694,6 +1706,7 @@ class ChoraleModule extends ModuleBase {
       s.original = ChoraleEditor.pack(this.fixedOriginal);
     }
     if (this.muted.some(Boolean)) s.muted = this.muted.slice();
+    if (this.solo != null) s.solo = this.solo;
     return s;
   }
 
@@ -1702,6 +1715,7 @@ class ChoraleModule extends ModuleBase {
     this.fixed = s.edited ? ChoraleEditor.unpack(this, s.edited) : null;
     this.fixedOriginal = this.fixed && s.original ? ChoraleEditor.unpack(this, s.original) : null;
     this.muted = [0, 1, 2, 3].map(k => !!(Array.isArray(s.muted) && s.muted[k]));
+    this.solo = [0, 1, 2, 3].includes(s.solo) ? s.solo : null;
     if (this.fixed || Array.isArray(s.muted)) {
       this.updateEnabled();
       this.updateReadout();

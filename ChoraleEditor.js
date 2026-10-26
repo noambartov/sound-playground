@@ -1,28 +1,32 @@
-// ChoraleEditor.js - the Chorale's big editor (the Edit button on ChoraleModule.js). The piece fills the
-// screen as a piano roll of the four voices. Tap a note to select it, drag it to move it in time and pitch,
-// drag its right end to change its length, double-tap an empty place to add a note to the chosen voice.
-// The first change freezes the piece: from then on the Chorale loops it as it is (and saves it in the
-// patch) until New. With Others follow on, the voices nobody edited are written again around each
-// edited note (a chord that holds the edited notes, voiced by the Chorale's own voice leading); edited
-// notes are marked and never moved by it. Reset goes back to the algorithm's piece, Undo steps back.
-// Longer x2 / Shorter /2 stretch the whole piece, + Bar / - Bar add or cut a bar at the end.
+// ChoraleEditor.js - the Chorale's big editor (the Edit button on ChoraleModule.js), made like a piano
+// roll in Logic. The piece fills the screen; you edit one voice at a time (Soprano, Alto, Tenor, Bass;
+// the others are faded) with three tools: Arrow (select, drag to move in time and pitch, drag the right
+// end to change the length), Pencil (tap to add a note, drag to draw its length) and Eraser (tap or drag
+// over notes to delete them). Grid sets the snap. Mute and Solo per voice. Follow this voice writes the
+// other voices again under the chosen one (a chord that holds its notes, voiced by the Chorale's own voice
+// leading; notes changed by hand stay), Original brings back the piece as the algorithm wrote it and hands
+// the music back to it (its settings rewrite it again).
+// The Length menu stretches the piece (x2, /2) or adds / cuts a bar at the end. The first change freezes
+// the piece: from then on the Chorale loops it as it is and saves it in the patch.
 
 const CHE_LO = 36, CHE_HI = 84;   // the pitch range shown (C2 to C6)
 const CHE_X0 = 44;                // the note-name strip on the left
 const CHE_MAX_LEN = 1024;         // 64 bars
 const CHE_LEN_NAMES = { 1: '1/16', 2: '1/8', 3: 'dotted 1/8', 4: '1/4', 6: 'dotted 1/4', 8: '1/2', 12: 'dotted 1/2', 16: 'whole', 24: 'dotted whole' };
+const CHE_TOOLS = { arrow: 'Arrow', pencil: 'Pencil', eraser: 'Eraser' };
 
 class ChoraleEditor {
   constructor(mod) {
     this.mod = mod;
     this.voice = 3;
     this.grid = 4;
-    this.follow = true;
+    this.tool = 'pencil';
     this.zoom = 1;
     this.sx = 0;
     this.sel = null;
     this.drag = null;
-    this.lastTap = null;
+    this.touches = new Map();
+    this.pinch = null;
     this.open = false;
   }
 
@@ -180,6 +184,9 @@ class ChoraleEditor {
   close() {
     if (!this.open) return;
     this.open = false;
+    this.drag = null;
+    this.pinch = null;
+    this.touches.clear();
     this.stopAudition();
     window.removeEventListener('keydown', this.onKey, true);
     window.removeEventListener('resize', this.onResize);
@@ -193,21 +200,19 @@ class ChoraleEditor {
 
   build() {
     const voices = [3, 2, 1, 0].map(k => `<button class="action-btn che-btn che-voice" data-v="${k}">${CH_VOICE_NAMES[k]}</button>`).join('');
-    const lens = [[1, '1/16'], [2, '1/8'], [4, '1/4'], [8, '1/2'], [16, 'Whole']]
-      .map(([v, n]) => `<button class="action-btn che-btn" data-len="${v}">${n}</button>`).join('');
+    const tools = Object.keys(CHE_TOOLS).map(t => `<button class="action-btn che-btn che-tool" data-tool="${t}">${CHE_TOOLS[t]}</button>`).join('');
     const el = document.createElement('div');
     el.className = 'che-overlay';
     el.innerHTML = `
       <div class="che-bar">
         <button class="action-btn che-btn che-play" data-a="play">Play</button>
         <button class="action-btn che-btn" data-a="undo">Undo</button>
-        <button class="action-btn che-btn" data-a="reset">Reset</button>
-        <button class="action-btn che-btn" data-a="new">New</button>
         <span class="che-gap"></span>
         ${voices}
         <button class="action-btn che-btn" data-a="mute">Mute</button>
+        <button class="action-btn che-btn" data-a="solo">Solo</button>
         <span class="che-gap"></span>
-        <button class="action-btn che-btn" data-a="follow">Others follow: On</button>
+        ${tools}
         <label class="che-label">Grid
           <select class="control-select che-grid">
             <option value="1">1/16</option><option value="2">1/8</option><option value="4" selected>1/4</option>
@@ -215,26 +220,18 @@ class ChoraleEditor {
           </select>
         </label>
         <span class="che-gap"></span>
-        <button class="action-btn che-btn" data-a="x2">Longer x2</button>
-        <button class="action-btn che-btn" data-a="half">Shorter /2</button>
-        <button class="action-btn che-btn" data-a="addbar">+ Bar</button>
-        <button class="action-btn che-btn" data-a="cutbar">- Bar</button>
-        <span class="che-gap"></span>
-        <button class="action-btn che-btn" data-a="zoomout">Zoom -</button>
-        <button class="action-btn che-btn" data-a="zoomin">Zoom +</button>
+        <button class="action-btn che-btn" data-a="follow">Follow this voice</button>
+        <button class="action-btn che-btn" data-a="original">Original</button>
+        <select class="control-select che-length">
+          <option value="" selected>Length</option>
+          <option value="x2">Longer x2</option>
+          <option value="half">Shorter /2</option>
+          <option value="addbar">+ Bar</option>
+          <option value="cutbar">- Bar</option>
+        </select>
         <button class="action-btn che-btn che-done" data-a="close">Done</button>
       </div>
-      <div class="che-bar che-selbar">
-        <span class="che-info"></span>
-        ${lens}
-        <button class="action-btn che-btn" data-len="dot">Dotted</button>
-        <span class="che-gap"></span>
-        <button class="action-btn che-btn" data-a="up">Up</button>
-        <button class="action-btn che-btn" data-a="down">Down</button>
-        <button class="action-btn che-btn" data-a="octup">Oct up</button>
-        <button class="action-btn che-btn" data-a="octdown">Oct down</button>
-        <button class="action-btn che-btn" data-a="delete">Delete</button>
-      </div>
+      <div class="che-info"></div>
       <div class="che-area"><canvas class="che-canvas"></canvas></div>
       <input type="range" class="che-scroll" min="0" max="1000" value="0" step="1">
     `;
@@ -250,11 +247,19 @@ class ChoraleEditor {
     el.addEventListener('click', e => {
       const b = e.target.closest('button');
       if (!b || b.disabled) return;
-      if (b.dataset.v != null) { this.voice = parseInt(b.dataset.v, 10); this.updateBar(); this.requestDraw(); return; }
-      if (b.dataset.len) { this.setLength(b.dataset.len); return; }
-      this.action(b.dataset.a);
+      if (b.dataset.v != null) { this.voice = parseInt(b.dataset.v, 10); this.sel = null; }
+      else if (b.dataset.tool) { this.tool = b.dataset.tool; this.sel = null; }
+      else { this.action(b.dataset.a); return; }
+      this.updateBar();
+      this.requestDraw();
     });
     el.querySelector('.che-grid').addEventListener('change', e => { this.grid = parseFloat(e.target.value); this.requestDraw(); });
+    const lenSel = el.querySelector('.che-length');
+    lenSel.addEventListener('change', () => {
+      const a = lenSel.value;
+      lenSel.value = '';
+      if (a) this.action(a);
+    });
     this.scrollEl.addEventListener('input', () => {
       this.sx = parseFloat(this.scrollEl.value) / 1000 * this.maxScroll();
       this.requestDraw();
@@ -262,9 +267,10 @@ class ChoraleEditor {
     this.cv.addEventListener('pointerdown', e => this.down(e));
     this.cv.addEventListener('pointermove', e => this.move(e));
     this.cv.addEventListener('pointerup', e => this.up(e));
-    this.cv.addEventListener('pointercancel', e => this.up(e));
+    this.cv.addEventListener('pointercancel', e => this.up(e, true));
     this.cv.addEventListener('wheel', e => {
       e.preventDefault();
+      if (e.ctrlKey) { this.zoomBy(Math.exp(-e.deltaY * 0.01), e.clientX - this.cv.getBoundingClientRect().left); return; }
       const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       this.scrollTo(this.sx + d);
     }, { passive: false });
@@ -352,16 +358,10 @@ class ChoraleEditor {
     const p = this.piece();
     return p ? p.events.findIndex(l => l.includes(n)) : -1;
   }
-
-  // An edited note goes in its place; with Others follow the other voices are written around it
+  // A changed note goes in its place and keeps a mark: Follow this voice never rewrites it
   commit(k, n) {
-    const p = this.mod.fixed;
     n.lock = true;
-    ChoraleEditor.place(p.events[k], n);
-    if (this.follow) {
-      if (p.part) this.followPart(k, n);
-      else this.followChorale(k, n);
-    }
+    ChoraleEditor.place(this.mod.fixed.events[k], n);
     this.done();
   }
 
@@ -392,28 +392,43 @@ class ChoraleEditor {
   }
 
   // Chorale styles: the chord slots under the edited note get a chord that holds it (and the other notes
-  // that must stay), and the free voices sing that chord, voiced from the chord before
-  followChorale(k, n) {
+  // A chord slot starts at t (the slot it falls in is split there)
+  splitAt(t) {
+    const p = this.mod.fixed;
+    const i = p.slots.findIndex(sl => sl.start < t - 1e-6 && sl.start + sl.dur > t + 1e-6);
+    if (i < 0) return;
+    const sl = p.slots[i];
+    const rest = sl.start + sl.dur - t;
+    sl.dur = t - sl.start;
+    p.slots.splice(i + 1, 0, { start: t, dur: rest, chord: sl.chord, v: sl.v.slice(), par: [] });
+  }
+
+  // Follow this voice: every chord gets one that holds the chosen voice's note there, and the other voices
+  // sing it, voiced from the chord before. Notes changed by hand (and the tune in Melody) stay.
+  // Arvo Part with the soprano: each melody note brings its tintinnabuli alto and mirrored tenor.
+  followVoice(k) {
+    this.begin();
     const mod = this.mod;
     const p = mod.fixed;
-    const s = n.start, e = n.start + n.len;
-    // A note that starts inside a chord starts a new one
-    const inside = p.slots.findIndex(sl => sl.start < s - 1e-6 && sl.start + sl.dur > s + 1e-6);
-    if (inside >= 0) {
-      const sl = p.slots[inside];
-      const rest = sl.start + sl.dur - s;
-      sl.dur = s - sl.start;
-      p.slots.splice(inside + 1, 0, { start: s, dur: rest, chord: sl.chord, v: sl.v.slice(), par: [] });
+    if (p.part && k === 3) {
+      p.events[3].slice().forEach(n => this.followPart(3, n));
+      this.done();
+      return;
     }
+    // A note of the voice on a beat, or a beat long or longer, starts a chord
+    p.events[k].forEach(n => { if (n.start % 4 < 1e-6 || n.len >= 4) this.splitAt(n.start); });
     const melody = mod.params.source === 'melody';
     p.slots.forEach((sl, i) => {
       const end = sl.start + sl.dur;
-      if (sl.start >= e - 1e-6 || end <= s + 1e-6) return;
       const kept = [0, 1, 2, 3].map(v => v === k || (melody && v === 3)
         || p.events[v].some(x => x.lock && x.start < end - 1e-6 && x.start + x.len > sl.start + 1e-6));
-      const at = Math.max(sl.start, s);
-      const fixed = [0, 1, 2, 3].map(v => (kept[v] ? ChoraleEditor.pitchAt(p.events[v], v === k ? at : sl.start) : null));
       if (kept.every(Boolean)) return;
+      let mk = ChoraleEditor.pitchAt(p.events[k], sl.start);
+      if (mk == null) {
+        const first = p.events[k].find(x => x.start >= sl.start - 1e-6 && x.start < end - 1e-6);
+        mk = first ? first.midi : null;
+      }
+      const fixed = [0, 1, 2, 3].map(v => (v === k ? mk : kept[v] ? ChoraleEditor.pitchAt(p.events[v], sl.start) : null));
       const pcs = fixed.filter(m => m != null).map(m => ChoraleModule.mod(m, 12));
       const chord = this.chooseChord(pcs, sl.chord);
       const prevSl = p.slots[i - 1];
@@ -427,6 +442,7 @@ class ChoraleEditor {
       }
     });
     for (let f = 0; f < 4; f++) ChoraleEditor.mergeTies(p.events[f]);
+    this.done();
   }
 
   // Arvo Part: a melody (soprano) note brings its tintinnabuli note (alto) and its mirror (tenor) along
@@ -447,18 +463,6 @@ class ChoraleEditor {
     });
   }
 
-  setLength(which) {
-    const n = this.sel;
-    if (!n) return;
-    this.begin();
-    const sel = this.sel;
-    const k = this.voiceOf(sel);
-    const p = this.mod.fixed;
-    const len = which === 'dot' ? sel.len * 1.5 : parseFloat(which);
-    sel.len = Math.max(0.25, Math.min(len, p.len - sel.start));
-    this.commit(k, sel);
-  }
-
   transpose(d) {
     if (!this.sel) return;
     this.begin();
@@ -476,17 +480,6 @@ class ChoraleEditor {
     if (k >= 0) this.mod.fixed.events[k].splice(this.mod.fixed.events[k].indexOf(this.sel), 1);
     this.sel = null;
     this.done();
-  }
-
-  addNote(t, midi) {
-    const p = this.piece();
-    const g = this.grid >= 1 ? this.grid : 1;
-    const start = Math.max(0, Math.min(p.len - 0.25, Math.floor(t / (this.grid || 0.25)) * (this.grid || 0.25)));
-    this.begin();
-    const n = { start, len: Math.min(g, this.mod.fixed.len - start), midi };
-    this.sel = n;
-    this.audition(this.voice, midi, 0.35);
-    this.commit(this.voice, n);
   }
 
   // Augmentation (x2) / diminution (/2) of the whole piece
@@ -573,24 +566,14 @@ class ChoraleEditor {
     const mod = this.mod;
     if (!mod.fixedOriginal) return;
     mod.undoStack.push({ f: ChoraleEditor.pack(mod.fixed), o: ChoraleEditor.pack(mod.fixedOriginal) });
-    mod.fixed = ChoraleEditor.clone(mod.fixedOriginal);
-    this.sel = null;
-    if (mod.tick >= mod.fixed.len) mod.tick = 0;
-    this.done();
-    this.scrollTo(this.sx);
-  }
-
-  // Let the Chorale write a new piece with its current settings
-  newPiece() {
-    const mod = this.mod;
-    mod.undoStack.push({ f: ChoraleEditor.pack(mod.fixed), o: ChoraleEditor.pack(mod.fixedOriginal) });
+    // The Chorale is in charge again: it plays its own piece, and its settings rewrite it as before
+    mod.timeline = ChoraleEditor.clone(mod.fixedOriginal);
     mod.fixed = null;
     mod.fixedOriginal = null;
-    mod.timeline = mod.buildTimeline();
-    mod.tick = 0;
     this.sel = null;
+    if (mod.tick >= mod.timeline.len) mod.tick = 0;
     this.done();
-    this.scrollTo(0);
+    this.scrollTo(this.sx);
   }
 
   action(a) {
@@ -599,24 +582,20 @@ class ChoraleEditor {
     switch (a) {
       case 'play': if (mod.playing) mod.stop(); else mod.start(); break;
       case 'undo': this.undo(); break;
-      case 'reset': this.reset(); break;
-      case 'new': this.newPiece(); break;
+      case 'original': this.reset(); break;
+      case 'follow': this.followVoice(this.voice); break;
       case 'mute':
         mod.muted[this.voice] = !mod.muted[this.voice];
-        if (mod.muted[this.voice] && mod.playing) mod.setVoice(this.voice, null, mod.audioCtx.currentTime, true);
+        mod.voicesChanged();
         break;
-      case 'follow': this.follow = !this.follow; break;
+      case 'solo':
+        mod.solo = mod.solo === this.voice ? null : this.voice;
+        mod.voicesChanged();
+        break;
       case 'x2': if (p && p.len * 2 <= CHE_MAX_LEN) this.stretch(2); break;
       case 'half': if (p && p.len >= 8) this.stretch(0.5); break;
       case 'addbar': if (p && p.len + 16 <= CHE_MAX_LEN) this.addBar(); break;
       case 'cutbar': this.cutBar(); break;
-      case 'zoomin': this.zoomBy(1.5); break;
-      case 'zoomout': this.zoomBy(1 / 1.5); break;
-      case 'up': this.transpose(1); break;
-      case 'down': this.transpose(-1); break;
-      case 'octup': this.transpose(12); break;
-      case 'octdown': this.transpose(-12); break;
-      case 'delete': this.deleteSel(); break;
       case 'close': this.close(); return;
       default: return;
     }
@@ -624,10 +603,10 @@ class ChoraleEditor {
     this.requestDraw();
   }
 
-  zoomBy(f) {
-    const mid = this.tickAt(this.w / 2);
+  zoomBy(f, at = this.w / 2) {
+    const t = this.tickAt(at);
     this.zoom = Math.max(0.25, Math.min(6, this.zoom * f));
-    this.scrollTo(CHE_X0 + mid * this.ppt() - this.w / 2);
+    this.scrollTo(CHE_X0 + t * this.ppt() - at);
   }
 
   key(e) {
@@ -669,13 +648,14 @@ class ChoraleEditor {
     this.auditioning = null;
   }
 
-  // ---- Pointer ----
-  hit(x, y) {
+  // ---- Pointer: one finger edits with the tool, two fingers scroll and zoom (pinch) ----
+  // The note under (x, y): any voice with Arrow (the chosen one first), only the chosen voice otherwise
+  hit(x, y, onlyVoice) {
     const p = this.piece();
-    if (!p) return null;
+    if (!p || x < CHE_X0) return null;
     const rh = this.rowH();
     const pad = Math.max(0, (18 - rh) / 2);
-    const order = [this.voice].concat([3, 2, 1, 0].filter(k => k !== this.voice));
+    const order = onlyVoice ? [this.voice] : [this.voice].concat([3, 2, 1, 0].filter(k => k !== this.voice));
     for (const k of order) {
       for (const n of p.events[k]) {
         if (typeof n.midi !== 'number') continue;
@@ -696,45 +676,55 @@ class ChoraleEditor {
   }
 
   down(e) {
-    if (this.drag) return;
     e.preventDefault();
-    const { x, y } = this.pos(e);
     try { this.cv.setPointerCapture(e.pointerId); } catch (err) {}
-    const h = x > CHE_X0 ? this.hit(x, y) : null;
+    const { x, y } = this.pos(e);
+    this.touches.set(e.pointerId, { x, y });
+    if (this.touches.size === 2) { this.startPinch(); return; }
+    if (this.drag || this.pinch) return;
+    const base = { id: e.pointerId, cx: e.clientX, cy: e.clientY, x, y, moved: false };
+    if (this.tool === 'eraser') {
+      this.drag = Object.assign(base, { mode: 'erase', erased: false });
+      return;
+    }
+    const h = this.hit(x, y, this.tool !== 'arrow');
     if (h) {
       this.sel = h.n;
       this.voice = h.k;
-      this.drag = { mode: h.edge ? 'len' : 'move', id: e.pointerId, k: h.k, cx: e.clientX, cy: e.clientY, start: h.n.start, len: h.n.len, midi: h.n.midi, moved: false };
+      this.drag = Object.assign(base, { mode: h.edge ? 'len' : 'move', k: h.k, start: h.n.start, len: h.n.len, midi: h.n.midi });
       this.audition(h.k, h.n.midi, 0);
       this.updateBar();
       this.requestDraw();
       return;
     }
-    const now = performance.now();
-    const lt = this.lastTap;
-    if (lt && now - lt.t < 400 && Math.abs(lt.x - x) < 24 && Math.abs(lt.y - y) < 24 && x > CHE_X0) {
-      this.lastTap = null;
-      this.addNote(this.tickAt(x), this.midiAt(y));
+    if (this.tool === 'pencil' && x > CHE_X0) {
+      this.drag = Object.assign(base, { mode: 'draw' });
       return;
     }
-    this.lastTap = { t: now, x, y };
-    this.drag = { mode: 'pan', id: e.pointerId, cx: e.clientX, sx: this.sx, moved: false };
+    this.drag = Object.assign(base, { mode: 'pan', sx: this.sx });
   }
 
   move(e) {
+    const pt = this.touches.get(e.pointerId);
+    if (!pt) return;
+    const { x, y } = this.pos(e);
+    pt.x = x;
+    pt.y = y;
+    if (this.pinch) { this.movePinch(); return; }
     const d = this.drag;
     if (!d || e.pointerId !== d.id) return;
-    const dx = e.clientX - d.cx, dy = e.clientY - (d.cy || 0);
+    const dx = e.clientX - d.cx, dy = e.clientY - d.cy;
     if (!d.moved && Math.abs(dx) + Math.abs(d.mode === 'pan' ? 0 : dy) < 5) return;
-    if (d.mode === 'pan') {
-      d.moved = true;
-      this.scrollTo(d.sx - dx);
+    const first = !d.moved;
+    d.moved = true;
+    if (d.mode === 'pan') { this.scrollTo(d.sx - dx); return; }
+    if (d.mode === 'erase') { this.eraseAt(x, y); return; }
+    if (d.mode === 'draw') {
+      if (first) this.startNote(d);
+      this.drawLength(d, x);
       return;
     }
-    if (!d.moved) {
-      d.moved = true;
-      this.begin();   // freezes the piece: this.sel is now the frozen copy of the note
-    }
+    if (first) this.begin();   // freezes the piece: this.sel is now the frozen copy of the note
     const n = this.sel;
     const p = this.mod.fixed;
     if (!n) return;
@@ -753,20 +743,101 @@ class ChoraleEditor {
     this.mod.requestDraw();
   }
 
-  up(e) {
+  up(e, cancel) {
+    this.touches.delete(e.pointerId);
+    if (this.pinch) {
+      if (!this.touches.size) this.pinch = null;
+      return;
+    }
     const d = this.drag;
     if (!d || e.pointerId !== d.id) return;
     this.drag = null;
     this.stopAudition();
+    if (cancel) { if (d.moved && d.n) this.commit(this.voice, d.n); this.requestDraw(); return; }
     if (d.mode === 'pan') {
       if (!d.moved && this.sel) { this.sel = null; this.updateBar(); this.requestDraw(); }
+      return;
+    }
+    if (d.mode === 'erase') {
+      if (!d.moved) this.eraseAt(d.x, d.y);
+      return;
+    }
+    if (d.mode === 'draw') {
+      if (!d.moved) this.startNote(d);
+      this.commit(this.voice, d.n);
+      this.audition(this.voice, d.n.midi, 0.3);
       return;
     }
     if (d.moved && this.sel) this.commit(d.k, this.sel);
     this.requestDraw();
   }
 
-  // ---- The bars of buttons ----
+  // Pencil: a new note of the chosen voice where the finger went down, one grid step long
+  startNote(d) {
+    const p = this.piece();
+    const g = this.grid || 0.25;
+    const start = Math.max(0, Math.min(p.len - g, Math.floor(this.tickAt(d.x) / g) * g));
+    this.begin();
+    const n = { start, len: Math.min(this.grid >= 1 ? this.grid : 1, this.mod.fixed.len - start), midi: this.midiAt(d.y) };
+    this.mod.fixed.events[this.voice].push(n);
+    this.sel = n;
+    d.n = n;
+    this.audition(this.voice, n.midi, 0);
+    this.requestDraw();
+  }
+
+  // Pencil drag: the note reaches to where the finger is (at least one grid step)
+  drawLength(d, x) {
+    const n = d.n;
+    const g = this.grid || 0.25;
+    const end = Math.max(n.start + g, Math.min(this.mod.fixed.len, Math.ceil(this.tickAt(x) / g - 1e-6) * g));
+    n.len = end - n.start;
+    this.updateInfo();
+    this.requestDraw();
+    this.mod.requestDraw();
+  }
+
+  // Eraser: deletes the chosen voice's note under the finger
+  eraseAt(x, y) {
+    let h = this.hit(x, y, true);
+    if (!h) return;
+    const d = this.drag;
+    if (!d || !d.erased) {
+      this.begin();   // one Undo step for a whole eraser stroke (and the piece is frozen now)
+      h = this.hit(x, y, true);
+      if (!h) return;
+    }
+    if (d) d.erased = true;
+    const list = this.mod.fixed.events[h.k];
+    list.splice(list.indexOf(h.n), 1);
+    if (this.sel === h.n) this.sel = null;
+    this.done();
+  }
+
+  startPinch() {
+    const d = this.drag;
+    this.drag = null;
+    this.stopAudition();
+    // A drag the first finger had begun is kept as it is
+    if (d && d.moved && (d.mode === 'move' || d.mode === 'len') && this.sel) this.commit(d.k, this.sel);
+    else if (d && d.moved && d.mode === 'draw' && d.n) this.commit(this.voice, d.n);
+    const [a, b] = Array.from(this.touches.values());
+    this.pinch = { dist: Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), mid: (a.x + b.x) / 2, zoom: this.zoom, sx: this.sx };
+    this.pinch.tick = this.tickAt(this.pinch.mid);
+  }
+
+  movePinch() {
+    const pts = Array.from(this.touches.values());
+    if (pts.length < 2) return;
+    const [a, b] = pts;
+    const pc = this.pinch;
+    const dist = Math.max(20, Math.hypot(a.x - b.x, a.y - b.y));
+    const mid = (a.x + b.x) / 2;
+    this.zoom = Math.max(0.25, Math.min(6, pc.zoom * dist / pc.dist));
+    this.scrollTo(CHE_X0 + pc.tick * this.ppt() - mid);
+  }
+
+  // ---- The bar of buttons ----
   updateBar() {
     if (!this.el) return;
     const mod = this.mod;
@@ -778,35 +849,44 @@ class ChoraleEditor {
     play.disabled = !!following;
     play.classList.toggle('active', mod.playing);
     q('[data-a="undo"]').disabled = !mod.undoStack.length;
-    q('[data-a="reset"]').disabled = !mod.fixedOriginal;
+    q('[data-a="original"]').disabled = !mod.fixedOriginal;
     this.el.querySelectorAll('.che-voice').forEach(b => b.classList.toggle('active', parseInt(b.dataset.v, 10) === this.voice));
+    this.el.querySelectorAll('.che-tool').forEach(b => b.classList.toggle('active', b.dataset.tool === this.tool));
+    const name = CH_VOICE_NAMES[this.voice];
     const mute = q('[data-a="mute"]');
     mute.classList.toggle('active', mod.muted[this.voice]);
-    mute.textContent = `Mute ${CH_VOICE_NAMES[this.voice]}`;
-    const follow = q('[data-a="follow"]');
-    follow.textContent = `Others follow: ${this.follow ? 'On' : 'Off'}`;
-    follow.classList.toggle('active', this.follow);
-    q('[data-a="x2"]').disabled = !p || p.len * 2 > CHE_MAX_LEN;
-    q('[data-a="half"]').disabled = !p || p.len < 8;
-    q('[data-a="addbar"]').disabled = !p || p.len + 16 > CHE_MAX_LEN;
-    q('[data-a="cutbar"]').disabled = !p || p.len <= 16;
-    this.el.querySelectorAll('.che-selbar button').forEach(b => { b.disabled = !this.sel; });
+    mute.textContent = `Mute ${name}`;
+    const solo = q('[data-a="solo"]');
+    solo.classList.toggle('active', mod.solo === this.voice);
+    solo.textContent = `Solo ${name}`;
+    q('[data-a="follow"]').textContent = `Follow ${name}`;
+    const opt = v => q(`.che-length option[value="${v}"]`);
+    opt('x2').disabled = !p || p.len * 2 > CHE_MAX_LEN;
+    opt('half').disabled = !p || p.len < 8;
+    opt('addbar').disabled = !p || p.len + 16 > CHE_MAX_LEN;
+    opt('cutbar').disabled = !p || p.len <= 16;
+    this.cv.style.cursor = this.tool === 'pencil' ? 'crosshair' : this.tool === 'eraser' ? 'not-allowed' : 'default';
     this.updateInfo();
   }
 
   updateInfo() {
     if (!this.info) return;
     const n = this.sel;
-    if (!n) {
-      this.info.textContent = 'Tap a note to select it. Drag it to move it, drag its right end to change its length. Double-tap an empty place to add a note.';
-      this.info.classList.add('che-hint');
+    const p = this.piece();
+    const bars = p ? `${+(p.len / 16).toFixed(2)} bars` : '';
+    if (!n || this.voiceOf(n) < 0) {
+      const hint = {
+        arrow: 'Arrow: tap a note to select it, drag it to move it, drag its right end to change its length. Drag an empty place to scroll.',
+        pencil: `Pencil: tap to add a ${CH_VOICE_NAMES[this.voice]} note, drag to the right to draw it longer. Drag a note to move it.`,
+        eraser: `Eraser: tap or drag over ${CH_VOICE_NAMES[this.voice]} notes to delete them.`
+      }[this.tool];
+      this.info.textContent = `${hint} Two fingers scroll and zoom. ${bars}`;
       return;
     }
-    this.info.classList.remove('che-hint');
     const k = this.voiceOf(n);
     const name = `${CH_NAMES[ChoraleModule.mod(n.midi, 12)]}${Math.floor(n.midi / 12) - 1}`;
     const len = CHE_LEN_NAMES[n.len] || `${+(n.len).toFixed(2)} sixteenths`;
-    this.info.textContent = `${k >= 0 ? CH_VOICE_NAMES[k] : ''} ${name}, ${len}`;
+    this.info.textContent = `${CH_VOICE_NAMES[k]} ${name}, ${len}. Up / Down arrow keys move it a half step, Delete removes it. ${bars}`;
   }
 
   // ---- Drawing ----
@@ -905,7 +985,7 @@ class ChoraleEditor {
     const order = [0, 1, 2, 3].filter(k => k !== this.voice).concat([this.voice]);
     order.forEach(k => {
       const active = k === this.voice;
-      g.globalAlpha = mod.muted[k] ? 0.15 : active ? 1 : 0.4;
+      g.globalAlpha = mod.isSilent(k) ? 0.15 : active ? 1 : 0.4;
       p.events[k].forEach(n => {
         let m = n.midi;
         if (m && typeof m === 'object') m = m.drone ? mod.resolve(m, 0) : m.tint != null ? mod.tintNote(m.tint, m.i, null, mod.partTriad(null)) : null;
@@ -927,7 +1007,7 @@ class ChoraleEditor {
           g.strokeRect(x0, y0 - 1.5, Math.max(4, x1 - x0), hh + 3);
           g.fillStyle = '#ef4444';
           g.fillRect(x1 - 5, y0 - 1.5, 5, hh + 3);
-          g.globalAlpha = mod.muted[k] ? 0.15 : active ? 1 : 0.4;
+          g.globalAlpha = mod.isSilent(k) ? 0.15 : active ? 1 : 0.4;
         }
       });
     });

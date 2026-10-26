@@ -165,6 +165,10 @@ class ChoraleModule extends ModuleBase {
     this.rec = null;
     this.history = [];       // live display (Chords source): the voices tick by tick
     this.vowelIndex = [0, 0, 0, 0];
+    this.fixed = null;       // an edited piece (Edit): { len, events, slots }, looped as it is
+    this.fixedOriginal = null;   // the algorithm's piece before the edits (Reset)
+    this.undoStack = [];
+    this.muted = [false, false, false, false];
 
     // ---- The choir: per voice two detuned saws with vibrato, three formant filters, an envelope ----
     this.bus = this.own(ctx.createGain());
@@ -299,6 +303,13 @@ class ChoraleModule extends ModuleBase {
 
   rewrite() {
     if (this.params.source === 'melody') this.harmonized = null;
+    // An edited piece stays as it is until New (in Edit) or a new recording
+    if (this.fixed && this.params.source !== 'chords') {
+      this.updateEnabled();
+      this.updateReadout();
+      this.requestDraw();
+      return;
+    }
     if (this.playing && this.params.source !== 'chords') {
       const at = this.tick;
       this.timeline = this.buildTimeline(true);
@@ -410,8 +421,10 @@ class ChoraleModule extends ModuleBase {
       for (let m = CH_RANGES[k][0]; m <= CH_RANGES[k][1]; m++) if (chord.pcs.includes(m % 12)) out.push(m);
       return out;
     };
-    const B = cands(0), T = cands(1), A = cands(2);
-    const S = o.soprano != null ? [o.soprano] : cands(3);
+    // o.fixed: notes that must stay (one per voice, null = free); o.soprano fixes only the soprano
+    const fixed = o.fixed || [null, null, null, o.soprano != null ? o.soprano : null];
+    const pick = k => (fixed[k] != null ? [fixed[k]] : cands(k));
+    const B = pick(0), T = pick(1), A = pick(2), S = pick(3);
     const st = this.style();
     const rules = this.rules();
     let best = null;
@@ -513,7 +526,7 @@ class ChoraleModule extends ModuleBase {
         }
       }
     }
-    return c + Math.random() * st.jitter;
+    return c + (o.steady ? 0 : Math.random() * st.jitter);
   }
 
   // Parallel fifths / octaves between two voicings, as voice pairs (for the display)
@@ -1014,17 +1027,36 @@ class ChoraleModule extends ModuleBase {
     if (src === 'chords' && !part) {
       this.liveTick(t);
     } else {
-      if (!this.timeline || this.tick >= this.timeline.len) {
-        this.tick = 0;
-        if (!this.timeline || src !== 'melody') this.timeline = this.buildTimeline();
+      let tl;
+      if (this.fixed && src !== 'chords') {
+        // An edited piece loops as it is
+        tl = this.fixed;
+        if (this.tick >= tl.len) this.tick = 0;
+      } else {
+        if (!this.timeline || this.tick >= this.timeline.len) {
+          this.tick = 0;
+          if (!this.timeline || src !== 'melody') this.timeline = this.buildTimeline();
+        }
+        tl = this.timeline;
       }
-      const tl = this.timeline;
       if (tl) {
+        const tk = this.tick;
         tl.events.forEach((list, k) => {
-          const ev = list.find(e => e.start === this.tick);
-          if (ev) this.setVoice(k, this.resolve(ev.midi, k), t, false, true);
+          // A note that ends here with nothing after it: the voice rests (edited pieces can have gaps)
+          list.forEach(e => {
+            const end = e.start + e.len;
+            if (end <= tk || end > tk + 1 || (end >= tl.len && tl !== this.fixed)) return;
+            const next = end >= tl.len ? end - tl.len : end;
+            if (!list.some(n => Math.abs(n.start - next) < 1e-6)) this.setVoice(k, null, t + (end - tk) * dur);
+          });
+          list.forEach(e => {
+            if (e.start >= tk && e.start < tk + 1) {
+              const m = this.muted[k] ? null : this.resolve(e.midi, k);
+              this.setVoice(k, m, t + (e.start - tk) * dur, false, true);
+            }
+          });
         });
-        const sl = tl.slots.find(s => s.start === this.tick);
+        const sl = tl.slots.find(s => s.start >= tk && s.start < tk + 1);
         if (sl) this.shownSlot = sl;
       }
     }
@@ -1253,6 +1285,7 @@ class ChoraleModule extends ModuleBase {
       const end = r.notes.reduce((a, n) => Math.max(a, n.start + n.len), 0);
       this.melody = r.notes;
       this.melodyLen = Math.max(16, Math.ceil(end / 16) * 16);
+      this.dropEdits();
       this.detectKey();
       this.rewrite();
       if (!this.follower.connected) this.start();
@@ -1266,10 +1299,25 @@ class ChoraleModule extends ModuleBase {
     if (this.rec) { clearTimeout(this.rec.quiet); this.stopMic(); this.rec = null; this.updateRecButton(); }
     this.melody = [];
     this.melodyLen = 0;
+    if (this.params.source === 'melody') this.dropEdits();
     if (this.params.source === 'melody' && this.playing) this.stop();
     this.timeline = null;
     this.updateReadout();
     this.requestDraw();
+  }
+
+  // A new tune replaces the edited piece (Undo in Edit can still bring it back)
+  dropEdits() {
+    if (!this.fixed) return;
+    this.undoStack.push({ f: ChoraleEditor.pack(this.fixed), o: ChoraleEditor.pack(this.fixedOriginal) });
+    this.fixed = null;
+    this.fixedOriginal = null;
+    if (this.editor) this.editor.close();
+  }
+
+  openEditor() {
+    if (!this.editor) this.editor = new ChoraleEditor(this);
+    this.editor.show();
   }
 
   // The key that fits the recorded notes best (Krumhansl profiles), kept within major / minor
@@ -1400,6 +1448,7 @@ class ChoraleModule extends ModuleBase {
         <button class="action-btn hw-play" id="${this.elId('play')}">Play</button>
         <button class="action-btn ch-rec" id="${this.elId('rec')}">Rec</button>
         <button class="action-btn ch-clear" id="${this.elId('clear')}">Clear</button>
+        <button class="action-btn ch-edit" id="${this.elId('edit')}">Edit</button>
         <span class="hw-chord" id="${this.elId('readout')}"></span>
       </div>
       <canvas id="${this.elId('display')}" class="ch-display" width="720" height="300"></canvas>
@@ -1431,6 +1480,8 @@ class ChoraleModule extends ModuleBase {
     if (rec) rec.addEventListener('click', () => this.toggleRec());
     const clear = this.el('clear');
     if (clear) clear.addEventListener('click', () => this.clearMelody());
+    const edit = this.el('edit');
+    if (edit) edit.addEventListener('click', () => this.openEditor());
     this.updateEnabled();
     this.updatePlayButton();
     this.updateRecButton();
@@ -1441,6 +1492,12 @@ class ChoraleModule extends ModuleBase {
   updateEnabled() {
     const clear = this.el('clear');
     if (clear) clear.disabled = !this.melody.length && !this.rec;
+    const edit = this.el('edit');
+    const src = this.params.source;
+    if (edit) {
+      edit.disabled = src === 'chords' || (src === 'melody' && !this.melody.length && !this.fixed) || !!this.rec;
+      edit.classList.toggle('active', !!this.fixed && src !== 'chords');
+    }
   }
 
   updatePlayButton() {
@@ -1470,6 +1527,8 @@ class ChoraleModule extends ModuleBase {
       text = this.rec.notes.length ? `Recording ${this.rec.notes.length} / ${CH_MAX_NOTES}` : (this.micCables ? 'Sing or play' : 'Play the Keyboard');
     } else if (this.params.source === 'melody' && !this.melody.length) {
       text = 'Press Rec';
+    } else if (this.fixed && this.params.source !== 'chords') {
+      text = this.playing && this.shownSlot && this.shownSlot.chord ? `${this.shownSlot.chord.label} in ${key}, edited` : `Edited, ${key}`;
     } else if (this.params.source === 'chords' && !this.playing) {
       text = 'Waiting for CHORDS';
     } else if (this.playing && this.shownSlot && this.shownSlot.chord) {
@@ -1481,6 +1540,7 @@ class ChoraleModule extends ModuleBase {
   }
 
   requestDraw() {
+    if (this.editor && this.editor.open) this.editor.requestDraw();
     if (this.drawPending || !this.card) return;
     this.drawPending = true;
     requestAnimationFrame(() => { this.drawPending = false; this.draw(); });
@@ -1532,7 +1592,8 @@ class ChoraleModule extends ModuleBase {
       g.textAlign = 'left';
       return;
     }
-    const tl = this.params.source === 'chords' && this.params.style !== 'part' ? null : (this.timeline || null);
+    const tl = this.params.source === 'chords' ? (this.params.style !== 'part' ? null : this.timeline || null)
+      : this.fixed || this.timeline || null;
     if (tl) {
       const xs = tk => x0 + tk / tl.len * (W - x0 - 6);
       // Chord names under the roll
@@ -1555,6 +1616,11 @@ class ChoraleModule extends ModuleBase {
         if (ev.midi && ev.midi.tint != null) m = this.tintNote(ev.midi.tint, ev.midi.i, null, this.partTriad(this.liveChord));
         if (m == null) return;
         bar(xs(ev.start), xs(ev.start + ev.len), m, colors[k]);
+        if (ev.lock) {   // a note changed in Edit
+          g.strokeStyle = text;
+          g.lineWidth = 1.5;
+          g.strokeRect(xs(ev.start) - 0.5, y(m) - 4.5, Math.max(3, xs(ev.start + ev.len) - xs(ev.start) - 1), 9);
+        }
       }));
       // Parallels: a red line joining the two voices on each side of the chord change
       g.strokeStyle = '#ef4444';
@@ -1562,6 +1628,7 @@ class ChoraleModule extends ModuleBase {
       tl.slots.forEach((sl, i) => (sl.par || []).forEach(([a, b]) => {
         const p = tl.slots[i - 1];
         [a, b].forEach(k => {
+          if (p.v[k] == null || sl.v[k] == null) return;
           g.beginPath();
           g.moveTo(xs(sl.start) - 10, y(p.v[k]));
           g.lineTo(xs(sl.start) + 10, y(sl.v[k]));
@@ -1621,10 +1688,25 @@ class ChoraleModule extends ModuleBase {
   }
 
   getExtraState() {
-    return { melody: this.melody.map(n => [n.midi, n.start, n.len]), melodyLen: this.melodyLen };
+    const s = { melody: this.melody.map(n => [n.midi, n.start, n.len]), melodyLen: this.melodyLen };
+    if (this.fixed) {
+      s.edited = ChoraleEditor.pack(this.fixed);
+      s.original = ChoraleEditor.pack(this.fixedOriginal);
+    }
+    if (this.muted.some(Boolean)) s.muted = this.muted.slice();
+    return s;
   }
 
   setExtraState(s) {
+    if (!s) return;
+    this.fixed = s.edited ? ChoraleEditor.unpack(this, s.edited) : null;
+    this.fixedOriginal = this.fixed && s.original ? ChoraleEditor.unpack(this, s.original) : null;
+    this.muted = [0, 1, 2, 3].map(k => !!(Array.isArray(s.muted) && s.muted[k]));
+    if (this.fixed || Array.isArray(s.muted)) {
+      this.updateEnabled();
+      this.updateReadout();
+      this.requestDraw();
+    }
     if (Array.isArray(s.melody)) {
       this.melody = s.melody.filter(n => Array.isArray(n) && n.length === 3).slice(0, CH_MAX_NOTES)
         .map(([midi, start, len]) => ({ midi, start, len }));
@@ -1644,6 +1726,7 @@ class ChoraleModule extends ModuleBase {
 
   destroy() {
     this.destroyed = true;
+    if (this.editor) this.editor.close();
     this.playing = false;
     if (this.timer) clearInterval(this.timer);
     clearInterval(this.driftTimer);

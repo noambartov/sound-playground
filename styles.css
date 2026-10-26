@@ -1941,21 +1941,16 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 
 .che-label .control-select { width: auto; }
 
-.che-selbar {
-  padding-top: 6px;
-  border-top: 1px solid var(--panel-border);
-}
+.che-length { width: auto; }
 
 .che-info {
-  min-width: 150px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.che-info.che-hint {
-  flex-basis: 100%;
+  min-height: 18px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--muted-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .che-area {

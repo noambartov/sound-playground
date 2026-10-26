@@ -1889,6 +1889,97 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   color: var(--muted-text);
 }
 
+/* Chorale editor (ChoraleEditor.js): a full-screen piano roll over everything */
+.che-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  background: var(--panel-bg);
+  color: var(--text-color);
+  direction: ltr;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.che-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.che-btn {
+  width: auto;
+  padding: 6px 10px;
+  font-size: 13px;
+  touch-action: manipulation;
+}
+
+.che-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+.che-btn:disabled { opacity: 0.4; cursor: default; }
+
+.che-done { margin-left: auto; }
+
+.che-gap { width: 8px; }
+
+.che-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.che-label .control-select { width: auto; }
+
+.che-selbar {
+  padding-top: 6px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.che-info {
+  min-width: 150px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.che-info.che-hint {
+  flex-basis: 100%;
+  font-weight: 500;
+  color: var(--muted-text);
+}
+
+.che-area {
+  flex: 1;
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.che-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  touch-action: none;
+}
+
+.che-scroll {
+  width: 100%;
+  margin: 0;
+}
+
 /* Wavetable Osc (WavetableModule.js): the stacked-waves display */
 .wt-display {
   width: 100%;

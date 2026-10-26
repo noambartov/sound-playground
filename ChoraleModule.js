@@ -304,8 +304,10 @@ class ChoraleModule extends ModuleBase {
 
   rewrite() {
     if (this.params.source === 'melody') this.harmonized = null;
-    // An edited piece stays as it is until Original (in Edit) or a new recording
+    // An edited piece: Key / Mode move it, the other settings write it again around the notes changed by hand
     if (this.fixed && this.params.source !== 'chords') {
+      if (!this.editor) this.editor = new ChoraleEditor(this);
+      this.editor.applySettings();
       this.updateEnabled();
       this.updateReadout();
       this.requestDraw();

@@ -37,11 +37,22 @@ class ChoraleEditor {
   }
 
   // ---- The piece as data ----
+  // The settings a piece was written in: Key / Mode (for moving it to a new key) and the rest (for rewriting)
+  static stamp(mod) {
+    const q = mod.params;
+    return {
+      key: String(q.key),
+      mode: String(q.mode),
+      sig: [q.source, q.style, q.rhythm, q.contrary, q.parallels, q.crossing, q.common, q.leading].join('|')
+    };
+  }
+
   static clone(p) {
     if (!p) return null;
     return {
       len: p.len,
       part: !!p.part,
+      set: Object.assign({}, p.set),
       events: p.events.map(l => l.map(e => Object.assign({}, e))),
       slots: p.slots.map(s => ({ start: s.start, dur: s.dur, chord: s.chord, v: s.v.slice(), par: (s.par || []).slice() }))
     };
@@ -70,7 +81,7 @@ class ChoraleEditor {
       return out;
     });
     const slots = tl.slots.map(s => ({ start: s.start, dur: s.dur, chord: s.chord, v: s.v.slice(), par: [] }));
-    const piece = { len: tl.len, part: !!tl.part, events, slots };
+    const piece = { len: tl.len, part: !!tl.part, events, slots, set: ChoraleEditor.stamp(mod) };
     ChoraleEditor.refreshSlots(mod, piece);
     return { piece, sel: newSel };
   }
@@ -81,6 +92,7 @@ class ChoraleEditor {
     return {
       len: p.len,
       part: p.part ? 1 : 0,
+      set: p.set,
       ev: p.events.map(l => l.map(e => [e.start, e.len, e.midi, e.lock ? 1 : 0])),
       sl: p.slots.map(s => [s.start, s.dur, s.chord.pcs.slice(), s.chord.deg == null ? null : s.chord.deg, s.chord.label])
     };
@@ -106,7 +118,9 @@ class ChoraleEditor {
       })
       .sort((a, b) => a.start - b.start);
     if (!slots.length || slots[0].start > 0) slots.unshift({ start: 0, dur: slots.length ? slots[0].start : d.len, chord: mod.degreeChord(0), v: [null, null, null, null], par: [] });
-    const p = { len: d.len, part: !!d.part, events, slots };
+    const st = d.set && typeof d.set.key === 'string' && typeof d.set.mode === 'string' && typeof d.set.sig === 'string'
+      ? { key: d.set.key.slice(0, 4), mode: d.set.mode.slice(0, 16), sig: d.set.sig.slice(0, 200) } : ChoraleEditor.stamp(mod);
+    const p = { len: d.len, part: !!d.part, events, slots, set: st };
     ChoraleEditor.refreshSlots(mod, p);
     return p;
   }
@@ -653,6 +667,128 @@ class ChoraleEditor {
     if (this.auditioning == null || mod.playing) { this.auditioning = null; return; }
     mod.setVoice(this.auditioning, null, mod.audioCtx.currentTime);
     this.auditioning = null;
+  }
+
+  // ---- The module's settings on an edited piece ----
+  // Key / Mode move the whole piece (each scale degree to the same degree of the new key); Style, Rhythm,
+  // Source and the rules write every note again except the ones changed by hand, which stay
+  applySettings() {
+    const mod = this.mod;
+    const p = mod.fixed;
+    if (!p) return;
+    const now = ChoraleEditor.stamp(mod);
+    const was = p.set || now;
+    const moved = was.key !== now.key || was.mode !== now.mode;
+    const rewrite = was.sig !== now.sig;
+    if (!moved && !rewrite) return;
+    mod.undoStack.push({ f: ChoraleEditor.pack(mod.fixed), o: ChoraleEditor.pack(mod.fixedOriginal) });
+    if (mod.undoStack.length > 60) mod.undoStack.shift();
+    if (moved) {
+      [mod.fixed, mod.fixedOriginal].forEach(x => { if (x) this.moveKey(x, was, now); });
+    }
+    if (rewrite) this.rewriteAround();
+    if (mod.fixed) mod.fixed.set = now;
+    if (mod.fixedOriginal) mod.fixedOriginal.set = now;
+    if (this.sel && this.voiceOf(this.sel) < 0) this.sel = null;
+    this.done();
+  }
+
+  moveKey(p, was, now) {
+    const mod = this.mod;
+    const steps = m => (CH_MODES[m] || CH_MODES.major).steps;
+    const oldT = parseInt(was.key, 10) || 0, newT = parseInt(now.key, 10) || 0;
+    const oldS = steps(was.mode), newS = steps(now.mode);
+    let shift = ChoraleModule.mod(newT - oldT, 12);
+    if (shift > 6) shift -= 12;
+    const pc = x => {
+      const rel = ChoraleModule.mod(x - oldT, 12);
+      const i = oldS.indexOf(rel);
+      return i >= 0 ? newS[i] - rel : 0;   // a note outside the scale keeps its distance
+    };
+    const mapM = m => Math.max(CHE_LO, Math.min(CHE_HI, m + shift + pc(m)));
+    p.events.forEach(l => l.forEach(e => { e.midi = mapM(e.midi); }));
+    p.slots.forEach(sl => {
+      const pcs = sl.chord.pcs.map(x => ChoraleModule.mod(x + shift + pc(x), 12));
+      sl.chord = mod.makeChord(pcs, sl.chord.deg);
+    });
+    p.events.forEach(l => ChoraleEditor.mergeTies(l));
+    ChoraleEditor.refreshSlots(mod, p);
+  }
+
+  // A new piece in the new settings, as long as the edited one, with the hand-changed notes put back in
+  // and the chords under them fitted to them
+  rewriteAround() {
+    const mod = this.mod;
+    const p = mod.fixed;
+    const parts = [];
+    let len = 0;
+    for (let guard = 0; len < p.len && guard < 64; guard++) {
+      const tl = mod.buildTimeline();
+      if (!tl || !(tl.len > 0)) break;
+      parts.push({ off: len, piece: ChoraleEditor.freezeTimeline(mod, tl, null).piece });
+      len += tl.len;
+    }
+    if (!parts.length) return;
+    const fresh = { len: p.len, part: parts[0].piece.part, events: [[], [], [], []], slots: [], set: ChoraleEditor.stamp(mod) };
+    parts.forEach(({ off, piece }) => {
+      piece.events.forEach((l, k) => l.forEach(e => {
+        if (off + e.start >= p.len - 1e-6) return;
+        fresh.events[k].push({ start: off + e.start, len: Math.min(e.len, p.len - off - e.start), midi: e.midi });
+      }));
+      piece.slots.forEach(sl => {
+        if (off + sl.start >= p.len - 1e-6) return;
+        fresh.slots.push({ start: off + sl.start, dur: Math.min(sl.dur, p.len - off - sl.start), chord: sl.chord, v: [], par: [] });
+      });
+    });
+    fresh.events.forEach(l => ChoraleEditor.mergeTies(l));
+    ChoraleEditor.refreshSlots(mod, fresh);
+    mod.fixedOriginal = ChoraleEditor.clone(fresh);
+    // The hand-changed notes go back where they were
+    const locked = p.events.map(l => l.filter(e => e.lock).map(e => Object.assign({}, e)));
+    mod.fixed = fresh;
+    this.sel = null;
+    locked.forEach((l, k) => l.forEach(n => ChoraleEditor.place(fresh.events[k], n)));
+    if (fresh.part) {
+      locked[3].forEach(n => this.followPart(3, n));
+    } else {
+      this.fitAround();
+    }
+    ChoraleEditor.refreshSlots(mod, fresh);
+  }
+
+  // Every chord under a hand-changed note gets one that holds it; the other voices sing it there
+  fitAround() {
+    const mod = this.mod;
+    const p = mod.fixed;
+    p.events.forEach(l => l.forEach(n => { if (n.lock && (n.start % 4 < 1e-6 || n.len >= 4)) this.splitAt(n.start); }));
+    const melody = mod.params.source === 'melody';
+    p.slots.forEach((sl, i) => {
+      const end = sl.start + sl.dur;
+      const lockIn = v => p.events[v].filter(x => x.lock && x.start < end - 1e-6 && x.start + x.len > sl.start + 1e-6);
+      const kept = [0, 1, 2, 3].map(v => lockIn(v).length > 0);
+      if (!kept.some(Boolean)) return;
+      if (melody) kept[3] = true;
+      if (kept.every(Boolean)) return;
+      const fixed = [0, 1, 2, 3].map(v => {
+        if (!kept[v]) return null;
+        const m = ChoraleEditor.pitchAt(p.events[v], sl.start);
+        if (m != null) return m;
+        const l = lockIn(v);
+        return l.length ? l[0].midi : null;
+      });
+      const pcs = fixed.filter(m => m != null).map(m => ChoraleModule.mod(m, 12));
+      const chord = this.chooseChord(pcs, sl.chord);
+      const prevSl = p.slots[i - 1];
+      let prev = prevSl ? p.events.map(l => ChoraleEditor.pitchNear(l, prevSl.start)) : null;
+      if (prev && prev.some(m => m == null)) prev = null;
+      const v = mod.lead(prev, chord, { fixed, prevChord: prevSl ? prevSl.chord : null, steady: true });
+      sl.chord = chord;
+      for (let f = 0; f < 4; f++) {
+        if (kept[f]) continue;
+        ChoraleEditor.place(p.events[f], { start: sl.start, len: sl.dur, midi: v[f] });
+      }
+    });
+    for (let f = 0; f < 4; f++) ChoraleEditor.mergeTies(p.events[f]);
   }
 
   // ---- Pointer: one finger edits with the tool, two fingers scroll and zoom (pinch) ----

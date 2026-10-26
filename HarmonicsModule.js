@@ -207,6 +207,15 @@ class HarmonicsModule extends ModuleBase {
     mixers.forEach((offset, mixId) => {
       const mixer = app.getModule(mixId);
       const added = [];
+      // Fewer partials: the Mixer's last channels that no cable uses any more are removed
+      // (only from the end, so the channel numbers of the others stay the same)
+      if (n < old) {
+        const used = ch => app.connections.some(c => (c.toNode === mixId && channelOf(c) === ch) ||
+          (c.fromNode === mixId && String(((c.fromPortInfo || {}).type) || '') === `ch_out_${ch}`));
+        while (mixer.channelCount > Math.max(1, n + offset) && !used(mixer.channelCount)) mixer.removeLastChannel();
+        if (typeof mixer.refreshTimbreCount === 'function') mixer.refreshTimbreCount();
+      }
+      const recipe = typeof mixer.timbreRecipe === 'function' ? mixer.timbreRecipe() : [];
       for (let k = old + 1; k <= n; k++) {
         const ch = k + offset;
         if (ch < 1) continue;
@@ -214,6 +223,8 @@ class HarmonicsModule extends ModuleBase {
         const taken = app.connections.some(c => c.toNode === mixId && channelOf(c) === ch);
         const exists = app.connections.some(c => c.fromNode === this.id && partialOf(c) === k && c.toNode === mixId);
         if (taken || exists) continue;
+        // The new channel's level is set before the cable goes in, so it never sounds at full volume
+        mixer.setChannelVolume(ch, Math.round((recipe[k - 1] || 0) * 100) / 100);
         const conn = { fromNode: this.id, fromPortInfo: { id: `h${k}` }, toNode: mixId, toPortInfo: { channel: String(ch), type: `ch_in_${ch}` } };
         app.connections.push(conn);
         app.connectAudio(conn);

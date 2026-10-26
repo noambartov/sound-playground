@@ -62,8 +62,7 @@ class MixerModule {
     // New partial channels (Harmonics got more partials): their faders start at the recipe of
     // the Timbre plugged into TIMBRE, or at 0 (silent until raised) without one.
     setNewPartialFaders(list) {
-        const bus = this.timbreBuses.values().next().value;
-        const levels = bus ? bus.getLevels() : [];
+        const levels = this.timbreRecipe();
         this.glideFaders(list.map(e => ({ ch: e.ch, level: levels[e.partial - 1] || 0 })));
         this.refreshTimbreCount();
     }
@@ -326,6 +325,28 @@ class MixerModule {
                 window.synthApp.bindPortEvents(card, this.id);
             }
         }
+    }
+
+    // Removes the last channel strip (Harmonics showing fewer partials, owner's request 2026-10-26).
+    // The caller makes sure no cable uses it. The first channel always stays.
+    removeLastChannel() {
+        const ch = this.channelCount;
+        if (ch <= 1) return false;
+        const c = this.channels[ch];
+        [c.inputNode, c.muteNode, c.gainNode, c.directOutNode, c.leftGain, c.rightGain].forEach(n => {
+            try { n.disconnect(); } catch (e) {}
+        });
+        delete this.channels[ch];
+        this.channelCount--;
+        const container = document.getElementById(`mixer_channels_${this.id}`);
+        if (container && container.lastElementChild) container.lastElementChild.remove();
+        return true;
+    }
+
+    // The recipe of the first Timbre plugged into TIMBRE (empty without one)
+    timbreRecipe() {
+        const bus = this.timbreBuses.values().next().value;
+        return bus ? bus.getLevels() : [];
     }
 
     renderChannelHTML(ch) {

@@ -91,6 +91,7 @@
     hint.innerHTML = `
       <div class="empty-canvas-intro">
         <h2>Sound Playground</h2>
+        <p class="empty-canvas-by"><a href="https://noambartov.com" target="_blank" rel="noopener" lang="he" dir="rtl">נעם ברטוב</a></p>
         <p data-lang="en">You're looking at an empty canvas. Pick modules from the <strong>Modules</strong> menu and connect them with cables to make sound.
           Follow the sound's path and make sure it ends in an <strong>Output</strong> module, so you can hear it.
           For any question, use the <strong>?</strong> button or <strong>Tooltips</strong> in the top bar.</p>
@@ -118,7 +119,7 @@
     const guideBtn = hint.querySelector('.empty-canvas-guide');
     guideBtn.addEventListener('click', () => { const help = document.getElementById('help-btn'); if (help) help.click(); });
     // Keep presses away from the canvas (selection box, pan)
-    [btn, langBtn, guideBtn].forEach(b => ['pointerdown', 'mousedown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })));
+    [btn, langBtn, guideBtn, hint.querySelector('.empty-canvas-by a')].forEach(b => ['pointerdown', 'mousedown', 'touchstart'].forEach(t => b.addEventListener(t, e => e.stopPropagation(), { passive: true })));
     btn.addEventListener('click', playDemo);
     langBtn.addEventListener('click', () => setLang(lang === 'he' ? 'en' : 'he'));
     try { if (localStorage.getItem(LANG_KEY) === 'he') lang = 'he'; } catch (e) {}

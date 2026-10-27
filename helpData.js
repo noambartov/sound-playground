@@ -173,8 +173,8 @@ window.helpData = {
     modules: [
       { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
         summary: "Makes a steady tone. The starting point of most sounds.",
-        controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure).", "Frequency: the pitch, 20 to 4000 Hz. The middle of the slider is 200 Hz, so the low range gets more room. Greyed out while a cable is in PITCH.", "Pulse Width: only for Square; changes the tone from hollow to thin.", "Slope: only for Sawtooth; how much of each cycle the wave climbs from the bottom to the peak, and how much it falls back. Rise 100% is the classic saw (slow climb, sudden drop), 50% is a triangle, 0% is a saw that drops slowly and jumps up.", "Flip: only for Sawtooth; turns the wave upside down."],
-        tips: ["Plug Keyboard FREQ into PITCH to play notes in tune.", "A slow LFO into FM IN gives vibrato."] },
+        controls: ["Waveform: Sawtooth (bright), Square / Pulse (hollow), Triangle (soft), Sine (pure), Noise (a hiss with no pitch, like the Minimoog's NOISE).", "Frequency: the pitch, 20 to 4000 Hz. The middle of the slider is 200 Hz, so the low range gets more room. Greyed out while a cable is in PITCH.", "Octave, Semitones, Fine: tune the oscillator away from the Frequency slider or from the note at PITCH, like the Minimoog's Range and Tune knobs. Octave moves whole octaves (-2 to +2), Semitones moves half steps (-12 to +12; +7 is a fifth), Fine moves a little (-50 to +50 cents). They keep working while a Keyboard is plugged in. Hidden for Noise.", "Pulse Width: only for Square; changes the tone from hollow to thin.", "Slope: only for Sawtooth; how much of each cycle the wave climbs from the bottom to the peak, and how much it falls back. Rise 100% is the classic saw (slow climb, sudden drop), 50% is a triangle, 0% is a saw that drops slowly and jumps up.", "Flip: only for Sawtooth; turns the wave upside down."],
+        tips: ["Plug Keyboard FREQ into PITCH to play notes in tune.", "A slow LFO into FM IN gives vibrato.", "Three Oscillators on the same Keyboard: give two of them a Fine of a few cents up and down (say +5 and -4). They drift against each other and the sound moves and grows wide, the classic Minimoog sound. Open the Minimoog patch to hear it."] },
       { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
         summary: "An oscillator that glides between a row of different waves, so the tone can change and move while it plays.",
         controls: ["The display: the table's 8 waves stacked from front to back; the bright wave is the one playing now, at its place in the stack.", "Table: Basic (sine, triangle, saw, square), Vocal (vowels A E I O U), Digital (a bright band that climbs), Organ (drawbar settings), PWM (a pulse that gets thinner), Draw (your own wave).", "Position: where in the table you are; in between two waves you hear a smooth blend.", "Warp: bends each wave (squeezes its first half), for brighter, more nasal colors.", "Frequency: the pitch, 20 to 2000 Hz; set aside while a cable is in PITCH. Octave and Tune shift the pitch (also a note from PITCH).", "POS Depth: how far a cable in POS moves Position.", "Unison Voices: up to 7 copies of the sound played together. Unison Detune: how far apart they are tuned (in cents); together they give a wide, thick sound.", "Draw: pick Draw in Table and draw one cycle of a wave on the display with the mouse or pencil. Position 0% plays a sine, 100% your wave, and in between a blend."],
@@ -237,7 +237,7 @@ window.helpData = {
         tips: ["Compare Clarinet and Square: both have (almost) only odd partials, which is why both sound hollow.", "Pick an instrument, then change one fader at a time and listen to which overtone makes it brighter, more nasal or rounder.", "Loading a saved patch keeps your own fader positions; only a choice on the Timbre card (or Apply) moves them.", "The recipes are rough averages: a real instrument also changes its overtones during each note."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "Removes part of the sound: darker, brighter or thinner.",
-        controls: ["Type: Lowpass (keeps the lows), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts, 20 Hz to 15 kHz. The middle of the slider is 700 Hz.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
+        controls: ["Type: Lowpass 12dB (keeps the lows), Lowpass 24dB (keeps the lows and cuts the highs twice as steeply, like the Minimoog filter), Highpass (keeps the highs), Bandpass, Notch.", "Cutoff: where the filter cuts, 20 Hz to 15 kHz. The middle of the slider is 700 Hz.", "Resonance (Q): a ringing peak at the cutoff.", "Mod Depth: how far CUT MOD moves the cutoff."],
         tips: ["Envelope into CUT MOD makes every note start bright and close darker."] },
       { type: "vca", group: "processors", name: "VCA (Amplifier)", preset: "demo-vca",
         summary: "A volume control that other modules can move.",
@@ -342,6 +342,9 @@ window.helpData = {
       { preset: "demo-polysynth", level: 2, title: "Chords",
         learn: "A Poly Synth plays several notes at once, so you can play chords.",
         steps: ["Raise Master Volume.", "Hold several keys on the Keyboard at once.", "Change Attack and Release on the Poly Synth for soft pads or short plucks."] },
+      { preset: "minimoog", level: 2, title: "Minimoog",
+        learn: "The classic Minimoog layout: three Oscillators tuned slightly apart (Octave, Semitones, Fine) and a Noise source into a Mixer, a steep 24dB Lowpass Filter with its own Envelope (the filter contour), a second Envelope for the volume (the loudness contour), Slide on the Keyboard for glide, and a slow LFO on the filter.",
+        steps: ["Raise Master Volume and play the Keyboard.", "Change Fine on the Oscillators: closer to 0 the sound is still, further apart it beats faster.", "On the filter Envelope (under the Filter), change Attack and Decay; Mod Depth on the Filter sets how far it opens the filter.", "Raise the Noise channel on the Mixer for breath, and Slide on the Keyboard for glide between notes."] },
       { preset: "demo-delay", level: 2, title: "Beat with Echo",
         learn: "A Stereo Delay synced to the Drum Machine's CLOCK, so the echoes land in time.",
         steps: ["Raise Master Volume (the Drum Machine is already playing).", "Change Feedback and Mix on the Stereo Delay.", "Switch Ping-Pong on to bounce the echoes left and right."] },
@@ -533,8 +536,8 @@ window.helpData = {
     modules: [
       { type: "oscillator", group: "sources", name: "Oscillator (VCO)", preset: "demo-oscillator",
         summary: "מייצר צליל קבוע. נקודת ההתחלה של רוב הצלילים.",
-        controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אמצע הסליידר הוא 200 הרץ, כך שלצלילים הנמוכים יש יותר מקום. אפור כשיש כבל ב-PITCH.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק.", "Slope: רק ל-Sawtooth; כמה מכל מחזור הגל מטפס מהתחתית לפסגה, וכמה הוא יורד בחזרה. Rise 100% הוא המסור הקלאסי (עלייה איטית, נפילה פתאומית), 50% הוא משולש, 0% הוא מסור שיורד לאט וקופץ למעלה.", "Flip: רק ל-Sawtooth; הופך את הגל (פסגה לתחתית)."],
-        tips: ["FREQ של המקלדת אל PITCH: מנגנים תווים מכוונים.", "LFO איטי אל FM IN נותן ויברטו."] },
+        controls: ["Waveform: Sawtooth (בהיר), Square / Pulse (חלול), Triangle (רך), Sine (נקי), Noise (רחש בלי גובה צליל, כמו ה-NOISE של המיני מוג).", "Frequency: גובה הצליל, 20 עד 4000 הרץ. אמצע הסליידר הוא 200 הרץ, כך שלצלילים הנמוכים יש יותר מקום. אפור כשיש כבל ב-PITCH.", "Octave, Semitones, Fine: מכוונים את האוסילטור הרחק מסליידר ה-Frequency או מהתו שמגיע ל-PITCH, כמו כפתורי Range ו-Tune של המיני מוג. Octave מזיז אוקטבות שלמות (2- עד 2+), Semitones מזיז חצאי טונים (12- עד 12+; 7+ זו קווינטה), Fine מזיז קצת (50- עד 50+ סנט). הם ממשיכים לעבוד גם כשמקלדת מחוברת. מוסתרים ב-Noise.", "Pulse Width: רק ל-Square; משנה את הצליל מחלול לדק.", "Slope: רק ל-Sawtooth; כמה מכל מחזור הגל מטפס מהתחתית לפסגה, וכמה הוא יורד בחזרה. Rise 100% הוא המסור הקלאסי (עלייה איטית, נפילה פתאומית), 50% הוא משולש, 0% הוא מסור שיורד לאט וקופץ למעלה.", "Flip: רק ל-Sawtooth; הופך את הגל (פסגה לתחתית)."],
+        tips: ["FREQ של המקלדת אל PITCH: מנגנים תווים מכוונים.", "LFO איטי אל FM IN נותן ויברטו.", "שלושה אוסילטורים על אותה מקלדת: תנו לשניים מהם Fine של כמה סנטים למעלה ולמטה (למשל 5+ ו-4-). הם נעים זה מול זה והצליל זז ומתרחב, הצליל הקלאסי של המיני מוג. פתחו את הפאץ' Minimoog כדי לשמוע."] },
       { type: "wavetable", group: "sources", name: "Wavetable Osc", preset: "demo-wavetable",
         summary: "אוסילטור שעובר בהדרגה בין שורה של צורות גל שונות, כך שהצליל יכול להשתנות ולזוז תוך כדי נגינה.",
         controls: ["המסך: 8 הגלים של הטבלה בערימה מקדימה לאחור; הגל הבהיר הוא זה שמתנגן עכשיו, במקום שלו בערימה.", "Table: Basic (סינוס, משולש, מסור, ריבוע), Vocal (תנועות A E I O U), Digital (פס בהיר שמטפס), Organ (הגדרות של עוגב), PWM (פולס שהולך ונעשה דק), Draw (גל שאתם מציירים).", "Position: איפה בטבלה נמצאים; בין שני גלים שומעים מעבר חלק.", "Warp: מעקם כל גל (מכווץ את החצי הראשון שלו), לצבעים בהירים ואפיים יותר.", "Frequency: גובה הצליל, 20 עד 2000 הרץ; לא פעיל כשיש כבל ב-PITCH. Octave ו-Tune מזיזים את הגובה (גם של תו שמגיע מ-PITCH).", "POS Depth: כמה כבל ב-POS מזיז את Position.", "Unison Voices: עד 7 עותקים של הצליל שמתנגנים יחד. Unison Detune: כמה הם מכוונים זה מזה (בסנטים); יחד הם נותנים צליל רחב ושמן.", "Draw: בוחרים Draw ב-Table ומציירים על המסך מחזור אחד של גל, בעכבר או בעט. Position על 0% מנגן סינוס, על 100% את הגל שלכם, ובאמצע שילוב."],
@@ -597,7 +600,7 @@ window.helpData = {
         tips: ["השוו בין Clarinet ל-Square: בשניהם יש (כמעט) רק חלקים אי-זוגיים, ולכן שניהם נשמעים חלולים.", "בחרו כלי, ואז שנו פיידר אחד בכל פעם והקשיבו איזה אוברטון עושה את הצליל בהיר יותר, אנפפי יותר או עגול יותר.", "טעינה של פאץ' שמור שומרת על המיקום של הפיידרים שלכם; רק בחירה בכרטיס של Timbre (או Apply) מזיזה אותם.", "המתכונים הם ממוצע גס: כלי אמיתי גם משנה את האוברטונים שלו במהלך כל תו."] },
       { type: "filter", group: "processors", name: "Filter (VCF)", preset: "demo-filter",
         summary: "מוריד חלק מהצליל: כהה יותר, בהיר יותר או דק יותר.",
-        controls: ["Type: Lowpass (משאיר נמוכים), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך, מ-20 הרץ עד 15 קילוהרץ. אמצע הסליידר הוא 700 הרץ.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
+        controls: ["Type: Lowpass 12dB (משאיר נמוכים), Lowpass 24dB (משאיר נמוכים וחותך את הגבוהים חד פי שניים, כמו הפילטר של המיני מוג), Highpass (משאיר גבוהים), Bandpass, Notch.", "Cutoff: איפה הפילטר חותך, מ-20 הרץ עד 15 קילוהרץ. אמצע הסליידר הוא 700 הרץ.", "Resonance (Q): שיא מצלצל בנקודת החיתוך.", "Mod Depth: כמה CUT MOD מזיז את החיתוך."],
         tips: ["Envelope אל CUT MOD: כל תו מתחיל בהיר ונסגר כהה יותר."] },
       { type: "vca", group: "processors", name: "VCA (Amplifier)", preset: "demo-vca",
         summary: "בקרת עוצמה שמודולים אחרים יכולים להזיז.",
@@ -699,6 +702,9 @@ window.helpData = {
       { preset: "demo-polysynth", level: 2, title: "Chords",
         learn: "Poly Synth מנגן כמה תווים בבת אחת, כך שאפשר לנגן אקורדים.",
         steps: ["הרימו את Master Volume.", "החזיקו כמה קלידים במקלדת בבת אחת.", "שנו Attack ו-Release ב-Poly Synth בשביל משטחים רכים או צלילים קצרים."] },
+      { preset: "minimoog", level: 2, title: "Minimoog",
+        learn: "המבנה הקלאסי של המיני מוג: שלושה אוסילטורים שמכוונים מעט זה מזה (Octave, Semitones, Fine) ומקור Noise אל Mixer, פילטר Lowpass חד של 24dB עם Envelope משלו (מעטפת הפילטר), Envelope שני לעוצמה (מעטפת העוצמה), Slide במקלדת בשביל גלישה, ו-LFO איטי על הפילטר.",
+        steps: ["הרימו את Master Volume ונגנו במקלדת.", "שנו את Fine באוסילטורים: קרוב ל-0 הצליל שקט, רחוק יותר הוא פועם מהר יותר.", "ב-Envelope של הפילטר (מתחת ל-Filter) שנו Attack ו-Decay; Mod Depth בפילטר קובע כמה הוא פותח את הפילטר.", "הרימו את ערוץ ה-Noise במיקסר בשביל נשיפה, ואת Slide במקלדת בשביל גלישה בין תווים."] },
       { preset: "demo-delay", level: 2, title: "Beat with Echo",
         learn: "Stereo Delay שמסונכרן ל-CLOCK של מכונת התופים, כך שההדים נופלים בזמן.",
         steps: ["הרימו את Master Volume (מכונת התופים כבר מנגנת).", "שנו Feedback ו-Mix ב-Stereo Delay.", "הדליקו Ping-Pong כדי שההדים יקפצו ימינה ושמאלה."] },
@@ -720,7 +726,7 @@ window.helpData = {
     ],
     // Hebrew text for each jack (keys match portGuide.js GUIDE); missing keys fall back to English
     ports: {
-      "oscillator:in:pitch": { text: "מנגן תווים. כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר" },
+      "oscillator:in:pitch": { text: "מנגן תווים. כשיש כבל, התו הנכנס קובע את הגובה וסליידר ה-Frequency מושבת. Octave, Semitones ו-Fine ממשיכים להזיז אותו.", where: "FREQ של המקלדת, PITCH CV של הסיקוונסר" },
       "oscillator:in:fm": { text: "מזיז את הגובה למעלה ולמטה סביב התו. LFO נותן ויברטו; אוסילטור אחר נותן צלילים מתכתיים.", where: "LFO OUT, X / Y של המצלמה, BEND של המקלדת, OUT של אוסילטור אחר" },
       "oscillator:out:default": { text: "הצליל הגולמי של האוסילטור.", where: "IN של Filter, VCA, Mixer, Reverb, Output, Oscilloscope" },
       "granular:in:in_l": { text: "צליל שנחתך לגרגרים (צד שמאל).", where: "OUT של Mic, Oscillator, Mixer" },
@@ -1446,6 +1452,41 @@ window.presetData = {
     connections: [{ fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }]
   },
 
+  "minimoog": {
+    modules: [
+      { id: "kb1", type: "keyboard", x: 40, y: 100, state: { octave: 3, glide: 0 } },
+      { id: "osc1", type: "oscillator", x: 680, y: 40, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 0 } },
+      { id: "osc2", type: "oscillator", x: 680, y: 460, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 6 } },
+      { id: "osc3", type: "oscillator", x: 680, y: 880, state: { waveform: "triangle", octave: -1, semitones: 0, fine: -5 } },
+      { id: "noise1", type: "oscillator", x: 680, y: 1300, state: { waveform: "noise" } },
+      { id: "mix1", type: "mixer", x: 1040, y: 40, state: { channels: {
+        "1": { volumeValue: 0.7, panValue: 0, label: "Osc 1" }, "2": { volumeValue: 0.7, panValue: 0, label: "Osc 2" },
+        "3": { volumeValue: 0.6, panValue: 0, label: "Osc 3" }, "4": { volumeValue: 0, panValue: 0, label: "Noise" } } } },
+      { id: "filt1", type: "filter", x: 1500, y: 40, state: { type: "lowpass24", frequency: 350, resonance: 4, modDepth: 3500 } },
+      { id: "fenv1", type: "envelope", x: 1500, y: 440, state: { attack: 0.01, decay: 0.5, sustain: 0.3, release: 0.4 } },
+      { id: "lfo1", type: "lfo", x: 1500, y: 840, state: { waveform: "sine", rate: 0.3, depth: 5 } },
+      { id: "aenv1", type: "envelope", x: 1860, y: 440, state: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.4 } },
+      { id: "vca1", type: "vca", x: 1860, y: 40, state: { gain: 0 } },
+      { id: "out1", type: "output", x: 2220, y: 40, state: {} }
+    ],
+    connections: [
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc2", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "freq" }, toNode: "osc3", toPortInfo: { type: "pitch" } },
+      { fromNode: "kb1", fromPortInfo: { name: "gate" }, toNode: "fenv1", toPortInfo: { type: "gate" } },
+      { fromNode: "kb1", fromPortInfo: { name: "gate" }, toNode: "aenv1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "1", type: "ch_in_1" } },
+      { fromNode: "osc2", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "2", type: "ch_in_2" } },
+      { fromNode: "osc3", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "3", type: "ch_in_3" } },
+      { fromNode: "noise1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "4", type: "ch_in_4" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "filt1", toPortInfo: { type: "audio" } },
+      { fromNode: "fenv1", fromPortInfo: { type: "env" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "aenv1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } }
+    ]
+  },
   "classic-mono": {
     modules: [
       { id: "kb1", type: "keyboard", x: 40, y: 100, state: {} },

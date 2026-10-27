@@ -1455,17 +1455,17 @@ window.presetData = {
   "minimoog": {
     modules: [
       { id: "kb1", type: "keyboard", x: 40, y: 100, state: { octave: 3, glide: 0 } },
-      { id: "osc1", type: "oscillator", x: 680, y: 40, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 0 } },
-      { id: "osc2", type: "oscillator", x: 680, y: 460, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 6 } },
-      { id: "osc3", type: "oscillator", x: 680, y: 880, state: { waveform: "triangle", octave: -1, semitones: 0, fine: -5 } },
-      { id: "noise1", type: "oscillator", x: 680, y: 1300, state: { waveform: "noise" } },
+      { id: "osc1", name: "Osc 1", type: "oscillator", x: 680, y: 40, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 0 } },
+      { id: "osc2", name: "Osc 2", type: "oscillator", x: 680, y: 460, state: { waveform: "triangle", octave: 0, semitones: 0, fine: 6 } },
+      { id: "osc3", name: "Osc 3", type: "oscillator", x: 680, y: 880, state: { waveform: "triangle", octave: -1, semitones: 0, fine: -5 } },
+      { id: "noise1", name: "Noise", type: "oscillator", x: 680, y: 1300, state: { waveform: "noise" } },
       { id: "mix1", type: "mixer", x: 1040, y: 40, state: { channels: {
         "1": { volumeValue: 0.7, panValue: 0, label: "Osc 1" }, "2": { volumeValue: 0.7, panValue: 0, label: "Osc 2" },
         "3": { volumeValue: 0.6, panValue: 0, label: "Osc 3" }, "4": { volumeValue: 0, panValue: 0, label: "Noise" } } } },
       { id: "filt1", type: "filter", x: 1500, y: 40, state: { type: "lowpass24", frequency: 350, resonance: 4, modDepth: 3500 } },
-      { id: "fenv1", type: "envelope", x: 1500, y: 440, state: { attack: 0.01, decay: 0.5, sustain: 0.3, release: 0.4 } },
-      { id: "lfo1", type: "lfo", x: 1500, y: 840, state: { waveform: "sine", rate: 0.3, depth: 8 } },
-      { id: "aenv1", type: "envelope", x: 1860, y: 440, state: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.4 } },
+      { id: "fenv1", name: "Filter Envelope", type: "envelope", x: 1500, y: 440, state: { attack: 0.01, decay: 0.5, sustain: 0.3, release: 0.4 } },
+      { id: "lfo1", name: "Filter LFO", type: "lfo", x: 1500, y: 840, state: { waveform: "sine", rate: 0.3, depth: 8 } },
+      { id: "aenv1", name: "Loudness Envelope", type: "envelope", x: 1860, y: 440, state: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.4 } },
       { id: "vca1", type: "vca", x: 1860, y: 40, state: { gain: 0 } },
       { id: "out1", type: "output", x: 2220, y: 40, state: {} }
     ],

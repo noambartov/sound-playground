@@ -1464,7 +1464,7 @@ window.presetData = {
         "3": { volumeValue: 0.6, panValue: 0, label: "Osc 3" }, "4": { volumeValue: 0, panValue: 0, label: "Noise" } } } },
       { id: "filt1", type: "filter", x: 1500, y: 40, state: { type: "lowpass24", frequency: 350, resonance: 4, modDepth: 3500 } },
       { id: "fenv1", type: "envelope", x: 1500, y: 440, state: { attack: 0.01, decay: 0.5, sustain: 0.3, release: 0.4 } },
-      { id: "lfo1", type: "lfo", x: 1500, y: 840, state: { waveform: "sine", rate: 0.3, depth: 5 } },
+      { id: "lfo1", type: "lfo", x: 1500, y: 840, state: { waveform: "sine", rate: 0.3, depth: 8 } },
       { id: "aenv1", type: "envelope", x: 1860, y: 440, state: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.4 } },
       { id: "vca1", type: "vca", x: 1860, y: 40, state: { gain: 0 } },
       { id: "out1", type: "output", x: 2220, y: 40, state: {} }
@@ -1481,7 +1481,7 @@ window.presetData = {
       { fromNode: "noise1", fromPortInfo: { id: "output" }, toNode: "mix1", toPortInfo: { channel: "4", type: "ch_in_4" } },
       { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "filt1", toPortInfo: { type: "audio" } },
       { fromNode: "fenv1", fromPortInfo: { type: "env" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
-      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "lfo1", fromPortInfo: { id: "output" }, toNode: "filt1", toPortInfo: { id: "knob:i0", knob: "i0" } },
       { fromNode: "filt1", fromPortInfo: { id: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
       { fromNode: "aenv1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
       { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "out1", toPortInfo: { type: "in" } }

@@ -3,7 +3,7 @@
 (function () {
   const CARRY_KEY = 'sp_carry_patch';
   const REASON_KEY = 'sp_carry_reason';
-  const CHECK_EVERY_MS = 10 * 60 * 1000;
+  const CHECK_EVERY_MS = 5 * 60 * 1000;
   let updateShown = false;
   let lastCheck = 0;
 
@@ -87,6 +87,9 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') checkForUpdate();
   });
+  // A desktop app window (e.g. Chrome app on Mac) does not become "hidden" when another window
+  // is in front, so also check when its window is clicked back into focus.
+  window.addEventListener('focus', checkForUpdate);
 
   function showUpdateNotice() {
     if (updateShown) return;

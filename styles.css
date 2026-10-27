@@ -2606,3 +2606,24 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
   padding: 3px 4px;
   font-size: 0.7rem;
 }
+
+/* Owner's signature (#brand-signature in index.html): quiet text fixed in the bottom-right corner of the screen,
+   not on the canvas, so it never moves or zooms. Notices (update notice, tips panel) sit above it. */
+#brand-signature {
+  position: fixed;
+  right: 14px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  font-size: 13px;
+  color: var(--muted-text);
+  opacity: 0.75;
+  text-decoration: none;
+  touch-action: manipulation;
+}
+#brand-signature:hover { opacity: 1; text-decoration: underline; }
+@media (max-width: 700px), (max-height: 500px) {
+  #brand-signature { font-size: 11px; right: 10px; bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+}
+.help-copyright a { color: inherit; }
+.empty-canvas-hint .empty-canvas-by { margin: -6px 0 10px; font-size: 12px; text-align: center; }
+.empty-canvas-hint .empty-canvas-by a { color: var(--muted-text); }

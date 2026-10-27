@@ -23,7 +23,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.53">
+  <link rel="stylesheet" href="styles.css?v=3.54">
 </head>
 <body class="light-theme">
 
@@ -121,6 +121,9 @@
     </div>
   </main>
 
+  <!-- Owner's signature: fixed in the bottom-right corner of the screen (not on the canvas), links to the owner's site -->
+  <a id="brand-signature" href="https://noambartov.com" target="_blank" rel="noopener" lang="he" dir="rtl" title="noambartov.com">נעם ברטוב</a>
+
   <!-- Group delete: shown while 2+ modules are selected (touch-friendly twin of the Delete key) -->
   <button id="delete-selected-btn" type="button" style="display: none;">Delete modules</button>
 
@@ -148,7 +151,7 @@
       <!-- Tab Content Area (Populated dynamically by help.js) -->
       <div id="help-tab-content" class="help-content-area modal-body"></div>
 
-      <p class="help-copyright" dir="ltr">&copy; 2026 noam bartov. All rights reserved.</p>
+      <p class="help-copyright" dir="ltr">&copy; 2026 noam bartov. All rights reserved. &middot; <a href="https://noambartov.com" target="_blank" rel="noopener"><span lang="he" dir="rtl">נעם ברטוב</span> &middot; noambartov.com</a></p>
 
     </div>
   </div>
@@ -201,7 +204,7 @@
   <script src="app.js?v=44"></script>
   <script src="improbability.js?v=2"></script>
   <script src="presetTips.js?v=7"></script>
-  <script src="onboarding.js?v=6"></script>
+  <script src="onboarding.js?v=7"></script>
   <script src="pwa.js?v=3"></script>
 
 </body>

@@ -5,6 +5,13 @@ class FilterModule {
 
         this.filterNode = this.ctx.createBiquadFilter();
         this.filterNode.type = 'lowpass';
+        this.type = 'lowpass'; // menu value: a BiquadFilter type, or 'lowpass24'
+        // Lowpass (24dB): a second lowpass stage in series (Moog-style steep slope). It follows the
+        // same cutoff and modulation; the resonance stays on the first stage only (one peak).
+        this.stage2 = this.ctx.createBiquadFilter();
+        this.stage2.type = 'lowpass';
+        this.stage2.Q.value = 0.707;
+        this.outputNode = this.ctx.createGain();
         
         this.minFreq = 20;
         this.maxFreq = 15000;
@@ -13,6 +20,7 @@ class FilterModule {
         this.currentFreq = this.sliderToFreq(defaultSliderVal);
 
         this.filterNode.frequency.setValueAtTime(this.currentFreq, this.ctx.currentTime);
+        this.stage2.frequency.setValueAtTime(this.currentFreq, this.ctx.currentTime);
         this.resonance = 1.0; // intended Q; Q.value lags behind while the audio engine ramps
         this.filterNode.Q.setValueAtTime(this.resonance, this.ctx.currentTime);
 
@@ -21,15 +29,18 @@ class FilterModule {
         this.modGain = this.ctx.createGain();
         this.modGain.gain.setValueAtTime(this.modDepth, this.ctx.currentTime);
         this.modGain.connect(this.filterNode.frequency);
+        this.modGain.connect(this.stage2.frequency);
+        this.stage2.connect(this.outputNode);
+        this.filterNode.connect(this.outputNode);
 
         this.audioInput = this.filterNode;
-        this.audioOutput = this.filterNode;
+        this.audioOutput = this.outputNode;
         this.cutoffModInput = this.modGain;
     }
 
     getState() {
         return {
-            type: this.filterNode ? this.filterNode.type : 'lowpass',
+            type: this.type,
             frequency: this.currentFreq,
             resonance: this.resonance,
             modDepth: this.modDepth
@@ -47,8 +58,10 @@ class FilterModule {
             this.currentFreq = state.frequency;
             const now = this.ctx ? this.ctx.currentTime : 0;
             if (this.ctx) {
-                this.filterNode.frequency.cancelScheduledValues(now);
-                this.filterNode.frequency.setTargetAtTime(this.currentFreq, now, 0.01);
+                for (const f of [this.filterNode, this.stage2]) {
+                    f.frequency.cancelScheduledValues(now);
+                    f.frequency.setTargetAtTime(this.currentFreq, now, 0.01);
+                }
             }
             const labelEl = document.getElementById(`cutoff_val_${this.id}`);
             if (labelEl) {
@@ -97,7 +110,11 @@ class FilterModule {
     getCutoffInput() { return this.cutoffModInput; }
 
     setType(type) {
-        this.filterNode.type = type;
+        const steep = type === 'lowpass24';
+        this.type = type;
+        this.filterNode.type = steep ? 'lowpass' : type;
+        try { this.filterNode.disconnect(); } catch (e) {}
+        this.filterNode.connect(steep ? this.stage2 : this.outputNode);
     }
 
     setCutoffFromSlider(sliderVal) {
@@ -106,8 +123,10 @@ class FilterModule {
 
         const now = this.ctx ? this.ctx.currentTime : 0;
         if (this.ctx) {
-            this.filterNode.frequency.cancelScheduledValues(now);
-            this.filterNode.frequency.setTargetAtTime(freq, now, 0.015);
+            for (const f of [this.filterNode, this.stage2]) {
+                f.frequency.cancelScheduledValues(now);
+                f.frequency.setTargetAtTime(freq, now, 0.015);
+            }
         }
 
         const labelEl = document.getElementById(`cutoff_val_${this.id}`);
@@ -165,10 +184,11 @@ class FilterModule {
                 <div class="control-group">
                     <label style="font-size: 11px; font-weight: 600;">Type</label>
                     <select class="control-select" onchange="synthApp.getModule('${this.id}').setType(this.value)">
-                        <option value="lowpass" ${this.filterNode.type === 'lowpass' ? 'selected' : ''}>Lowpass (12dB)</option>
-                        <option value="highpass" ${this.filterNode.type === 'highpass' ? 'selected' : ''}>Highpass</option>
-                        <option value="bandpass" ${this.filterNode.type === 'bandpass' ? 'selected' : ''}>Bandpass</option>
-                        <option value="notch" ${this.filterNode.type === 'notch' ? 'selected' : ''}>Notch</option>
+                        <option value="lowpass" ${this.type === 'lowpass' ? 'selected' : ''}>Lowpass (12dB)</option>
+                        <option value="lowpass24" ${this.type === 'lowpass24' ? 'selected' : ''}>Lowpass (24dB)</option>
+                        <option value="highpass" ${this.type === 'highpass' ? 'selected' : ''}>Highpass</option>
+                        <option value="bandpass" ${this.type === 'bandpass' ? 'selected' : ''}>Bandpass</option>
+                        <option value="notch" ${this.type === 'notch' ? 'selected' : ''}>Notch</option>
                     </select>
                 </div>
 

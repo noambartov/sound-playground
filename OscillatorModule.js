@@ -10,6 +10,12 @@ class OscillatorModule {
     // (1 = classic saw, 0.5 = triangle, 0 = falling ramp); sawFlip turns the wave upside down.
     this.sawRise = 1;
     this.sawFlip = false;
+    // Tuning relative to the Frequency slider or the note at PITCH IN (Minimoog style):
+    // whole octaves, semitones and fine cents, summed into the oscillators' detune.
+    this.octave = 0;     // -2..+2
+    this.semitones = 0;  // -12..+12
+    this.fine = 0;       // -50..+50 cents
+    this.noiseSource = null; // started the first time the Noise waveform is chosen
     this.card = null;
 
     // Two oscillators (side A and side B) that always get the same frequency, so they stay in
@@ -51,6 +57,7 @@ class OscillatorModule {
     this.pitchInput.connect(this.oscB.frequency);
     this.pitchConnections = 0;
 
+    this.applyDetune();
     this.updateWaveformRouting();
     const t0 = this.ctx.currentTime;
     this.oscNode.start(t0);
@@ -63,7 +70,10 @@ class OscillatorModule {
       frequency: this.currentFreq,
       pulseWidth: this.pulseWidth,
       sawRise: this.sawRise,
-      sawFlip: this.sawFlip
+      sawFlip: this.sawFlip,
+      octave: this.octave,
+      semitones: this.semitones,
+      fine: this.fine
     };
   }
 
@@ -74,6 +84,7 @@ class OscillatorModule {
     if (state.pulseWidth !== undefined) this.setPulseWidth(state.pulseWidth);
     if (state.sawRise !== undefined) this.setSawRise(state.sawRise);
     if (state.sawFlip !== undefined) this.setSawFlip(state.sawFlip);
+    for (const k of ['octave', 'semitones', 'fine']) if (state[k] !== undefined) this.setTune(k, state[k]);
 
     if (this.card) {
       const typeSelect = this.card.querySelector(`#osc_type_${this.id}`);
@@ -93,6 +104,7 @@ class OscillatorModule {
       const riseSlider = this.card.querySelector(`#osc_rise_${this.id}`);
       if (riseSlider) riseSlider.value = this.sawRise;
       this.updateSawUI();
+      this.updateTuneUI();
     }
   }
 
@@ -114,6 +126,33 @@ class OscillatorModule {
     for (const osc of [this.oscNode, this.oscB]) {
       osc.frequency.cancelScheduledValues(now);
       osc.frequency.setTargetAtTime(target, now, 0.003);
+    }
+  }
+
+  setTune(key, val) {
+    const lim = OscillatorModule.TUNE[key];
+    if (!lim) return;
+    const n = Math.round(parseFloat(val));
+    this[key] = Math.min(lim.max, Math.max(lim.min, isNaN(n) ? 0 : n));
+    this.applyDetune();
+  }
+
+  applyDetune() {
+    const cents = this.octave * 1200 + this.semitones * 100 + this.fine;
+    const now = this.ctx.currentTime;
+    for (const osc of [this.oscNode, this.oscB]) {
+      osc.detune.cancelScheduledValues(now);
+      osc.detune.setTargetAtTime(cents, now, 0.005);
+    }
+  }
+
+  updateTuneUI() {
+    if (!this.card) return;
+    for (const key of Object.keys(OscillatorModule.TUNE)) {
+      const slider = this.card.querySelector(`#osc_${key}_${this.id}`);
+      if (slider) slider.value = this[key];
+      const label = this.card.querySelector(`#${key}_val_${this.id}`);
+      if (label) label.innerText = OscillatorModule.TUNE[key].label(this[key]);
     }
   }
 
@@ -248,6 +287,10 @@ class OscillatorModule {
       }
       const sawContainer = this.card.querySelector(`#saw_container_${this.id}`);
       if (sawContainer) sawContainer.style.display = (type === 'sawtooth') ? 'flex' : 'none';
+      const tuneContainer = this.card.querySelector(`#tune_container_${this.id}`);
+      if (tuneContainer) tuneContainer.style.display = (type === 'noise') ? 'none' : 'flex';
+      const freqContainer = this.card.querySelector(`#freq_container_${this.id}`);
+      if (freqContainer) freqContainer.style.display = (type === 'noise') ? 'none' : 'flex';
       if (window.synthApp && typeof synthApp.updateCables === 'function') synthApp.updateCables();
     }
   }
@@ -267,6 +310,7 @@ class OscillatorModule {
   // Waveform menu change (or a load): both sides get the wave at once, side A is heard.
   updateWaveformRouting() {
     try { this.mixNode.disconnect(); this.shaperNode.disconnect(); } catch (e) {}
+    if (this.noiseSource) try { this.noiseSource.disconnect(); } catch (e) {}
     if (this.fadeTimer) { clearTimeout(this.fadeTimer); this.fadeTimer = null; }
     this.fading = false;
     this.pendingWave = null;
@@ -279,7 +323,20 @@ class OscillatorModule {
     this.sawKey = null;
 
     const oscs = [this.oscNode, this.oscB];
-    if (this.currentType === 'square') {
+    if (this.currentType === 'noise') {
+      // White noise (Minimoog mixer's NOISE): a looped 2 s random buffer, pitch controls unused
+      if (!this.noiseSource) {
+        const len = this.ctx.sampleRate * 2;
+        const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        this.noiseSource = this.ctx.createBufferSource();
+        this.noiseSource.buffer = buf;
+        this.noiseSource.loop = true;
+        this.noiseSource.start();
+      }
+      this.noiseSource.connect(this.outputGain);
+    } else if (this.currentType === 'square') {
       oscs.forEach(o => { o.type = 'sawtooth'; });
       this.shaperNode.curve = this.makePulseCurve(this.pulseWidth);
       this.mixNode.connect(this.shaperNode);
@@ -316,12 +373,21 @@ class OscillatorModule {
             <option value="sawtooth" ${this.currentType === 'sawtooth' ? 'selected' : ''}>Sawtooth</option>
             <option value="triangle" ${this.currentType === 'triangle' ? 'selected' : ''}>Triangle</option>
             <option value="sine" ${this.currentType === 'sine' ? 'selected' : ''}>Sine</option>
+            <option value="noise" ${this.currentType === 'noise' ? 'selected' : ''}>Noise</option>
           </select>
         </div>
 
-        <div class="control-group">
+        <div class="control-group" id="freq_container_${this.id}" style="display: ${this.currentType === 'noise' ? 'none' : 'flex'};">
           <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">Frequency: <span id="freq_val_${this.id}" data-entry="@freq">${Math.round(this.currentFreq)} Hz</span></label>
           <input type="range" id="osc_freq_${this.id}" min="0" max="1" step="0.001" value="${OscillatorModule.freqToSlider(this.currentFreq)}">
+        </div>
+
+        <div id="tune_container_${this.id}" style="display: ${this.currentType === 'noise' ? 'none' : 'flex'}; flex-direction: column; gap: 10px;">
+          ${Object.entries(OscillatorModule.TUNE).map(([key, t]) => `
+          <div class="control-group">
+            <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">${t.name}: <span id="${key}_val_${this.id}" data-entry="unit:${t.unit}">${t.label(this[key])}</span></label>
+            <input type="range" id="osc_${key}_${this.id}" min="${t.min}" max="${t.max}" step="1" value="${this[key]}">
+          </div>`).join('')}
         </div>
 
         <div class="control-group" id="pwm_container_${this.id}" style="display: ${this.currentType === 'square' ? 'flex' : 'none'};">
@@ -371,6 +437,14 @@ class OscillatorModule {
       });
     }
 
+    for (const key of Object.keys(OscillatorModule.TUNE)) {
+      const slider = card.querySelector(`#osc_${key}_${this.id}`);
+      if (slider) slider.addEventListener('input', (e) => {
+        this.setTune(key, e.target.value);
+        this.updateTuneUI();
+      });
+    }
+
     const pwSlider = card.querySelector(`#osc_pw_${this.id}`);
     const pwLabel = card.querySelector(`#pw_val_${this.id}`);
     if (pwSlider) {
@@ -403,6 +477,7 @@ class OscillatorModule {
     if (this.shaperNode) try { this.shaperNode.disconnect(); } catch (e) {}
     if (this.outputGain) try { this.outputGain.disconnect(); } catch (e) {}
     if (this.pitchInput) try { this.pitchInput.disconnect(); } catch (e) {}
+    if (this.noiseSource) try { this.noiseSource.stop(); this.noiseSource.disconnect(); } catch (e) {}
   }
 }
 
@@ -420,6 +495,14 @@ OscillatorModule.freqToSlider = (freq) => {
   const { FREQ_MIN: lo, FREQ_MAX: hi, FREQ_CURVE: k } = OscillatorModule;
   const f = Math.min(hi, Math.max(lo, parseFloat(freq)));
   return Math.pow(Math.log(f / lo) / Math.log(hi / lo), 1 / k);
+};
+
+// Octave / Semitones / Fine sliders (setTune): ranges, names and readouts
+OscillatorModule.signed = (n) => (n > 0 ? `+${n}` : `${n}`);
+OscillatorModule.TUNE = {
+  octave:    { name: 'Octave',    min: -2,  max: 2,  unit: 'oct', label: n => `${OscillatorModule.signed(n)} oct` },
+  semitones: { name: 'Semitones', min: -12, max: 12, unit: 'st',  label: n => `${OscillatorModule.signed(n)} st` },
+  fine:      { name: 'Fine',      min: -50, max: 50, unit: 'ct',  label: n => `${OscillatorModule.signed(n)} ct` }
 };
 
 OscillatorModule.SAW_HARMONICS = 1024;

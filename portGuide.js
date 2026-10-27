@@ -13,7 +13,7 @@
 
   const GUIDE = {
     // Sound sources
-    'oscillator:in:pitch': { name: 'PITCH', signal: 'CV', text: 'Plays notes. While a cable is plugged in, the incoming note sets the pitch and the Frequency slider is set aside.', from: 'Keyboard FREQ, Sequencer PITCH CV', match: ['keyboard:out:freq', 'sequencer:out:pitch'] },
+    'oscillator:in:pitch': { name: 'PITCH', signal: 'CV', text: 'Plays notes. While a cable is plugged in, the incoming note sets the pitch and the Frequency slider is set aside; Octave, Semitones and Fine still shift it.', from: 'Keyboard FREQ, Sequencer PITCH CV', match: ['keyboard:out:freq', 'sequencer:out:pitch'] },
     'oscillator:in:fm': { name: 'FM IN', signal: 'CV', text: 'Pushes the pitch up and down around the current note. An LFO here gives vibrato; another oscillator gives metallic FM tones.', from: 'LFO OUT, Webcam X / Y, Keyboard BEND, another Oscillator OUT', match: ['lfo:out:default', 'oscillator:out:default', 'webcam:out:out_x', 'webcam:out:out_y', 'keyboard:out:bend'] },
     'oscillator:out:default': { name: 'OUT', signal: 'Audio', text: 'The raw tone of the oscillator.', to: 'Filter IN, VCA IN, Mixer IN, Reverb IN L, Output IN, Oscilloscope IN', match: AUDIO_DESTS },
 

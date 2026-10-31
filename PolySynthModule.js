@@ -73,10 +73,23 @@ class PolySynthModule extends ModuleBase {
       { id: 'position', label: 'Position', min: 0, max: 100, step: 0.5, value: 0, unit: '%' },
       { id: 'warp', label: 'Warp', min: 0, max: 100, step: 1, value: 0, unit: '%' },
       { id: 'detune', label: 'Detune', min: 0, max: 50, step: 1, value: 8, unit: 'cents' },
+      // Oscillator 2 on its own (Minilogue VCO 2): its waveform ('same' = the Waveform above), octave
+      // and semitone interval, the balance between the two oscillators, and a noise source
+      { id: 'wave2', label: 'Osc 2 Wave', kind: 'select', value: 'same',
+        options: [['same', 'Same as Osc 1'], ['sawtooth', 'Sawtooth'], ['square', 'Square'], ['triangle', 'Triangle'], ['sine', 'Sine']] },
+      { id: 'osc2Oct', label: 'Osc 2 Octave', min: -2, max: 2, step: 1, value: 0, format: v => `${v > 0 ? '+' : ''}${v} oct` },
+      { id: 'osc2Semi', label: 'Osc 2 Semitones', min: -12, max: 12, step: 1, value: 0, format: v => `${v > 0 ? '+' : ''}${v} st` },
+      { id: 'oscMix', label: 'Osc Mix', min: 0, max: 100, step: 1, value: 50, format: v => v === 50 ? 'Equal' : (v < 50 ? `Osc 1 ${100 - v}%` : `Osc 2 ${v}%`) },
+      { id: 'noise', label: 'Noise', min: 0, max: 100, step: 1, value: 0, unit: '%' },
       { id: 'cutoff', label: 'Cutoff', min: 0, max: 100, step: 1, value: 45, format: v => PolySynthModule.formatHz(PolySynthModule.cutoffHz(v)),
         entry: { unit: 'Hz', decimals: 0, fromSlider: v => PolySynthModule.cutoffHz(v), toSlider: hz => 100 * Math.log(hz / 60) / Math.log(200) } },
       { id: 'reso', label: 'Resonance', min: 0, max: 20, step: 0.5, value: 2, format: v => `Q ${v}` },
+      { id: 'slope', label: 'Filter Slope', kind: 'select', value: '12', options: [['12', '12dB (2-pole)'], ['24', '24dB (4-pole)']] },
       { id: 'filterEnv', label: 'Filter Env', min: 0, max: 100, step: 1, value: 40, unit: '%' },
+      // The filter's own envelope (older patches without it copy Attack / Decay / Sustain, see setState)
+      { id: 'fAttack', label: 'Filter Attack', min: 1, max: 3000, step: 1, value: 10, unit: 'ms' },
+      { id: 'fDecay', label: 'Filter Decay', min: 10, max: 3000, step: 10, value: 400, unit: 'ms' },
+      { id: 'fSustain', label: 'Filter Sustain', min: 0, max: 100, step: 1, value: 60, unit: '%' },
       { id: 'attack', label: 'Attack', min: 1, max: 3000, step: 1, value: 10, unit: 'ms' },
       { id: 'decay', label: 'Decay', min: 10, max: 3000, step: 10, value: 400, unit: 'ms' },
       { id: 'sustain', label: 'Sustain', min: 0, max: 100, step: 1, value: 60, unit: '%' },
@@ -258,6 +271,18 @@ class PolySynthModule extends ModuleBase {
     // Pitch bend from the Keyboard (NOTES cable): cents added to every oscillator's detune
     this.bendNode = this.makeConstant(0);
     this.lastFreq = null;   // Hz of the last note played, where a Slide glide starts
+    // Noise: one looped white-noise buffer shared by all voices, each voice has its own level into its filter
+    const nLen = ctx.sampleRate * 2;
+    const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+    const nd = nBuf.getChannelData(0);
+    for (let i = 0; i < nLen; i++) nd[i] = Math.random() * 2 - 1;
+    this.noiseSrc = this.own(ctx.createBufferSource());
+    this.noiseSrc.buffer = nBuf;
+    this.noiseSrc.loop = true;
+    this.noiseSrc.start();
+    // Osc Mix: a level for oscillator 1 and one for oscillator 2 (both 1 at the middle, as before)
+    this.mix1 = this.makeConstant(1);
+    this.mix2 = this.makeConstant(1);
     for (let i = 0; i < POLY_MAX_VOICES; i++) {
       const mix = this.own(ctx.createGain());
       mix.gain.value = 0.5;
@@ -266,25 +291,43 @@ class PolySynthModule extends ModuleBase {
         gain.gain.value = si === 0 ? 1 : 0;
         const o1 = this.own(ctx.createOscillator());
         const o2 = this.own(ctx.createOscillator());
-        o1.connect(gain);
-        o2.connect(gain);
+        const g1 = this.own(ctx.createGain());
+        const g2 = this.own(ctx.createGain());
+        g1.gain.value = 0;
+        g2.gain.value = 0;
+        this.mix1.connect(g1.gain);
+        this.mix2.connect(g2.gain);
+        o1.connect(g1);
+        o2.connect(g2);
+        g1.connect(gain);
+        g2.connect(gain);
         this.bendNode.connect(o1.detune);
         this.bendNode.connect(o2.detune);
         gain.connect(mix);
         return { osc1: o1, osc2: o2, gain };
       });
+      const noise = this.own(ctx.createGain());
+      noise.gain.value = 0;
+      this.noiseSrc.connect(noise);
+      noise.connect(mix);
+      // Two low-pass stages: the second one is in the path only with Filter Slope 24dB. Both follow the
+      // filter envelope; the resonance is on the first only (one peak).
       const filter = this.own(ctx.createBiquadFilter());
       filter.type = 'lowpass';
+      const filter2 = this.own(ctx.createBiquadFilter());
+      filter2.type = 'lowpass';
+      filter2.Q.value = -3.01;   // dB for a Web Audio lowpass: no peak (Butterworth)
       const amp = this.own(ctx.createGain());
       amp.gain.value = 0;
       mix.connect(filter);
       filter.connect(amp);
+      filter2.connect(amp);
       amp.connect(this.outNode);
       const t0 = ctx.currentTime;
       sides.forEach(sd => { sd.osc1.start(t0); sd.osc2.start(t0); });
       // osc1s / osc2s: the first / second oscillator of both sides (pitch and detune go to both)
       this.voices.push({ sides, osc1s: sides.map(sd => sd.osc1), osc2s: sides.map(sd => sd.osc2),
-        filter, amp, note: null, freq: 440, gate: false, freeAt: 0, started: 0, order: 0 });
+        filter, filter2, filters: [filter, filter2], noise, amp, note: null, freq: 440, gate: false, freeAt: 0, started: 0, order: 0 });
     }
 
     // The NOTES input: app.js connects the Keyboard's PolyNoteBus to this object
@@ -317,26 +360,44 @@ class PolySynthModule extends ModuleBase {
     const t = this.audioCtx.currentTime;
     if (id === 'wave' || id === 'position' || id === 'warp') {
       this.applyWave();
-    } else if (id === 'detune') {
+    } else if (id === 'wave2') {
+      this.applyWave();
+    } else if (id === 'detune' || id === 'osc2Oct' || id === 'osc2Semi') {
+      const p = this.params;
+      const shift = (p.osc2Oct || 0) * 1200 + (p.osc2Semi || 0) * 100;
       this.voices.forEach(v => {
-        v.osc1s.forEach(o => o.detune.setTargetAtTime(-value / 2, t, 0.02));
-        v.osc2s.forEach(o => o.detune.setTargetAtTime(value / 2, t, 0.02));
+        v.osc1s.forEach(o => o.detune.setTargetAtTime(-p.detune / 2, t, 0.02));
+        v.osc2s.forEach(o => o.detune.setTargetAtTime(p.detune / 2 + shift, t, 0.02));
+      });
+    } else if (id === 'oscMix') {
+      const m = value / 100;
+      this.mix1.offset.setTargetAtTime(Math.min(1, 2 * (1 - m)), t, 0.02);
+      this.mix2.offset.setTargetAtTime(Math.min(1, 2 * m), t, 0.02);
+    } else if (id === 'noise') {
+      this.voices.forEach(v => v.noise.gain.setTargetAtTime(value / 100, t, 0.02));
+    } else if (id === 'slope') {
+      this.voices.forEach(v => {
+        try { v.filter.disconnect(); } catch (e) {}
+        v.filter.connect(value === '24' ? v.filter2 : v.amp);
       });
     } else if (id === 'reso') {
       this.voices.forEach(v => v.filter.Q.setTargetAtTime(value, t, 0.02));
     } else if (id === 'level') {
       // Several voices add up, so the output is kept well below 1
       this.outNode.gain.setTargetAtTime(0.35 * value / 100, t, 0.02);
-    } else if (id === 'cutoff' || id === 'filterEnv' || id === 'sustain') {
+    } else if (id === 'cutoff' || id === 'filterEnv' || id === 'fSustain' || id === 'sustain') {
       // Voices that are holding a note follow the new filter / sustain settings
       this.voices.forEach(v => {
         if (!v.gate) {
-          if (id === 'cutoff' && t >= v.freeAt) v.filter.frequency.setTargetAtTime(this.cutoffBase(), t, 0.02);
+          if (id === 'cutoff' && t >= v.freeAt) v.filters.forEach(f => f.frequency.setTargetAtTime(this.cutoffBase(), t, 0.02));
           return;
         }
-        if (t < v.started + this.params.attack / 1000) return;
-        PolySynthModule.moveTo(v.filter.frequency, this.cutoffSustain(), t, 0.03);
-        if (id === 'sustain') PolySynthModule.moveTo(v.amp.gain, this.params.sustain / 100, t, 0.03);
+        if (id === 'sustain') {
+          if (t >= v.started + this.params.attack / 1000) PolySynthModule.moveTo(v.amp.gain, this.params.sustain / 100, t, 0.03);
+          return;
+        }
+        if (t < v.started + this.params.fAttack / 1000) return;
+        v.filters.forEach(f => PolySynthModule.moveTo(f.frequency, this.cutoffSustain(), t, 0.03));
       });
     } else if (id === 'voices') {
       // Voices beyond the new count let go of their notes
@@ -359,6 +420,9 @@ class PolySynthModule extends ModuleBase {
       next = { key: `${table}|${pos.toFixed(3)}|${warp.toFixed(2)}`,
         pw: PolySynthModule.tableWave(this.audioCtx, table, pos, warp) };
     }
+    // Osc 2 Wave other than 'same': a classic wave of its own on the second oscillator
+    const w2 = this.params.wave2 && this.params.wave2 !== 'same' ? this.params.wave2 : null;
+    if (w2) { next.w2 = { type: w2 }; next.key += `|${w2}`; }
     if (next.key !== this.waveKey) {
       this.pendingWave = next;
       this.flushWave();
@@ -386,7 +450,7 @@ class PolySynthModule extends ModuleBase {
       // First waveform, or no sound is running: set both sides directly
       this.voices.forEach(v => v.sides.forEach(sd => {
         PolySynthModule.setWave(sd.osc1, w);
-        PolySynthModule.setWave(sd.osc2, w);
+        PolySynthModule.setWave(sd.osc2, w.w2 || w);
       }));
     } else if (t < this.fadeEnd) {
       if (!this.waveTimer) {
@@ -399,7 +463,7 @@ class PolySynthModule extends ModuleBase {
         const on = v.sides[next];
         const off = v.sides[this.side];
         PolySynthModule.setWave(on.osc1, w);
-        PolySynthModule.setWave(on.osc2, w);
+        PolySynthModule.setWave(on.osc2, w.w2 || w);
         [[on.gain, 1], [off.gain, 0]].forEach(([g, to]) => {
           g.gain.cancelScheduledValues(t);
           g.gain.setValueAtTime(1 - to, t);
@@ -424,7 +488,7 @@ class PolySynthModule extends ModuleBase {
 
   cutoffSustain() {
     const base = this.cutoffBase();
-    return base + (this.cutoffPeak() - base) * (this.params.sustain / 100);
+    return base + (this.cutoffPeak() - base) * (this.params.fSustain / 100);
   }
 
   activeVoices() {
@@ -503,11 +567,16 @@ class PolySynthModule extends ModuleBase {
     amp.setTargetAtTime(1, start, Math.max(0.001, a / 3));
     amp.setTargetAtTime(s, start + a, Math.max(0.005, d / 4));
 
-    const f = v.filter.frequency;
-    f.cancelScheduledValues(t);
-    if (silent || stolen) f.setValueAtTime(this.cutoffBase(), start);
-    f.setTargetAtTime(this.cutoffPeak(), start, Math.max(0.001, a / 3));
-    f.setTargetAtTime(this.cutoffSustain(), start + a, Math.max(0.005, d / 4));
+    // Filter envelope: its own Attack / Decay / Sustain, the same Release as the volume
+    const fa = p.fAttack / 1000;
+    const fd = p.fDecay / 1000;
+    v.filters.forEach(flt => {
+      const f = flt.frequency;
+      f.cancelScheduledValues(t);
+      if (silent || stolen) f.setValueAtTime(this.cutoffBase(), start);
+      f.setTargetAtTime(this.cutoffPeak(), start, Math.max(0.001, fa / 3));
+      f.setTargetAtTime(this.cutoffSustain(), start + fa, Math.max(0.005, fd / 4));
+    });
 
     this.updateVoiceDisplay();
   }
@@ -533,7 +602,7 @@ class PolySynthModule extends ModuleBase {
     v.order = ++this.order;
     v.freeAt = t + r;
     PolySynthModule.moveTo(v.amp.gain, 0, t, r / 4);
-    PolySynthModule.moveTo(v.filter.frequency, this.cutoffBase(), t, r / 4);
+    v.filters.forEach(f => PolySynthModule.moveTo(f.frequency, this.cutoffBase(), t, r / 4));
   }
 
   // Lights the voices that are holding a note; voices above the Voices count are dimmed
@@ -546,6 +615,15 @@ class PolySynthModule extends ModuleBase {
       cell.classList.toggle('on', !!(v && v.gate));
       cell.classList.toggle('off', i >= this.params.voices);
     });
+  }
+
+  // Patches from before the filter had its own envelope: it follows the volume Attack / Decay / Sustain
+  setState(state) {
+    if (state && state.fAttack === undefined) {
+      state = Object.assign({}, state, { fAttack: state.attack, fDecay: state.decay, fSustain: state.sustain });
+      ['fAttack', 'fDecay', 'fSustain'].forEach(k => { if (state[k] === undefined) delete state[k]; });
+    }
+    super.setState(state);
   }
 
   destroy() {

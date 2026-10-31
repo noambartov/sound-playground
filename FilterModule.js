@@ -10,7 +10,7 @@ class FilterModule {
         // same cutoff and modulation; the resonance stays on the first stage only (one peak).
         this.stage2 = this.ctx.createBiquadFilter();
         this.stage2.type = 'lowpass';
-        this.stage2.Q.value = 0.707;
+        this.stage2.Q.value = -3.01; // Q is in dB for a Web Audio lowpass: -3 dB = no peak (Butterworth)
         this.outputNode = this.ctx.createGain();
         
         this.minFreq = 20;

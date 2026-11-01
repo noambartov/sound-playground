@@ -34,6 +34,7 @@
 
     'sequencer:out:pitch': { name: 'PITCH CV', signal: 'CV', text: 'The note of the current step.', to: 'Oscillator PITCH', match: ['oscillator:in:pitch', 'wavetable:in:pitch'] },
     'sequencer:out:gate': { name: 'GATE', signal: 'Gate', text: 'A short pulse on every active step.', to: 'Envelope GATE IN, or VCA CV', match: ['envelope:in:gate', 'vca:in:cv'] },
+    'sequencer:out:notes': { name: 'NOTES', signal: 'Gate', text: 'Every active step as a note, held as long as its GATE, so a Poly Synth (or a Sampler) can play the sequence. Carries notes, not sound.', to: 'Poly Synth NOTES, Sampler NOTES', match: ['polysynth:in:notes', 'sampler:in:notes'] },
     'sequencer:out:clock': { name: 'CLOCK', signal: 'Gate', text: 'A pulse on every step (16th note) while playing, active or not, so other modules can follow the tempo.', to: 'Stereo Delay CLOCK (with Sync on), Drum Machine CLOCK IN, LFO CLOCK', match: ['delay:in:clock', 'drums:in:clock_in', 'lfo:in:clock', 'harmony:in:clock', 'chorale:in:clock'] },
     'sequencer:in:clock_in': { name: 'CLOCK IN', signal: 'Gate', text: 'A pulse on every 16th note from another module. With a cable here the Sequencer moves one step per pulse instead of using its own Tempo, starts from the first step when that module starts and stops with it.', from: 'Metronome CLOCK, Drum Machine CLOCK', match: ['metronome:out:clock', 'drums:out:clock'] },
 
@@ -97,6 +98,7 @@
     'keyboard:out:notes': 'Poly Synth NOTES',
     'sequencer:out:pitch': 'Osc PITCH',
     'sequencer:out:gate': 'Env GATE / VCA CV',
+    'sequencer:out:notes': 'Poly Synth NOTES',
     'sequencer:out:clock': 'Delay CLOCK',
     'sequencer:in:clock_in': 'Metronome CLOCK',
     'webcam:out:out_x': 'Osc FM / Filter',

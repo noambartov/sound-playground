@@ -50,6 +50,11 @@ class SequencerModule {
         this.clockSource = ClockSource.attach(this.clockNode); // tells CLOCK followers each pulse ahead of time
         this.firstPulse = false;
 
+        // NOTES OUT: every active step as a note for the Poly Synth (or any NOTES input). A PolyNoteBus
+        // (PolySynthModule.js); the notes are sent a little ahead with their exact start time (see sendNote)
+        this.noteBus = new PolyNoteBus();
+        this.noteTimers = new Set();
+
         // CLOCK IN: with a cable here the steps follow the incoming pulses (clockSync.js)
         this.follower = new ClockFollower(this.ctx, {
             onPulse: (t, dur, index) => this.followPulse(t, dur, index),
@@ -100,6 +105,7 @@ class SequencerModule {
         if (portType === 'clock') {
             return this.clockNode;
         }
+        if (portType === 'notes') return this.noteBus;
         return this.pitchNode;
     }
 
@@ -150,6 +156,9 @@ class SequencerModule {
         const now = this.ctx.currentTime;
         this.gateNode.offset.cancelScheduledValues(now);
         this.gateNode.offset.setValueAtTime(0, now);
+        this.noteTimers.forEach(id => clearTimeout(id));
+        this.noteTimers.clear();
+        this.noteBus.update([]);
         this.clearStepHighlights();
         this.scheduledStepsQueue = [];
         this.clockSource.stop();
@@ -261,6 +270,10 @@ class SequencerModule {
             const gateOffTime = time + gateDurationSec;
             this.gateNode.offset.setValueAtTime(1.0, gateOffTime - rampTime);
             this.gateNode.offset.linearRampToValueAtTime(0.0, gateOffTime);
+
+            // NOTES OUT: the same note, from the step start to the gate end (MIDI 45 = A2 = 110 Hz)
+            this.sendNote(true, 45 + semis, freq, time);
+            this.sendNote(false, 45 + semis, freq, gateOffTime);
         } else {
             this.gateNode.offset.setValueAtTime(0.0, time);
         }
@@ -271,6 +284,20 @@ class SequencerModule {
 
         // Push to queue for UI sync
         this.scheduledStepsQueue.push({ stepIndex: this.currentStep, time: time });
+    }
+
+    // Sends a note on / off to the NOTES sinks about 30 ms before its time, with the exact time as the
+    // 4th argument: the Poly Synth starts the note exactly then; sinks that ignore it are at most ~30 ms early.
+    sendNote(on, note, freq, time) {
+        const delay = Math.max(0, (time - this.ctx.currentTime) * 1000 - 30);
+        const id = setTimeout(() => {
+            this.noteTimers.delete(id);
+            const bus = this.noteBus;
+            if (on) bus.held.set(note, freq);
+            else bus.held.delete(note);
+            bus.sinks.forEach(sk => { if (on) sk.noteOn(note, freq, 0, time); else sk.noteOff(note, time); });
+        }, delay);
+        this.noteTimers.add(id);
     }
 
     requestUIUpdate() {
@@ -381,6 +408,8 @@ class SequencerModule {
         try { this.pitchNode.stop(); } catch(e){}
         try { this.gateNode.stop(); } catch(e){}
         try { this.clockNode.stop(); } catch(e){}
+        this.noteTimers.forEach(id => clearTimeout(id));
+        this.noteBus.disconnect();
     }
 
     // --- Static Event Handlers ---
@@ -503,8 +532,8 @@ class SequencerModule {
                         </div>
                     </div>
 
-                    <!-- Outputs Section -->
-                    <div style="display: flex; justify-content: space-around; width: 100%; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 2px;">
+                    <!-- Outputs Section (two rows of two) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; row-gap: 6px; justify-items: center; width: 100%; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 2px;">
                         <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <span style="font-size: 0.65rem; font-weight: 700;">PITCH CV</span>
                             <div class="port port-out" data-node-id="${this.id}" data-port-type="pitch" title="Pitch CV Output"></div>
@@ -512,6 +541,10 @@ class SequencerModule {
                         <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <span style="font-size: 0.65rem; font-weight: 700;">GATE</span>
                             <div class="port port-out" data-node-id="${this.id}" data-port-type="gate" title="Gate Output"></div>
+                        </div>
+                        <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                            <span style="font-size: 0.65rem; font-weight: 700;">NOTES</span>
+                            <div class="port port-out" data-node-id="${this.id}" data-port-id="notes" data-port-type="gate" title="Notes Output (Poly Synth)"></div>
                         </div>
                         <div class="port-group" style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
                             <span style="font-size: 0.65rem; font-weight: 700;">CLOCK</span>

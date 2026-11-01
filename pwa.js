@@ -98,4 +98,14 @@
   }
 
   window.showUpdateNotice = showUpdateNotice;
+
+  // "Site updated: <date, time>" in the help book's bottom line: when the page that is running now was
+  // published (the Last-Modified of index.html), so after a refresh the owner can see the new version
+  // arrived. Hidden when the server gave no date (the browser then reports the current time).
+  const updatedEl = document.getElementById('site-updated');
+  const published = new Date(document.lastModified);
+  if (updatedEl && !isNaN(published) && Date.now() - published.getTime() > 60 * 1000) {
+    const when = published.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    updatedEl.textContent = `Site updated: ${when} \u00b7 `;
+  }
 })();

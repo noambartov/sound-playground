@@ -12,7 +12,7 @@ if (!window.SoundSandboxApp) {
 
       this.isPresentationMode = false;
       this.isSpacePressed = false;
-      this.tooltipsEnabled = true;
+      this.tooltipsEnabled = false; // jack hints start off on every open; the Tooltips button turns them on
 
       this.selectedNodeIds = new Set();
       this.activeCable = null; 
@@ -2565,7 +2565,6 @@ if (!window.SoundSandboxApp) {
         this.cableLayerBtn.textContent = `Cables: ${this.cablesBehind ? 'Back' : 'Front'}`;
         this.cableLayerBtn.classList.toggle('active', this.cablesBehind);
       }
-      try { localStorage.setItem('sp_cables_behind', this.cablesBehind ? '1' : '0'); } catch (e) {}
     }
 
     // Sidebar categories open and close by clicking their title. Groups and buttons added later
@@ -2715,9 +2714,8 @@ if (!window.SoundSandboxApp) {
     }
 
     initDraggablePanels() {
-      try {
-        if (localStorage.getItem('sp_cables_behind') === '1') this.toggleCableLayer();
-      } catch (e) {}
+      // Cables always start in front of the modules on every open (the choice is no longer remembered)
+      try { localStorage.removeItem('sp_cables_behind'); } catch (e) {}
 
       const panels = [
         { el: document.querySelector('.sidebar'), handle: document.querySelector('.sidebar h3'), key: 'sp_panel_sidebar' },

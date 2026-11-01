@@ -453,8 +453,18 @@ class KeyboardModule {
     window.addEventListener('keyup', this.handleKeyUp);
   }
 
+  // Letters play notes unless the user is typing text (a typed value, a name, a menu). A slider, a
+  // button or a switch that was just clicked keeps focus, but letters still play, so one hand can play
+  // the computer keys while the other moves sliders with the mouse.
+  static isTyping() {
+    const el = document.activeElement;
+    if (!el) return false;
+    if (el.isContentEditable || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') return true;
+    return el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button', 'submit', 'reset', 'color', 'file'].includes(el.type);
+  }
+
   handleKeyDown(e) {
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    if (KeyboardModule.isTyping()) return;
     if (e.repeat) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return; // shortcuts such as Cmd+Z do not play notes
 
@@ -466,7 +476,7 @@ class KeyboardModule {
   }
 
   handleKeyUp(e) {
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    if (KeyboardModule.isTyping()) return;
 
     const char = e.key.toLowerCase();
     if (this.keyMap.hasOwnProperty(char)) {

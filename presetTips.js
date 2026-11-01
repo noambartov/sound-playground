@@ -1,6 +1,7 @@
 // presetTips.js - a small tips panel at the bottom of the screen while a preset plays ("Try moving ... to get ..."),
 // and whenever the Tooltips button is switched on (then with the canvas tips, after the last preset's tips if one is
-// still on the canvas). Switching Tooltips off hides it, and while Tooltips is off presets open no tips.
+// still on the canvas). Tooltips start OFF, yet presets still open their tips; once the user switches Tooltips off, the
+// panel hides and presets open no tips until it is switched on again.
 // Tips come from helpData: playTips[preset] when written, else the recipe's steps, else the module's controls and tips.
 // After the preset's own tips come general canvas tips (moving around, zoom, selecting, cables, menus, the guide),
 // worded for touch or mouse. A pulsing ring marks what the current tip talks about (window.playTipTargets, CANVAS_TIPS;
@@ -248,8 +249,11 @@
     if (!wasRunning) requestAnimationFrame(placeRing);
   }
 
+  // Tooltips start OFF (jack hints hidden), but presets and lessons still open their tips until the user
+  // switches Tooltips off themselves during this visit.
+  let userTurnedOff = false;
   function tooltipsOn() {
-    return !document.body.classList.contains('tooltips-disabled');
+    return !userTurnedOff || !document.body.classList.contains('tooltips-disabled');
   }
 
   function render() {
@@ -332,6 +336,7 @@
 
   // The Tooltips button (app.js toggleTooltips) switches the panel on and off with the jack hints
   function onTooltips(enabled) {
+    userTurnedOff = !enabled;
     if (enabled) show(presetKey);
     else hide();
   }

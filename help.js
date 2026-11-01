@@ -3,7 +3,7 @@
 // Troubleshooting, Shortcuts.
 // The search box filters cards across all tabs. English by default; Hebrew is optional (RTL).
 (function () {
-  let currentLang = 'en';
+  let currentLang = 'he'; // the help book opens in Hebrew; the button switches to English
   let activeTab = 'start';
   let activeModule = null;
   let query = '';

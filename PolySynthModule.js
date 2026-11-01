@@ -7,7 +7,8 @@
 
 // What a NOTES cable carries: not sound but note-on / note-off messages. The Keyboard's NOTES output
 // is a PolyNoteBus; app.js calls bus.connect(sink) / bus.disconnect(sink) like for an audio node,
-// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq, glide) / noteOff(note) / allNotesOff() (glide: seconds, 0 = none),
+// and the sink (the Poly Synth's NOTES input) gets noteOn(note, freq, glide, when) / noteOff(note, when) / allNotesOff() (glide: seconds, 0 = none;
+// when: optional AudioContext time to play it at, used by the Sequencer, which sends its notes a little ahead),
 // plus bend(amount) for the Keyboard's pitch bend wheel (-1..+1).
 class PolyNoteBus {
   constructor() {
@@ -98,7 +99,7 @@ class PolySynthModule extends ModuleBase {
     ],
     inputs: [
       { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Input (from Keyboard or Harmony Walker NOTES)',
-        guide: { text: 'All the keys you hold on the Keyboard (or the Harmony Walker chord), each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES, Harmony Walker NOTES, Chorale NOTES', match: ['keyboard:out:notes', 'harmony:out:notes', 'chorale:out:notes'] },
+        guide: { text: 'All the keys you hold on the Keyboard (or the Harmony Walker chord), each played by its own voice. This cable carries notes, not sound.', from: 'Keyboard NOTES, Harmony Walker NOTES, Chorale NOTES, Sequencer NOTES', match: ['keyboard:out:notes', 'harmony:out:notes', 'chorale:out:notes', 'sequencer:out:notes'] },
         chip: 'Keyboard / Walker NOTES' }
     ],
     outputs: [
@@ -334,8 +335,8 @@ class PolySynthModule extends ModuleBase {
     const self = this;
     this.inputNodes = {
       notes: {
-        noteOn(note, freq, glide) { self.noteOn(note, freq, glide); },
-        noteOff(note) { self.noteOff(note); },
+        noteOn(note, freq, glide, when) { self.noteOn(note, freq, glide, when); },
+        noteOff(note, when) { self.noteOff(note, when); },
         allNotesOff() { self.allNotesOff(); },
         bend(amount) { self.setBend(amount); }
       }
@@ -513,10 +514,10 @@ class PolySynthModule extends ModuleBase {
     this.bendNode.offset.setTargetAtTime(Math.max(-1, Math.min(1, amount)) * 200, t, 0.005);
   }
 
-  noteOn(note, freq, glide = 0) {
+  noteOn(note, freq, glide = 0, when = 0) {
     if (this.destroyed) return;
     const ctx = this.audioCtx;
-    const t = ctx.currentTime;
+    const t = Math.max(ctx.currentTime, when || 0);
     const v = this.pickVoice(note, t);
     if (!v) return;
     const glideSec = glide === true ? 0.15 : Number(glide) || 0;
@@ -581,9 +582,9 @@ class PolySynthModule extends ModuleBase {
     this.updateVoiceDisplay();
   }
 
-  noteOff(note) {
+  noteOff(note, when = 0) {
     if (this.destroyed) return;
-    const t = this.audioCtx.currentTime;
+    const t = Math.max(this.audioCtx.currentTime, when || 0);
     this.voices.forEach(v => { if (v.gate && v.note === note) this.releaseVoice(v, t); });
     this.updateVoiceDisplay();
   }

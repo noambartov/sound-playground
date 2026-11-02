@@ -2627,3 +2627,62 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 .help-copyright a { color: inherit; }
 .empty-canvas-hint .empty-canvas-by { margin: -6px 0 10px; font-size: 12px; text-align: center; }
 .empty-canvas-hint .empty-canvas-by a { color: var(--muted-text); }
+
+/* Voice Split (VoiceSplitModule.js): one row per voice, note name + PITCH and GATE jacks; lit while the voice's key is held */
+.vs-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.vs-row {
+  display: grid;
+  grid-template-columns: 18px 40px 1fr 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.05s, border-color 0.05s;
+}
+.vs-row .port-group { display: flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 10px; font-weight: 700; }
+.vs-num { color: var(--muted-text); }
+.vs-note { font-variant-numeric: tabular-nums; }
+.vs-row.on { border-color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 18%, transparent); }
+.vs-row.unused { opacity: 0.35; }
+
+/* Linked modules (moduleLinks.js): a small text tag in the header, e.g. "LINK A" */
+.link-tag {
+  margin-left: auto;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--link-color, #0d9488);
+  cursor: default;
+}
+#link-selected-btn {
+  position: fixed;
+  left: 50%;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 900;
+  padding: 12px 24px;
+  min-height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: #0d9488;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  touch-action: manipulation;
+}
+#link-selected-btn:hover { filter: brightness(1.08); }
+body.presentation-mode #link-selected-btn { display: none !important; }

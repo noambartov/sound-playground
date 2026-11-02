@@ -23,7 +23,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=3.54">
+  <link rel="stylesheet" href="styles.css?v=3.55">
 </head>
 <body class="light-theme tooltips-disabled">
 
@@ -126,6 +126,7 @@
 
   <!-- Group delete: shown while 2+ modules are selected (touch-friendly twin of the Delete key) -->
   <button id="delete-selected-btn" type="button" style="display: none;">Delete modules</button>
+  <button id="link-selected-btn" type="button" style="display: none;">Link modules</button>
 
   <!-- Dynamic Bilingual Help Modal / Manual & Presets -->
   <div id="help-modal" class="help-modal-overlay modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
@@ -164,8 +165,8 @@
   <script src="clockSync.js?v=1"></script>
 
   <!-- Modules Scripts -->
-  <script src="helpData.js?v=58"></script>
-  <script src="portGuide.js?v=17"></script>
+  <script src="helpData.js?v=59"></script>
+  <script src="portGuide.js?v=18"></script>
   <script src="help.js?v=15"></script>
   <script src="OscilloscopeModule.js?v=3"></script>
   <script src="KeyboardModule.js?v=9"></script>
@@ -191,18 +192,20 @@
   <script src="EqModule.js?v=2"></script>
   <script src="VocoderModule.js?v=2"></script>
   <script src="MetronomeModule.js?v=3"></script>
-  <script src="HarmonyWalkerModule.js?v=6"></script>
-  <script src="ChoraleModule.js?v=6"></script>
+  <script src="HarmonyWalkerModule.js?v=7"></script>
+  <script src="ChoraleModule.js?v=7"></script>
   <script src="ChoraleEditor.js?v=4"></script>
   <script src="WavetableModule.js?v=2"></script>
   <script src="PolySynthModule.js?v=12"></script>
   <script src="HarmonicsModule.js?v=6"></script>
   <script src="TimbreModule.js?v=5"></script>
   <script src="SamplerModule.js?v=2"></script>
+  <script src="VoiceSplitModule.js?v=1"></script>
 
   <!-- Main Application -->
   <script src="modulation.js?v=2"></script>
-  <script src="app.js?v=45"></script>
+  <script src="moduleLinks.js?v=1"></script>
+  <script src="app.js?v=46"></script>
   <script src="improbability.js?v=2"></script>
   <script src="presetTips.js?v=8"></script>
   <script src="onboarding.js?v=7"></script>

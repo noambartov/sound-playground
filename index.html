@@ -34,11 +34,11 @@
     <p class="sidebar-no-results" hidden>No modules found</p>
 
     <div class="sidebar-group">
-      <span class="sidebar-group-title">Instruments</span>
-      <button class="add-module-btn" data-type="polysynth" aria-label="Add Poly Synth Module">Poly Synth</button>
-      <button class="add-module-btn" data-type="drums" aria-label="Add Drum Machine Module">Drum Machine</button>
-      <button class="add-module-btn" data-type="sampler" aria-label="Add Sampler Module">Sampler</button>
-      <button class="add-module-btn" data-type="granular" aria-label="Add Granular Cloud Module">Granular Cloud</button>
+      <span class="sidebar-group-title">Sound Sources</span>
+      <button class="add-module-btn" data-type="oscillator" aria-label="Add Oscillator Module">Oscillator</button>
+      <button class="add-module-btn" data-type="wavetable" aria-label="Add Wavetable Osc Module">Wavetable Osc</button>
+      <button class="add-module-btn" data-type="harmonics" aria-label="Add Harmonics Module">Harmonics</button>
+      <button class="add-module-btn" data-type="audio_in" aria-label="Add Audio Input Module">Mic / Audio In</button>
     </div>
 
     <div class="sidebar-group">
@@ -49,27 +49,20 @@
     </div>
 
     <div class="sidebar-group">
-      <span class="sidebar-group-title">Play</span>
-      <button class="add-module-btn" data-type="keyboard" aria-label="Add Keyboard Module">Keyboard</button>
-      <button class="add-module-btn" data-type="ribbon" aria-label="Add Ribbon Module">Ribbon</button>
-      <button class="add-module-btn" data-type="webcam" aria-label="Add Webcam Controller Module">Webcam Controller</button>
-    </div>
-
-    <div class="sidebar-group">
-      <span class="sidebar-group-title">Sound Sources</span>
-      <button class="add-module-btn" data-type="oscillator" aria-label="Add Oscillator Module">Oscillator</button>
-      <button class="add-module-btn" data-type="wavetable" aria-label="Add Wavetable Osc Module">Wavetable Osc</button>
-      <button class="add-module-btn" data-type="harmonics" aria-label="Add Harmonics Module">Harmonics</button>
-      <button class="add-module-btn" data-type="audio_in" aria-label="Add Audio Input Module">Mic / Audio In</button>
-    </div>
-
-    <div class="sidebar-group">
       <span class="sidebar-group-title">Shaping</span>
       <button class="add-module-btn" data-type="filter" aria-label="Add Filter Module">Filter</button>
       <button class="add-module-btn" data-type="vca" aria-label="Add VCA Module">VCA</button>
       <button class="add-module-btn" data-type="envelope" aria-label="Add ADSR Envelope Module">Envelope (ADSR)</button>
       <button class="add-module-btn" data-type="lfo" aria-label="Add LFO Module">LFO</button>
       <button class="add-module-btn" data-type="mixer" aria-label="Add Mixer Module">Mixer</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Time &amp; Composition</span>
+      <button class="add-module-btn" data-type="metronome" aria-label="Add Metronome Module">Metronome</button>
+      <button class="add-module-btn" data-type="sequencer" aria-label="Add Sequencer Module">Sequencer</button>
+      <button class="add-module-btn" data-type="harmony" aria-label="Add Harmony Walker Module">Harmony Walker</button>
+      <button class="add-module-btn" data-type="chorale" aria-label="Add Chorale Module">Chorale</button>
     </div>
 
     <div class="sidebar-group">
@@ -83,11 +76,18 @@
     </div>
 
     <div class="sidebar-group">
-      <span class="sidebar-group-title">Time &amp; Composition</span>
-      <button class="add-module-btn" data-type="metronome" aria-label="Add Metronome Module">Metronome</button>
-      <button class="add-module-btn" data-type="sequencer" aria-label="Add Sequencer Module">Sequencer</button>
-      <button class="add-module-btn" data-type="harmony" aria-label="Add Harmony Walker Module">Harmony Walker</button>
-      <button class="add-module-btn" data-type="chorale" aria-label="Add Chorale Module">Chorale</button>
+      <span class="sidebar-group-title">Play</span>
+      <button class="add-module-btn" data-type="keyboard" aria-label="Add Keyboard Module">Keyboard</button>
+      <button class="add-module-btn" data-type="ribbon" aria-label="Add Ribbon Module">Ribbon</button>
+      <button class="add-module-btn" data-type="webcam" aria-label="Add Webcam Controller Module">Webcam Controller</button>
+    </div>
+
+    <div class="sidebar-group">
+      <span class="sidebar-group-title">Instruments</span>
+      <button class="add-module-btn" data-type="polysynth" aria-label="Add Poly Synth Module">Poly Synth</button>
+      <button class="add-module-btn" data-type="drums" aria-label="Add Drum Machine Module">Drum Machine</button>
+      <button class="add-module-btn" data-type="sampler" aria-label="Add Sampler Module">Sampler</button>
+      <button class="add-module-btn" data-type="granular" aria-label="Add Granular Cloud Module">Granular Cloud</button>
     </div>
 
     <div class="sidebar-group">
@@ -195,7 +195,7 @@
   <!-- Modules Scripts -->
   <script src="helpData.js?v=59"></script>
   <script src="portGuide.js?v=18"></script>
-  <script src="help.js?v=16"></script>
+  <script src="help.js?v=17"></script>
   <script src="OscilloscopeModule.js?v=3"></script>
   <script src="KeyboardModule.js?v=9"></script>
   <script src="OscillatorModule.js?v=9"></script>

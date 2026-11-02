@@ -9,7 +9,7 @@
   let query = '';
   const DONE_KEY = 'sp_lessons_done';
 
-  const GROUP_ORDER = ['instruments', 'output', 'play', 'sources', 'shaping', 'effects', 'time', 'helpers'];
+  const GROUP_ORDER = ['sources', 'output', 'shaping', 'time', 'effects', 'play', 'instruments', 'helpers'];
   // Sidebar group title -> manual group. The Sidebar decides each module's group and its order
   // in the manual's module list, so the two lists always match.
   const SIDEBAR_GROUPS = {

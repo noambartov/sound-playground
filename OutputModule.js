@@ -124,7 +124,7 @@ class OutputModule {
 
         return `
             <div class="node-header">
-                <span>Audio Output</span>
+                <span>Output</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
             <div class="node-body" style="padding: 14px; display: flex; flex-direction: column; gap: 12px;">
@@ -132,7 +132,7 @@ class OutputModule {
                     <label style="font-size: 11px; font-weight: 600; display: flex; justify-content: space-between;">
                         Master Volume: <span id="vol_val_${this.id}" data-entry="scale:100;unit:%">${Math.round(currentVol * 100)}%</span>
                     </label>
-                    <input type="range" min="0" max="1" step="0.01" value="${currentVol}" 
+                    <input type="range" min="0" max="1" step="0.01" value="${currentVol}" style="width: 100%;" 
                         oninput="synthApp.getModule('${this.id}').setVolume(this.value); document.getElementById('vol_val_${this.id}').innerText = Math.round(this.value * 100) + '%';">
                 </div>
                 <div class="ports-matrix" style="display: flex; justify-content: space-between; gap: 8px; align-items: center; padding-top: 8px; border-top: 1px solid var(--panel-border);">

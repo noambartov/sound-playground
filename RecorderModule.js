@@ -304,7 +304,7 @@ class RecorderModule {
     renderHTML() {
         return `
             <div class="node-header">
-                <span class="node-title">Audio Recorder</span>
+                <span class="node-title">Recorder</span>
                 <button class="delete-module-btn" onclick="window.synthApp.deleteNode('${this.id}')" title="Delete Module">×</button>
             </div>
             <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 10px;">

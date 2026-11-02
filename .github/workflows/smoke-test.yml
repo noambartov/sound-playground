@@ -1,0 +1,19 @@
+# Runs tests/smoke.js (every module, every preset, help-book demos, autosave) on each pull request
+# and push to main. A red check means something broke; the site itself still deploys from main.
+name: Smoke test
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --no-save playwright@1.63.0
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/smoke.js

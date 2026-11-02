@@ -274,7 +274,7 @@ class EnvelopeModule {
 
         return `
             <div class="node-header">
-                <span>Envelope Generator (ADSR)</span>
+                <span>Envelope (ADSR)</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
             <div class="node-body" style="padding: 12px; display: flex; flex-direction: column; gap: 12px; background: var(--panel-bg);">

@@ -208,7 +208,7 @@ class TimbreModule extends ModuleBase {
     type: 'timbre',
     title: 'Timbre',
     width: 260,
-    menu: { group: 'Controllers & Sequencing', label: 'Timbre' },
+    menu: { group: 'Helpers', label: 'Timbre' },
     params: [
       { id: 'preset', label: 'Instrument', kind: 'select', value: 'clarinet',
         options: Object.keys(TIMBRE_PRESETS).map(k => [k, TIMBRE_PRESETS[k].label]) }

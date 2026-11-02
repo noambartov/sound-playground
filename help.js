@@ -9,12 +9,20 @@
   let query = '';
   const DONE_KEY = 'sp_lessons_done';
 
-  const GROUP_ORDER = ['sources', 'controllers', 'processors', 'modulation', 'output'];
-  // Sidebar group title -> manual group, for modules that have no manual entry yet
+  const GROUP_ORDER = ['instruments', 'output', 'play', 'sources', 'shaping', 'effects', 'time', 'helpers'];
+  // Sidebar group title -> manual group. The Sidebar decides each module's group and its order
+  // in the manual's module list, so the two lists always match.
   const SIDEBAR_GROUPS = {
-    'sound sources': 'sources', 'controllers & sequencing': 'controllers', 'processors & effects': 'processors',
-    'modulation': 'modulation', 'output & monitoring': 'output'
+    'instruments': 'instruments', 'output': 'output', 'play': 'play', 'sound sources': 'sources',
+    'shaping': 'shaping', 'effects': 'effects', 'time & composition': 'time', 'helpers': 'helpers'
   };
+  function sidebarPlace(type) {
+    const btns = Array.from(document.querySelectorAll('.add-module-btn[data-type]'));
+    const btn = btns.find(b => b.dataset.type === type);
+    if (!btn) return null;
+    const titleEl = btn.closest('.sidebar-group') && btn.closest('.sidebar-group').querySelector('.sidebar-group-title');
+    return { group: SIDEBAR_GROUPS[((titleEl && titleEl.textContent) || '').trim().toLowerCase()] || null, index: btns.indexOf(btn) };
+  }
 
   function injectModalStyles() {
     if (document.getElementById('help-custom-css')) return;
@@ -174,7 +182,7 @@
       if (known.has(type)) return;
       known.add(type);
       const titleEl = btn.closest('.sidebar-group') && btn.closest('.sidebar-group').querySelector('.sidebar-group-title');
-      const group = SIDEBAR_GROUPS[((titleEl && titleEl.textContent) || '').trim().toLowerCase()] || 'controllers';
+      const group = SIDEBAR_GROUPS[((titleEl && titleEl.textContent) || '').trim().toLowerCase()] || 'helpers';
       list.push({ type, group, name: btn.textContent.trim() || type, controls: [], tips: [] });
     });
     return list;
@@ -236,8 +244,13 @@
     const mods = moduleEntries(data);
     if (!mods.find(m => m.type === activeModule)) activeModule = mods.length ? mods[0].type : null;
     let listHTML = '';
+    const place = {};
+    mods.forEach((m, i) => {
+      const p = sidebarPlace(m.type) || {};
+      place[m.type] = { group: p.group || (GROUP_ORDER.includes(m.group) ? m.group : 'helpers'), index: p.index != null ? p.index : 1000 + i };
+    });
     GROUP_ORDER.forEach(g => {
-      const inGroup = mods.filter(m => (GROUP_ORDER.includes(m.group) ? m.group : 'controllers') === g);
+      const inGroup = mods.filter(m => place[m.type].group === g).sort((a, b) => place[a.type].index - place[b.type].index);
       if (!inGroup.length) return;
       listHTML += `<div class="book-mod-group">${esc(ui.groups[g] || g)}</div>`;
       listHTML += inGroup.map(m => `<button class="book-mod-btn${m.type === activeModule ? ' active' : ''}" data-module="${esc(m.type)}">${esc(m.name)}</button>`).join('');

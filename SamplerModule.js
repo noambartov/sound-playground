@@ -16,7 +16,7 @@ class SamplerModule extends ModuleBase {
     type: 'sampler',
     title: 'Sampler',
     width: 300,
-    menu: { group: 'Sound Sources', label: 'Sampler' },
+    menu: { group: 'Instruments', label: 'Sampler' },
     params: [
       { id: 'root', label: 'Root', min: 24, max: 96, step: 1, value: 60,
         format: v => SamplerModule.noteName(v),

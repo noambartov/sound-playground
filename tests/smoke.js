@@ -23,7 +23,7 @@ const server = http.createServer((req, res) => {
 });
 
 // Messages that are expected in a headless browser
-const EXPECTED = [/MIDI access failed/, /Permission to use Web MIDI/, /slider-vertical/];
+const EXPECTED = [/MIDI access failed/, /Permission to use Web MIDI/];
 
 const SIZES = [
   { name: 'desktop', viewport: { width: 1440, height: 900 } },

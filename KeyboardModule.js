@@ -290,7 +290,7 @@ class KeyboardModule {
           <!-- Pitch Bend Wheel -->
           <div class="kb-bend">
             <span class="kb-bend-label">PITCH</span>
-            <input type="range" id="bend_wheel_${this.id}" min="-1" max="1" step="0.01" value="0" style="writing-mode: bt-lr; appearance: slider-vertical; width: 16px; height: 90px; cursor: pointer;">
+            <input type="range" id="bend_wheel_${this.id}" min="-1" max="1" step="0.01" value="0" style="writing-mode: vertical-lr; direction: rtl; width: 16px; height: 90px; cursor: pointer;">
             <span class="kb-bend-label">BEND</span>
           </div>
 

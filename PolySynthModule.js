@@ -64,7 +64,7 @@ class PolySynthModule extends ModuleBase {
     type: 'polysynth',
     title: 'Poly Synth',
     width: 240,
-    menu: { group: 'Sound Sources', label: 'Poly Synth' },
+    menu: { group: 'Instruments', label: 'Poly Synth' },
     params: [
       { id: 'voices', label: 'Voices', min: 1, max: POLY_MAX_VOICES, step: 1, value: 8 },
       { id: 'wave', label: 'Waveform', kind: 'select', value: 'sawtooth',

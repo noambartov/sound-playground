@@ -47,7 +47,7 @@ class DrumMachineModule extends ModuleBase {
     title: 'Drum Machine',
     aliases: ['drum_machine', 'drummachine'],
     width: 760,
-    menu: { group: 'Controllers & Sequencing', label: 'Drum Machine' },
+    menu: { group: 'Instruments', label: 'Drum Machine' },
     params: [],
     inputs: [
       { id: 'clock_in', label: 'CLOCK IN', signal: 'gate', title: 'Clock Input',

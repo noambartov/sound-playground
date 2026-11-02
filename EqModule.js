@@ -28,7 +28,7 @@ class EqModule extends ModuleBase {
     type: 'eq',
     title: 'EQ',
     width: 400,
-    menu: { group: 'Processors & Effects', label: 'EQ' },
+    menu: { group: 'Effects', label: 'EQ' },
     params: [
       { id: 'low_freq', label: 'Low Freq', min: 0, max: 100, step: 0.1, value: +eqPos(100).toFixed(1), format: v => eqHz(eqFreq(v)), entry: EQ_ENTRY },
       { id: 'low_gain', label: 'Low Gain', min: -EQ_RANGE, max: EQ_RANGE, step: 0.5, value: 0, format: eqDb },

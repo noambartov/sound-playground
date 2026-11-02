@@ -115,7 +115,7 @@ class DegraderModule extends ModuleBase {
     type: 'degrader',
     title: 'Degrader',
     width: 220,
-    menu: { group: 'Processors & Effects', label: 'Degrader' },
+    menu: { group: 'Effects', label: 'Degrader' },
     params: [
       { id: 'amount', label: 'Degrade', min: 0, max: 100, step: 1, value: 50, format: v => `${v}% ${DegraderModule.stageName(v)}`, entry: { unit: '%' } }
     ],

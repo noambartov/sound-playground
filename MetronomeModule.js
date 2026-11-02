@@ -9,7 +9,7 @@ class MetronomeModule extends ModuleBase {
     type: 'metronome',
     title: 'Metronome',
     width: 260,
-    menu: { group: 'Controllers & Sequencing', label: 'Metronome' },
+    menu: { group: 'Time & Composition', label: 'Metronome' },
     params: [
       { id: 'tempo', label: 'Tempo', min: 20, max: 300, step: 1, value: 120, unit: 'BPM' },
       { id: 'beats', label: 'Beats per Bar', min: 1, max: 12, step: 1, value: 4 },

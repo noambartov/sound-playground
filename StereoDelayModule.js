@@ -27,7 +27,7 @@ class StereoDelayModule extends ModuleBase {
     title: 'Stereo Delay',
     aliases: ['stereo_delay'],
     width: 460,
-    menu: { group: 'Processors & Effects', label: 'Stereo Delay' },
+    menu: { group: 'Effects', label: 'Stereo Delay' },
     params: [],
     inputs: [
       { id: 'in_l', label: 'IN L', signal: 'audio', title: 'Left Input',

@@ -430,9 +430,9 @@ if (!window.SoundSandboxApp) {
       const categoryRank = (type) => {
         const btn = document.querySelector(`.add-module-btn[data-type="${type}"]`);
         const title = btn && btn.closest('.sidebar-group') ? (btn.closest('.sidebar-group').querySelector('.sidebar-group-title') || {}).textContent || '' : '';
-        if (/controller|modulation/i.test(title)) return 0;
-        if (/source/i.test(title)) return 1;
-        if (/output|monitor/i.test(title)) return 3;
+        if (type === 'envelope' || type === 'lfo' || /^(play|time|helpers)/i.test(title)) return 0;
+        if (/source|instrument/i.test(title)) return 1;
+        if (/^output/i.test(title)) return 3;
         return 2;
       };
       const isFinal = (m) => m.type === 'output' || m.type === 'recorder';
@@ -2183,7 +2183,7 @@ if (!window.SoundSandboxApp) {
     }
 
     // What a Mixer channel's empty name box suggests: the nearest renamed module up the chain,
-    // else its sound source (a module from the Sound Sources menu), else the module plugged in.
+    // else its sound source (a module from the Sound Sources or Instruments menu), else the module plugged in.
     getChannelHint(fromId) {
       const seen = new Set([fromId]);
       const queue = [fromId];
@@ -2196,7 +2196,7 @@ if (!window.SoundSandboxApp) {
           const btn = document.querySelector(`.add-module-btn[data-type="${m.type}"]`);
           const group = btn && btn.closest('.sidebar-group');
           const title = group ? (group.querySelector('.sidebar-group-title') || {}).textContent || '' : '';
-          if (/source/i.test(title)) source = cur;
+          if (/source|instrument/i.test(title)) source = cur;
         }
         this.connections.forEach(c => {
           if (c.toNode !== cur || seen.has(c.fromNode) || !this.modules[c.fromNode] || this.modules[c.fromNode].type === 'mixer') return;

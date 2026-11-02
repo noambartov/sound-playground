@@ -140,7 +140,7 @@ class VocoderModule extends ModuleBase {
     type: 'vocoder',
     title: 'Vocoder',
     width: 300,
-    menu: { group: 'Processors & Effects', label: 'Vocoder' },
+    menu: { group: 'Effects', label: 'Vocoder' },
     params: [
       { id: 'bands', label: 'Bands', kind: 'select', value: '16',
         options: [['8', '8 bands'], ['12', '12 bands'], ['16', '16 bands'], ['24', '24 bands'], ['32', '32 bands']] },

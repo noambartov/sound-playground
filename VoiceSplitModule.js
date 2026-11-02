@@ -12,7 +12,7 @@ class VoiceSplitModule extends ModuleBase {
     type: 'voicesplit',
     title: 'Voice Split',
     width: 260,
-    menu: { group: 'Controllers & Sequencing', label: 'Voice Split' },
+    menu: { group: 'Helpers', label: 'Voice Split' },
     params: [
       { id: 'voices', label: 'Voices', min: 1, max: VS_VOICES, step: 1, value: VS_VOICES, format: v => `${v}`, entry: false },
       { id: 'mode', label: 'New Note Goes To', kind: 'select', value: 'rotate',

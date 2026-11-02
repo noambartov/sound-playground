@@ -76,7 +76,7 @@ class ChoraleModule extends ModuleBase {
     type: 'chorale',
     title: 'Chorale',
     width: 380,
-    menu: { group: 'Controllers & Sequencing', label: 'Chorale' },
+    menu: { group: 'Time & Composition', label: 'Chorale' },
     params: [
       { id: 'source', label: 'Source', kind: 'select', value: 'free',
         options: [['free', 'Free (writes by itself)'], ['chords', 'Chords (from CHORDS)'], ['melody', 'Melody (Rec a tune)']] },

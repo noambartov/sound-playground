@@ -93,7 +93,7 @@ class CompressorModule extends ModuleBase {
     type: 'compressor',
     title: 'Compressor',
     width: 330,
-    menu: { group: 'Processors & Effects', label: 'Compressor' },
+    menu: { group: 'Effects', label: 'Compressor' },
     params: [
       { id: 'threshold', label: 'Threshold', min: -60, max: 0, step: 1, value: -24, unit: 'dB' },
       { id: 'ratio', label: 'Ratio', min: 1, max: 20, step: 0.5, value: 4, format: v => `${v}:1` },

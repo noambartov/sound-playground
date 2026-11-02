@@ -9,7 +9,7 @@ class RibbonModule extends ModuleBase {
     type: 'ribbon',
     title: 'Ribbon',
     width: 300,
-    menu: { group: 'Controllers & Sequencing', label: 'Ribbon' },
+    menu: { group: 'Play', label: 'Ribbon' },
     params: [
       { id: 'base', label: 'Base Note', min: 24, max: 72, step: 1, value: 48, format: v => RibbonModule.noteName(v),
         entry: { unit: '', step: 1, format: v => RibbonModule.noteName(v), parse: t => RibbonModule.parseNote(t) } },

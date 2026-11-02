@@ -133,7 +133,7 @@ class HarmonyWalkerModule extends ModuleBase {
     type: 'harmony',
     title: 'Harmony Walker',
     width: 360,
-    menu: { group: 'Controllers & Sequencing', label: 'Harmony Walker' },
+    menu: { group: 'Time & Composition', label: 'Harmony Walker' },
     params: [
       { id: 'source', label: 'Source', kind: 'select', value: 'tonnetz',
         options: [['tonnetz', 'Tonnetz moves'], ['progression', 'Progression'], ['markov', 'Chance table'],

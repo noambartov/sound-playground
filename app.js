@@ -837,7 +837,8 @@ if (!window.SoundSandboxApp) {
           x: parseFloat(m.card.style.left || 0),
           y: parseFloat(m.card.style.top || 0),
           state,
-          ...(m.name ? { name: m.name } : {})
+          ...(m.name ? { name: m.name } : {}),
+          ...(m.link ? { link: m.link } : {})
         };
       }).sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
       const connections = this.connections.map(c => ({
@@ -929,6 +930,7 @@ if (!window.SoundSandboxApp) {
           }
           if (!entry) this.createModule(m.type, m.id, m.x, m.y, m.state);
           if (this.modules[m.id] && (this.modules[m.id].name || '') !== (m.name || '')) this.setModuleName(m.id, m.name);
+          if (this.modules[m.id] && window.moduleLinks && (this.modules[m.id].link || '') !== (m.link || '')) window.moduleLinks.setLink(m.id, m.link);
         });
 
         const existing = {};
@@ -1002,7 +1004,8 @@ if (!window.SoundSandboxApp) {
             x: parseFloat(card.style.left || 0),
             y: parseFloat(card.style.top || 0),
             state: typeof m.instance.getState === 'function' ? m.instance.getState() : {},
-            ...(m.name ? { name: m.name } : {})
+            ...(m.name ? { name: m.name } : {}),
+            ...(m.link ? { link: m.link } : {})
           };
         }),
         connections: this.connections
@@ -1089,6 +1092,8 @@ if (!window.SoundSandboxApp) {
       }
 
       const newIds = [];
+      // Link groups (moduleLinks.js): an added patch gets letters not already used on the canvas
+      const linkMap = add && window.moduleLinks ? window.moduleLinks.remapLetters(patch.modules) : null;
       if (Array.isArray(patch.modules)) {
         patch.modules.forEach(m => {
           let modState = m.state || {};
@@ -1104,6 +1109,7 @@ if (!window.SoundSandboxApp) {
           const y = m.y == null ? m.y : m.y + dy;
           const mod = this.createModule(m.type, id, x, y, modState);
           if (mod && m.name) this.setModuleName(mod.id || id, m.name);
+          if (mod && m.link && window.moduleLinks) window.moduleLinks.setLink(mod.id || id, linkMap ? linkMap[m.link] : m.link);
           newIds.push(mod && mod.id ? mod.id : id);
         });
       }
@@ -1992,6 +1998,7 @@ if (!window.SoundSandboxApp) {
       const count = Array.from(this.selectedNodeIds).filter(id => this.modules[id]).length;
       btn.textContent = `Delete ${count} modules`;
       btn.style.display = count >= 2 ? 'block' : 'none';
+      if (window.moduleLinks) window.moduleLinks.updateButton();
     }
 
     // The module the user touches last is drawn above all others, so a moved module
@@ -2834,8 +2841,10 @@ if (!window.SoundSandboxApp) {
         return true;
       });
 
+      const linkLetter = this.modules[id] ? this.modules[id].link : '';
       if (this.modules[id]) delete this.modules[id];
       this.selectedNodeIds.delete(id);
+      if (linkLetter && window.moduleLinks) window.moduleLinks.onDelete(id, linkLetter);
       
       const card = document.getElementById(`module_card_${id}`);
       if (card) {

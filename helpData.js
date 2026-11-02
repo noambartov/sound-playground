@@ -136,6 +136,7 @@ window.helpData = {
             <li><kbd>Delete</kbd>: remove the selected module or cable. <kbd>Esc</kbd>: deselect.</li>
             <li><kbd>Cmd</kbd>+<kbd>Z</kbd> undo, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> redo (<kbd>Ctrl</kbd> on Windows).</li>
             <li><kbd>Shift</kbd> + drag from an output: move the last cable plugged into it.</li>
+            <li>Select 2 or more modules of the same type (drag a box around them) and press <strong>Link</strong>: their controls move together, like one panel. The settings of the module you touched last are copied to the others. Each group shows a tag like LINK A. Select them again and press <strong>Unlink</strong> to separate them.</li>
           </ul>
         </div>
         <div class="help-card">
@@ -211,6 +212,10 @@ window.helpData = {
         summary: "Turns movement in front of your camera into control signals.",
         controls: ["Start Camera.", "Sens (Thresh): how much movement counts.", "Smoothing: calmer or faster response.", "CV Depth (Hz): how strong the X / Y outputs are."],
         tips: ["X CV into an Oscillator FM IN: move your hand left and right to change the pitch."] },
+      { type: "voicesplit", group: "controllers", name: "Voice Split", preset: "demo-voicesplit",
+        summary: "Splits the notes of a NOTES cable (every key you hold) between 4 voices, each with its own PITCH and GATE. With it you build a polyphonic synth from separate modules: one Oscillator, Envelope, Filter and VCA per voice, so you can see and change every step.",
+        controls: ["The four rows: one per voice, with the note it plays now and its PITCH and GATE jacks. A row lights while its key is held; after you let go it keeps showing its last note, because the sound is still fading out at that pitch.", "Voices: how many of the 4 voices are used (1 to 4). Unused rows are dimmed.", "New Note Goes To: Next voice (in turn) moves on to the next free voice each time, so a released note can ring out while the next one plays elsewhere. Lowest free voice always starts from voice 1.", "When every voice is busy, a new note takes over the voice holding the oldest note."],
+        tips: ["Keyboard NOTES into NOTES, then for each voice: PITCH to an Oscillator PITCH, GATE to an Envelope GATE IN, the Oscillator through a Filter and a VCA, and the Envelope into the VCA CV and the Filter CUT MOD. Open the demo to see it built.", "In a real polyphonic synth one panel controls every voice. Do the same with Link: select the four Oscillators (or Filters, Envelopes) and press Link 4 modules. Moving a control on one then moves all of them. Unlink them to give each voice its own sound.", "Detune the voices on purpose: with the Oscillators unlinked, give each a slightly different Fine for a wide, living chord."] },
       { type: "ribbon", group: "controllers", name: "Ribbon", preset: "demo-ribbon",
         summary: "A rainbow strip you play by sliding a mouse, a finger or the iPad pencil along it.",
         controls: ["Left to right sets the pitch. The Note readout shows the note you are on.", "Base Note: the note at the left end. Range: how many octaves the strip covers.", "Glide: how smoothly the pitch slides between positions.", "Snap: On jumps to whole notes, Off slides freely.", "Hold: On keeps the gate open after you lift your finger.", "Y / Press Range: multiplies the Y and PRESS outputs. x1 suits a VCA CV or a Filter CUT MOD (its Mod Depth sets how far it opens)."],
@@ -342,6 +347,9 @@ window.helpData = {
       { preset: "demo-polysynth", level: 2, title: "Chords",
         learn: "A Poly Synth plays several notes at once, so you can play chords.",
         steps: ["Raise Master Volume.", "Hold several keys on the Keyboard at once.", "Change Attack and Release on the Poly Synth for soft pads or short plucks."] },
+      { preset: "demo-voicesplit", level: 3, title: "Poly Synth from Modules",
+        learn: "How a polyphonic synth works inside: a Voice Split hands each held key to its own chain of Oscillator, Envelope, Filter and VCA. The four chains are linked (LINK A to D), so like a real poly synth one move changes every voice.",
+        steps: ["Raise Master Volume and hold a chord on the Keyboard. Each Voice Split row lights for the voice playing.", "Change the Waveform on any Oscillator: all four follow, because they are linked. Do the same with Cutoff, or Attack and Release.", "Select the four Oscillators and press Unlink 4 modules, then give each a different waveform or Fine, and hear the voices differ."] },
       { preset: "minimoog", level: 2, title: "Minimoog",
         learn: "The classic Minimoog layout: three Oscillators tuned slightly apart (Octave, Semitones, Fine) and a Noise source into a Mixer, a steep 24dB Lowpass Filter with its own Envelope (the filter contour), a second Envelope for the volume (the loudness contour), Slide on the Keyboard for glide, and a slow LFO on the filter.",
         steps: ["Raise Master Volume and play the Keyboard.", "Change Fine on the Oscillators: closer to 0 the sound is still, further apart it beats faster.", "On the filter Envelope (under the Filter), change Attack and Decay; Mod Depth on the Filter sets how far it opens the filter.", "Raise the Noise channel on the Mixer for breath, and Slide on the Keyboard for glide between notes."] },
@@ -502,6 +510,7 @@ window.helpData = {
             <li><kbd>Delete</kbd>: מחיקת המודול או הכבל המסומן. <kbd>Esc</kbd>: ביטול סימון.</li>
             <li><kbd>Cmd</kbd>+<kbd>Z</kbd> ביטול, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd> חזרה (<kbd>Ctrl</kbd> בווינדוס).</li>
             <li><kbd>Shift</kbd> + גרירה מיציאה: הזזת הכבל האחרון שחובר אליה.</li>
+            <li>מסמנים 2 מודולים או יותר מאותו סוג (גוררים מסגרת סביבם) ולוחצים <strong>Link</strong>: הכפתורים שלהם זזים יחד, כמו פאנל אחד. ההגדרות של המודול שנגעתם בו אחרון מועתקות לשאר. כל קבוצה מסומנת בתווית כמו LINK A. מסמנים אותם שוב ולוחצים <strong>Unlink</strong> כדי להפריד.</li>
           </ul>
         </div>
         <div class="help-card">
@@ -577,6 +586,10 @@ window.helpData = {
         summary: "הופך תנועה מול המצלמה לאותות שליטה.",
         controls: ["Start Camera.", "Sens (Thresh): כמה תנועה נחשבת.", "Smoothing: תגובה רגועה או מהירה.", "CV Depth (Hz): כמה חזקות יציאות X / Y."],
         tips: ["X CV אל FM IN של האוסילטור: מזיזים יד ימינה ושמאלה ומשנים את הגובה."] },
+      { type: "voicesplit", group: "controllers", name: "Voice Split", preset: "demo-voicesplit",
+        summary: "מחלק את התווים של כבל NOTES (כל הקלידים שמחזיקים) בין 4 קולות, ולכל קול PITCH ו-GATE משלו. בעזרתו בונים סינתסייזר פוליפוני ממודולים נפרדים: Oscillator, Envelope, Filter ו-VCA לכל קול, כך שאפשר לראות ולשנות כל שלב.",
+        controls: ["ארבע השורות: אחת לכל קול, עם התו שהוא מנגן עכשיו ושקעי ה-PITCH וה-GATE שלו. שורה נדלקת כל עוד מחזיקים את הקליד שלה; אחרי שעוזבים היא ממשיכה להראות את התו האחרון, כי הצליל עוד דועך בגובה הזה.", "Voices: בכמה מתוך 4 הקולות משתמשים (1 עד 4). שורות שלא בשימוש מעומעמות.", "New Note Goes To: Next voice (in turn) עובר בכל פעם לקול הפנוי הבא, כך שתו שעזבו ממשיך לדעוך בזמן שהתו הבא מתנגן בקול אחר. Lowest free voice מתחיל תמיד מקול 1.", "כשכל הקולות תפוסים, תו חדש לוקח את הקול שמחזיק את התו הוותיק ביותר."],
+        tips: ["NOTES של המקלדת אל NOTES, ואז לכל קול: PITCH אל PITCH של Oscillator, GATE אל GATE IN של Envelope, ה-Oscillator דרך Filter ו-VCA, וה-Envelope אל CV של ה-VCA ואל CUT MOD של ה-Filter. פתחו את הדמו כדי לראות את זה בנוי.", "בסינתסייזר פוליפוני אמיתי פאנל אחד שולט בכל הקולות. עושים אותו דבר עם Link: מסמנים את ארבעת האוסילטורים (או הפילטרים, או המעטפות) ולוחצים Link 4 modules. מעכשיו הזזת כפתור באחד מזיזה את כולם. Unlink מחזיר לכל קול צליל משלו.", "כיוון מכוון של הקולות זה מזה: כשהאוסילטורים לא מקושרים, תנו לכל אחד Fine קצת שונה, לאקורד רחב וחי."] },
       { type: "ribbon", group: "controllers", name: "Ribbon", preset: "demo-ribbon",
         summary: "רצועה בצבעי קשת שמנגנים עליה בהחלקה של עכבר, אצבע או העיפרון של האייפד.",
         controls: ["משמאל לימין קובע את גובה הצליל. התצוגה Note מראה על איזה תו אתם.", "Base Note: התו בקצה השמאלי. Range: כמה אוקטבות הרצועה מכסה.", "Glide: כמה חלק הגובה מחליק בין מקומות.", "Snap: במצב On קופץ לתווים שלמים, במצב Off מחליק חופשי.", "Hold: במצב On ה-Gate נשאר פתוח גם אחרי שמרימים את האצבע.", "Y / Press Range: מכפיל את היציאות Y ו-PRESS. x1 מתאים ל-CV של VCA או ל-CUT MOD של פילטר (ה-Mod Depth שלו קובע כמה הוא נפתח)."],
@@ -705,6 +718,9 @@ window.helpData = {
       { preset: "demo-polysynth", level: 2, title: "Chords",
         learn: "Poly Synth מנגן כמה תווים בבת אחת, כך שאפשר לנגן אקורדים.",
         steps: ["הרימו את Master Volume.", "החזיקו כמה קלידים במקלדת בבת אחת.", "שנו Attack ו-Release ב-Poly Synth בשביל משטחים רכים או צלילים קצרים."] },
+      { preset: "demo-voicesplit", level: 3, title: "פולי-סינת ממודולים",
+        learn: "איך סינתסייזר פוליפוני עובד מבפנים: Voice Split מוסר כל קליד שמחזיקים לשרשרת משלו של Oscillator, Envelope, Filter ו-VCA. ארבע השרשראות מקושרות (LINK A עד D), כך שכמו בפולי-סינת אמיתי תזוזה אחת משנה את כל הקולות.",
+        steps: ["הרימו את Master Volume והחזיקו אקורד במקלדת. כל שורה ב-Voice Split נדלקת לקול שמנגן.", "שנו את ה-Waveform באוסילטור כלשהו: כל הארבעה עוקבים, כי הם מקושרים. אותו דבר עם Cutoff, או Attack ו-Release.", "סמנו את ארבעת האוסילטורים ולחצו Unlink 4 modules, ואז תנו לכל אחד צורת גל או Fine אחרים, ושמעו את הקולות נבדלים."] },
       { preset: "minimoog", level: 2, title: "Minimoog",
         learn: "המבנה הקלאסי של המיני מוג: שלושה אוסילטורים שמכוונים מעט זה מזה (Octave, Semitones, Fine) ומקור Noise אל Mixer, פילטר Lowpass חד של 24dB עם Envelope משלו (מעטפת הפילטר), Envelope שני לעוצמה (מעטפת העוצמה), Slide במקלדת בשביל גלישה, ו-LFO איטי על הפילטר.",
         steps: ["הרימו את Master Volume ונגנו במקלדת.", "שנו את Fine באוסילטורים: קרוב ל-0 הצליל שקט, רחוק יותר הוא פועם מהר יותר.", "ב-Envelope של הפילטר (מתחת ל-Filter) שנו Attack ו-Decay; Mod Depth בפילטר קובע כמה הוא פותח את הפילטר.", "הרימו את ערוץ ה-Noise במיקסר בשביל נשיפה, ואת Slide במקלדת בשביל גלישה בין תווים."] },
@@ -818,6 +834,15 @@ window.helpData = {
       "output:in:in_r": { text: "צד ימין. מחברים לכאן את יציאת R של מודול סטריאו (Reverb, Granular, Mixer, Stereo Delay, MAIN R של Drum Machine), ואת יציאת L שלו ל-IN L.", where: "OUT R של Reverb, Granular, Mixer, Stereo Delay, MAIN R של Drum Machine" },
       "output:out:out": { text: "עותק של מה שמגיע ל-Output, לפני ה-Master Volume.", where: "Recorder, Oscilloscope" },
       "oscilloscope:in:audio": { text: "משרטט את האות. אין לו יציאה: כדי גם לשמוע, חברו את אותו מקור גם ל-Output.", where: "כל OUT" },
+      "voicesplit:in:notes": { text: "כל הקלידים שמחזיקים. כל תו נמסר לאחד מ-4 הקולות. הכבל הזה מעביר תווים, לא צליל.", where: "NOTES של המקלדת, של Sequencer, של Harmony Walker או של Chorale" },
+      "voicesplit:out:pitch1": { text: "התו שקול 1 מנגן, כגובה צליל. הוא נשאר על התו האחרון אחרי שעוזבים את הקליד, כדי שהצליל ידעך בכוונון.", where: "PITCH של אוסילטור" },
+      "voicesplit:out:gate1": { text: "דלוק כל עוד הקליד של קול 1 מוחזק. תו חדש על קול תפוס מכבה אותו לרגע, כדי שהמעטפת תתחיל מחדש.", where: "GATE IN של Envelope, או CV של VCA" },
+      "voicesplit:out:pitch2": { text: "התו שקול 2 מנגן, כגובה צליל. הוא נשאר על התו האחרון אחרי שעוזבים את הקליד, כדי שהצליל ידעך בכוונון.", where: "PITCH של אוסילטור" },
+      "voicesplit:out:gate2": { text: "דלוק כל עוד הקליד של קול 2 מוחזק. תו חדש על קול תפוס מכבה אותו לרגע, כדי שהמעטפת תתחיל מחדש.", where: "GATE IN של Envelope, או CV של VCA" },
+      "voicesplit:out:pitch3": { text: "התו שקול 3 מנגן, כגובה צליל. הוא נשאר על התו האחרון אחרי שעוזבים את הקליד, כדי שהצליל ידעך בכוונון.", where: "PITCH של אוסילטור" },
+      "voicesplit:out:gate3": { text: "דלוק כל עוד הקליד של קול 3 מוחזק. תו חדש על קול תפוס מכבה אותו לרגע, כדי שהמעטפת תתחיל מחדש.", where: "GATE IN של Envelope, או CV של VCA" },
+      "voicesplit:out:pitch4": { text: "התו שקול 4 מנגן, כגובה צליל. הוא נשאר על התו האחרון אחרי שעוזבים את הקליד, כדי שהצליל ידעך בכוונון.", where: "PITCH של אוסילטור" },
+      "voicesplit:out:gate4": { text: "דלוק כל עוד הקליד של קול 4 מוחזק. תו חדש על קול תפוס מכבה אותו לרגע, כדי שהמעטפת תתחיל מחדש.", where: "GATE IN של Envelope, או CV של VCA" },
       "ribbon:out:pitch": { text: "התו שמתחת לאצבע או לעיפרון; הקצה השמאלי הוא Base Note.", where: "PITCH של אוסילטור, או כל סליידר" },
       "ribbon:out:gate": { text: "דלוק כל עוד נוגעים ברצועה (נשאר דלוק עם Hold).", where: "GATE IN של Envelope, או CV של VCA" },
       "ribbon:out:y": { text: "כמה גבוה נוגעים בתוך הרצועה, 0 בתחתית, כפול Y / Press Range. אפשר להפיל את הכבל גם על כל סליידר.", where: "CV של VCA, CUT MOD של פילטר, או כל סליידר" },
@@ -1274,6 +1299,68 @@ window.presetData = {
     connections: [
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "scope1", toPortInfo: { type: "audio" } },
       { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "out1", toPortInfo: { type: "in" } }
+    ]
+  },
+  "demo-voicesplit": {
+    modules: [
+      { id: "kb1", type: "keyboard", x: 40, y: 80, state: {} },
+      { id: "vs1", type: "voicesplit", x: 40, y: 560, state: { voices: 4, mode: "rotate" } },
+      { id: "osc1", type: "oscillator", x: 720, y: 40, link: "A", state: { waveform: "sawtooth", fine: 0 } },
+      { id: "env1", type: "envelope", x: 1040, y: 40, link: "B", state: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.8 } },
+      { id: "flt1", type: "filter", x: 1380, y: 40, link: "C", state: { type: "lowpass", frequency: 500, resonance: 4, modDepth: 2500 } },
+      { id: "vca1", type: "vca", x: 1720, y: 40, link: "D", state: { gain: 0 } },
+      { id: "osc2", type: "oscillator", x: 720, y: 520, link: "A", state: { waveform: "sawtooth", fine: 0 } },
+      { id: "env2", type: "envelope", x: 1040, y: 520, link: "B", state: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.8 } },
+      { id: "flt2", type: "filter", x: 1380, y: 520, link: "C", state: { type: "lowpass", frequency: 500, resonance: 4, modDepth: 2500 } },
+      { id: "vca2", type: "vca", x: 1720, y: 520, link: "D", state: { gain: 0 } },
+      { id: "osc3", type: "oscillator", x: 720, y: 1000, link: "A", state: { waveform: "sawtooth", fine: 0 } },
+      { id: "env3", type: "envelope", x: 1040, y: 1000, link: "B", state: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.8 } },
+      { id: "flt3", type: "filter", x: 1380, y: 1000, link: "C", state: { type: "lowpass", frequency: 500, resonance: 4, modDepth: 2500 } },
+      { id: "vca3", type: "vca", x: 1720, y: 1000, link: "D", state: { gain: 0 } },
+      { id: "osc4", type: "oscillator", x: 720, y: 1480, link: "A", state: { waveform: "sawtooth", fine: 0 } },
+      { id: "env4", type: "envelope", x: 1040, y: 1480, link: "B", state: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.8 } },
+      { id: "flt4", type: "filter", x: 1380, y: 1480, link: "C", state: { type: "lowpass", frequency: 500, resonance: 4, modDepth: 2500 } },
+      { id: "vca4", type: "vca", x: 1720, y: 1480, link: "D", state: { gain: 0 } },
+      { id: "mix1", type: "mixer", x: 2060, y: 40, state: { masterVolumeValue: 0.8, channels: { "1": { volumeValue: 0.6, panValue: -0.3 }, "2": { volumeValue: 0.6, panValue: -0.1 }, "3": { volumeValue: 0.6, panValue: 0.1 }, "4": { volumeValue: 0.6, panValue: 0.3 } } } },
+      { id: "rev1", type: "reverb", x: 2400, y: 40, state: {} },
+      { id: "out1", type: "output", x: 2760, y: 40, state: {} },
+      { id: "scope1", type: "oscilloscope", x: 2400, y: 500, state: {} }
+    ],
+    connections: [
+      { fromNode: "kb1", fromPortInfo: { name: "notes" }, toNode: "vs1", toPortInfo: { id: "notes" } },
+      { fromNode: "vs1", fromPortInfo: { id: "pitch1" }, toNode: "osc1", toPortInfo: { type: "pitch" } },
+      { fromNode: "vs1", fromPortInfo: { id: "gate1" }, toNode: "env1", toPortInfo: { type: "gate" } },
+      { fromNode: "osc1", fromPortInfo: { id: "output" }, toNode: "flt1", toPortInfo: { type: "audio" } },
+      { fromNode: "flt1", fromPortInfo: { type: "output" }, toNode: "vca1", toPortInfo: { type: "audio" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "vca1", toPortInfo: { type: "cv" } },
+      { fromNode: "env1", fromPortInfo: { type: "env" }, toNode: "flt1", toPortInfo: { type: "cutoff" } },
+      { fromNode: "vca1", fromPortInfo: { type: "audio" }, toNode: "mix1", toPortInfo: { channel: "1", type: "ch_in_1" } },
+      { fromNode: "vs1", fromPortInfo: { id: "pitch2" }, toNode: "osc2", toPortInfo: { type: "pitch" } },
+      { fromNode: "vs1", fromPortInfo: { id: "gate2" }, toNode: "env2", toPortInfo: { type: "gate" } },
+      { fromNode: "osc2", fromPortInfo: { id: "output" }, toNode: "flt2", toPortInfo: { type: "audio" } },
+      { fromNode: "flt2", fromPortInfo: { type: "output" }, toNode: "vca2", toPortInfo: { type: "audio" } },
+      { fromNode: "env2", fromPortInfo: { type: "env" }, toNode: "vca2", toPortInfo: { type: "cv" } },
+      { fromNode: "env2", fromPortInfo: { type: "env" }, toNode: "flt2", toPortInfo: { type: "cutoff" } },
+      { fromNode: "vca2", fromPortInfo: { type: "audio" }, toNode: "mix1", toPortInfo: { channel: "2", type: "ch_in_2" } },
+      { fromNode: "vs1", fromPortInfo: { id: "pitch3" }, toNode: "osc3", toPortInfo: { type: "pitch" } },
+      { fromNode: "vs1", fromPortInfo: { id: "gate3" }, toNode: "env3", toPortInfo: { type: "gate" } },
+      { fromNode: "osc3", fromPortInfo: { id: "output" }, toNode: "flt3", toPortInfo: { type: "audio" } },
+      { fromNode: "flt3", fromPortInfo: { type: "output" }, toNode: "vca3", toPortInfo: { type: "audio" } },
+      { fromNode: "env3", fromPortInfo: { type: "env" }, toNode: "vca3", toPortInfo: { type: "cv" } },
+      { fromNode: "env3", fromPortInfo: { type: "env" }, toNode: "flt3", toPortInfo: { type: "cutoff" } },
+      { fromNode: "vca3", fromPortInfo: { type: "audio" }, toNode: "mix1", toPortInfo: { channel: "3", type: "ch_in_3" } },
+      { fromNode: "vs1", fromPortInfo: { id: "pitch4" }, toNode: "osc4", toPortInfo: { type: "pitch" } },
+      { fromNode: "vs1", fromPortInfo: { id: "gate4" }, toNode: "env4", toPortInfo: { type: "gate" } },
+      { fromNode: "osc4", fromPortInfo: { id: "output" }, toNode: "flt4", toPortInfo: { type: "audio" } },
+      { fromNode: "flt4", fromPortInfo: { type: "output" }, toNode: "vca4", toPortInfo: { type: "audio" } },
+      { fromNode: "env4", fromPortInfo: { type: "env" }, toNode: "vca4", toPortInfo: { type: "cv" } },
+      { fromNode: "env4", fromPortInfo: { type: "env" }, toNode: "flt4", toPortInfo: { type: "cutoff" } },
+      { fromNode: "vca4", fromPortInfo: { type: "audio" }, toNode: "mix1", toPortInfo: { channel: "4", type: "ch_in_4" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "rev1", toPortInfo: { type: "in_l" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_r" }, toNode: "rev1", toPortInfo: { type: "in_r" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_l" }, toNode: "out1", toPortInfo: { type: "in" } },
+      { fromNode: "rev1", fromPortInfo: { type: "out_r" }, toNode: "out1", toPortInfo: { type: "in_r" } },
+      { fromNode: "mix1", fromPortInfo: { type: "out_l" }, toNode: "scope1", toPortInfo: { type: "audio" } }
     ]
   },
   "demo-ribbon": {

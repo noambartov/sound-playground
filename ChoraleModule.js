@@ -115,7 +115,7 @@ class ChoraleModule extends ModuleBase {
     ],
     outputs: [
       { id: 'notes', label: 'NOTES', signal: 'gate', title: 'Notes Output (all four voices)', inline: true,
-        guide: { text: 'The four voices together, as notes. Carries notes, not sound.', to: 'Poly Synth NOTES', match: ['polysynth:in:notes'] },
+        guide: { text: 'The four voices together, as notes. Carries notes, not sound.', to: 'Poly Synth NOTES, Voice Split NOTES', match: ['polysynth:in:notes', 'voicesplit:in:notes'] },
         chip: 'Poly Synth NOTES' },
       { id: 'out_l', label: 'OUT L', signal: 'audio', title: 'Choir Output Left', inline: true,
         guide: { text: 'The built-in choir, left side (Bass and Alto lean left).', to: 'Reverb IN L, Output IN L, Mixer', match: ['reverb:in:in_l', 'output:in:in', 'mixer:in:ch_in'] },

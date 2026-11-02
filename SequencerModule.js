@@ -474,7 +474,7 @@ class SequencerModule {
 
         return `
             <div class="node-header">
-                <span>Step Sequencer</span>
+                <span>Sequencer</span>
                 <button class="delete-module-btn" onclick="synthApp.deleteNode('${this.id}')">×</button>
             </div>
             <div class="node-body" style="display: flex; flex-direction: row; gap: 12px; padding: 12px; width: max-content; background: var(--panel-bg);">

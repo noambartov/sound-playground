@@ -252,7 +252,7 @@ class KeyboardModule {
   renderHTML() {
     return `
       <div class="node-header">
-        <span class="node-title">Keyboard Controller</span>
+        <span class="node-title">Keyboard</span>
         <button class="delete-module-btn" title="Delete Module" onclick="synthApp.deleteNode('${this.id}')">×</button>
       </div>
       <div class="node-body" style="min-width: 580px; padding: 12px;">

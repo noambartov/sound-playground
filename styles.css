@@ -2686,3 +2686,8 @@ body.cable-dragging .module-card input[type="range"].knob-droppable {
 }
 #link-selected-btn:hover { filter: brightness(1.08); }
 body.presentation-mode #link-selected-btn { display: none !important; }
+
+/* One slider look in every module (2026-11-02): grey track and thumb, as in most modules.
+   The Keyboard's pitch-bend wheel keeps its sky blue. */
+.module-card input[type="range"] { accent-color: var(--muted-text); }
+.module-card .kb-bend input[type="range"] { accent-color: #38bdf8; }
